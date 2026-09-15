@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function() {
+        // Prevent "Cannot set property fetch of #<Window> which has only a getter"
+        try {
+          var originalFetch = window.fetch;
+          var fetchHandler = typeof originalFetch === 'function' ? originalFetch.bind(window) : originalFetch;
+
+          function defineFetchProperty(target) {
+            try {
+              if (!target) return false;
+              var desc = Object.getOwnPropertyDescriptor(target, 'fetch');
+              if (desc && (desc.set || desc.writable)) {
+                return true;
+              }
+              Object.defineProperty(target, 'fetch', {
+                get: function() {
+                  return fetchHandler;
+                },
+                set: function(val) {
+                  fetchHandler = val;
+                },
+                configurable: true,
+                enumerable: true
+              });
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+
+          if (typeof Window !== 'undefined' && Window.prototype) {
+            defineFetchProperty(Window.prototype);
+          }
+          defineFetchProperty(window);
+        } catch (e) {
+          // ignore
+        }
+
+        // Global safeguard against unhandled errors for fetch setter in sandboxed iframes
+        window.addEventListener('error', function(event) {
+          if (event && event.message && event.message.indexOf('Cannot set property fetch') !== -1) {
+            event.preventDefault();
+            if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+            return true;
+          }
+        }, true);
+      })();
+    </script>
+    <title>Yaswant Code</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" type="image/svg+xml" href="/logo-icon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <meta name="theme-color" content="#030712" />
+    <meta name="description" content="Premium Glassmorphism & Bento UI EdTech platform with Firebase Firestore persistence, Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community." />
+    <meta property="og:title" content="Yaswant Code" />
+    <meta property="og:description" content="Premium Glassmorphism & Bento UI EdTech platform with Firebase Firestore persistence, Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

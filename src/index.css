@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-neutral-750: #2c2c31;
+  --color-neutral-850: #1b1b20;
+}
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.7);
+}
+
+.glass-surface {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .glass-surface {
+  background: rgba(18, 18, 22, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dark .glass-card {
+  background: rgba(24, 24, 27, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   Auto-Contrast Theme Utilities
+   Prevents white-on-white and dark-on-dark text contrast issues automatically
+   ========================================================================== */
+
+:root {
+  --color-contrast-surface: #ffffff;
+  --color-contrast-surface-elevated: #fafafa;
+  --color-contrast-surface-subtle: #f4f4f5;
+  --color-contrast-text-heading: #09090b;
+  --color-contrast-text-body: #18181b;
+  --color-contrast-text-muted: #52525b;
+  --color-contrast-text-subtle: #71717a;
+  --color-contrast-border: #e4e4e7;
+  --color-contrast-input-bg: #ffffff;
+  --color-contrast-input-text: #09090b;
+}
+
+.dark {
+  --color-contrast-surface: #18181b;
+  --color-contrast-surface-elevated: #1b1b20;
+  --color-contrast-surface-subtle: #27272a;
+  --color-contrast-text-heading: #ffffff;
+  --color-contrast-text-body: #f4f4f5;
+  --color-contrast-text-muted: #a1a1aa;
+  --color-contrast-text-subtle: #71717a;
+  --color-contrast-border: #2c2c31;
+  --color-contrast-input-bg: #141417;
+  --color-contrast-input-text: #fafafa;
+}
+
+/* 1. Theme-safe card & panel surfaces (Automatically matches background and foreground text) */
+.contrast-card {
+  background-color: var(--color-contrast-surface);
+  color: var(--color-contrast-text-body);
+  border: 1px solid var(--color-contrast-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.contrast-card-elevated {
+  background-color: var(--color-contrast-surface-elevated);
+  color: var(--color-contrast-text-body);
+  border: 1px solid var(--color-contrast-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.contrast-card-subtle {
+  background-color: var(--color-contrast-surface-subtle);
+  color: var(--color-contrast-text-body);
+  border: 1px solid var(--color-contrast-border);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* 2. Guaranteed high-contrast typography */
+.contrast-heading {
+  color: var(--color-contrast-text-heading);
+}
+
+.contrast-body {
+  color: var(--color-contrast-text-body);
+}
+
+.contrast-muted {
+  color: var(--color-contrast-text-muted);
+}
+
+.contrast-subtle {
+  color: var(--color-contrast-text-subtle);
+}
+
+/* 3. Auto-contrast input and form fields */
+.contrast-input {
+  background-color: var(--color-contrast-input-bg);
+  color: var(--color-contrast-input-text);
+  border: 1px solid var(--color-contrast-border);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.contrast-input::placeholder {
+  color: var(--color-contrast-text-subtle);
+}
+
+.contrast-input:focus {
+  outline: none;
+  border-color: var(--color-contrast-text-heading);
+}
+
+/* 4. Auto-contrast border */
+.contrast-border {
+  border-color: var(--color-contrast-border);
+}
+

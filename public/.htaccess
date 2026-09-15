@@ -1,0 +1,121 @@
+# ==============================================================================
+# Hostinger Apache / LiteSpeed Configuration for Yaswant Code LMS (React SPA + PHP)
+# ==============================================================================
+
+# 1. Directory Index Priority
+DirectoryIndex index.html index.php
+
+# 2. Character Encoding & Default Language
+AddDefaultCharset UTF-8
+DefaultLanguage en-US
+
+# 3. MIME Types for Modern Web Assets & Fonts
+<IfModule mod_mime.c>
+  AddType image/svg+xml .svg .svgz
+  AddEncoding gzip .svgz
+  AddType application/json .json
+  AddType application/javascript .js .mjs
+  AddType text/css .css
+  AddType font/woff2 .woff2
+  AddType font/woff .woff
+  AddType font/ttf .ttf
+  AddType font/otf .otf
+  AddType image/webp .webp
+  AddType image/avif .avif
+  AddType application/wasm .wasm
+</IfModule>
+
+# 4. Enable URL Rewriting for Single Page Application (SPA) & PHP API
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Optional: Uncomment the following two lines to enforce HTTPS on Hostinger
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Allow direct execution of PHP API endpoints in /api/
+  RewriteRule ^api/(.*)$ api/$1 [L,QSA]
+
+  # Do NOT rewrite files or directories that exist physically
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Fallback all other frontend routes to index.html for React Router / SPA navigation
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# 5. Browser Caching & Performance (Expires & Cache-Control)
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresDefault "access plus 1 month"
+
+  # HTML & App Manifest: Never cache so updates are immediate
+  ExpiresByType text/html "access plus 0 seconds"
+  ExpiresByType application/xhtml+xml "access plus 0 seconds"
+  ExpiresByType application/json "access plus 0 seconds"
+
+  # Hashed JS & CSS Assets: Cache aggressively (1 year)
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType text/javascript "access plus 1 year"
+
+  # Images & Icons
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/gif "access plus 1 month"
+  ExpiresByType image/x-icon "access plus 1 year"
+
+  # Web Fonts
+  ExpiresByType font/woff2 "access plus 1 year"
+  ExpiresByType font/woff "access plus 1 year"
+  ExpiresByType font/ttf "access plus 1 year"
+</IfModule>
+
+# 6. Gzip / Deflate Compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/plain
+  AddOutputFilterByType DEFLATE text/html
+  AddOutputFilterByType DEFLATE text/xml
+  AddOutputFilterByType DEFLATE text/css
+  AddOutputFilterByType DEFLATE application/xml
+  AddOutputFilterByType DEFLATE application/xhtml+xml
+  AddOutputFilterByType DEFLATE application/rss+xml
+  AddOutputFilterByType DEFLATE application/javascript
+  AddOutputFilterByType DEFLATE application/x-javascript
+  AddOutputFilterByType DEFLATE application/json
+  AddOutputFilterByType DEFLATE image/svg+xml
+  AddOutputFilterByType DEFLATE font/woff2
+</IfModule>
+
+# 7. Security Headers
+<IfModule mod_headers.c>
+  # Protect against MIME sniffing
+  Header set X-Content-Type-Options "nosniff"
+
+  # Help protect against Clickjacking
+  Header set X-Frame-Options "SAMEORIGIN"
+
+  # Referrer policy for privacy
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Disable server signature
+  Header unset X-Powered-By
+</IfModule>
+
+# 8. Prevent Directory Browsing
+Options -Indexes
+
+# 9. Block sensitive files from being accessed directly
+<FilesMatch "(\.(env|git|bak|config|sql|sh|lock)|composer\.json|package\.json)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+  </IfModule>
+</FilesMatch>

@@ -1,0 +1,77 @@
+{
+  "entities": {
+    "users": {
+      "title": "User",
+      "description": "User profile in Yaswant Code LMS",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["student", "instructor", "admin"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role"]
+    },
+    "notes": {
+      "title": "Study Note",
+      "description": "Learner personal study note and code scratchpad",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "category": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "title", "content"]
+    },
+    "projectSubmissions": {
+      "title": "Capstone Submission",
+      "description": "Student submission for real-world capstone projects",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "projectId": { "type": "string" },
+        "githubUrl": { "type": "string" },
+        "liveUrl": { "type": "string" },
+        "notes": { "type": "string" },
+        "submittedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "projectId", "githubUrl"]
+    },
+    "enrollments": {
+      "title": "Course Enrollment",
+      "description": "User enrollment and progress record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "courseId": { "type": "string" },
+        "progressPercent": { "type": "number" },
+        "enrolledAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "courseId", "progressPercent"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/users" },
+      "description": "Individual user document"
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/notes" },
+      "description": "User personal study notes"
+    },
+    "/users/{userId}/enrollments/{enrollmentId}": {
+      "schema": { "$ref": "#/entities/enrollments" },
+      "description": "User enrolled courses and progress"
+    },
+    "/projectSubmissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/projectSubmissions" },
+      "description": "Real-world capstone project submissions"
+    }
+  }
+}

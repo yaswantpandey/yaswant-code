@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 380 96" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient for the Icon Squircle -->
+    <linearGradient id="fullBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+
+    <!-- Emerald to Cyan Gradient -->
+    <linearGradient id="fullPrimaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#10b981" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+
+    <!-- Border Gradient -->
+    <linearGradient id="fullBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.6" />
+      <stop offset="50%" stop-color="#334155" stop-opacity="0.4" />
+      <stop offset="100%" stop-color="#10b981" stop-opacity="0.5" />
+    </linearGradient>
+
+    <!-- Glow Filter -->
+    <filter id="fullGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#06b6d4" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Icon Section (Left) -->
+  <g transform="translate(6, 6)">
+    <!-- Squircle Base (84x84) -->
+    <rect x="0" y="0" width="84" height="84" rx="22" fill="url(#fullBgGrad)" stroke="url(#fullBorderGrad)" stroke-width="2" />
+    
+    <!-- Y + Code Bracket Geometry -->
+    <g transform="translate(0, 0) scale(0.656)" filter="url(#fullGlow)">
+      <!-- Left Bracket Wing -->
+      <path d="M 32 36 L 56 64 L 64 64 L 46 36 Z" fill="url(#fullPrimaryGrad)" />
+      <!-- Right Bracket Wing -->
+      <path d="M 96 36 L 72 64 L 64 64 L 82 36 Z" fill="url(#fullPrimaryGrad)" />
+      <!-- Center Stem -->
+      <rect x="58" y="60" width="12" height="38" rx="6" fill="url(#fullPrimaryGrad)" />
+      <!-- Core Node -->
+      <circle cx="64" cy="62" r="5" fill="#ffffff" />
+      <!-- Flanking Code Chevrons -->
+      <path d="M 36 68 L 28 77 L 36 86" fill="none" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8" />
+      <path d="M 92 68 L 100 77 L 92 86" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity="0.8" />
+    </g>
+  </g>
+
+  <!-- Typography Section (Right) -->
+  <g transform="translate(106, 12)">
+    <!-- Main Brand Name "Yaswant Code" -->
+    <text x="0" y="38" font-family="'Plus Jakarta Sans', system-ui, -apple-system, sans-serif" font-size="28" font-weight="800" letter-spacing="-0.03em" fill="#0f172a" class="dark:fill-white">
+      Yaswant <tspan fill="url(#fullPrimaryGrad)">Code</tspan>
+    </text>
+
+    <!-- Subtitle / Tagline Badge -->
+    <text x="0" y="58" font-family="'JetBrains Mono', monospace" font-size="10" font-weight="700" letter-spacing="0.18em" fill="#64748b">
+      ENGINEERING LMS • ACADEMY
+    </text>
+  </g>
+</svg>
