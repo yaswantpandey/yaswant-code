@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  googleWorkspace, 
-  DriveFileItem, 
-  CalendarEventItem, 
-  ChatSpaceItem, 
-  ChatMessageItem, 
-  GmailMessageItem 
+import {
+  googleWorkspace,
+  DriveFileItem,
+  CalendarEventItem,
+  ChatSpaceItem,
+  ChatMessageItem,
+  GmailMessageItem
 } from '../services/googleWorkspace';
 
 interface WorkspaceContextType {
@@ -14,7 +14,7 @@ interface WorkspaceContextType {
   error: string | null;
   connectWorkspace: () => Promise<void>;
   disconnectWorkspace: () => void;
-  
+
   // Drive
   driveFiles: DriveFileItem[];
   isLoadingDrive: boolean;

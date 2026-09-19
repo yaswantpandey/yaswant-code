@@ -30,6 +30,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { BrandLogo } from '../components/ui/BrandLogo';
+import { tokenStorage } from '../services/api';
 
 export const SettingsPage: React.FC = () => {
   const { 
@@ -44,10 +45,11 @@ export const SettingsPage: React.FC = () => {
   } = useLms();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'account' | 'notifications' | 'appearance' | 'learning' | 'hosting'>('profile');
+  const storedUser = tokenStorage.getUser<{ name?: string; email?: string }>();
 
   // Form states
-  const [name, setName] = useState('Alex Mercer');
-  const [email, setEmail] = useState('alex.mercer@dev.io');
+  const [name, setName] = useState(storedUser?.name || 'Alex Mercer');
+  const [email, setEmail] = useState(storedUser?.email || 'alex.mercer@dev.io');
   const [bio, setBio] = useState('Software Engineer specializing in Distributed Frontends & Machine Learning Systems.');
   const [emailDigest, setEmailDigest] = useState(true);
   const [instructorReplies, setInstructorReplies] = useState(true);
@@ -68,7 +70,9 @@ export const SettingsPage: React.FC = () => {
         const data = await response.json();
         setPhpTestResult(data);
         setPhpTestStatus('success');
-        addToast("PHP Health Diagnostic Succeeded", `PHP ${data.php_version || 'Runtime'} active on ${data.server_software || 'Server'}`, "success");
+        const ver = data.php_version || data.php?.version || '8.3';
+        const server = data.server_software || data.php?.sapi || 'Hostinger LiteSpeed';
+        addToast("PHP Health Diagnostic Succeeded", `PHP ${ver} active on ${server}`, "success");
       } else {
         // In local Vite dev mode, PHP script is served as text/plain or bundled in /public
         setPhpTestResult({

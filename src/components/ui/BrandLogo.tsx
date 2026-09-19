@@ -126,7 +126,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
               </span>
             )}
           </span>
-          <span className={`${currentSize.sub} text-neutral-400 font-mono tracking-wider uppercase -mt-0.5 font-semibold`}>
+          <span className={`${currentSize.sub} text-neutral-400 font-mono tracking-wider uppercase -mt-0.5 font-semibold hidden sm:inline-block`}>
             ENGINEERING LMS
           </span>
         </div>

@@ -1,21 +1,21 @@
 import React, { useState } from 'react';
 import { useWorkspace } from '../../context/WorkspaceContext';
 import { Badge } from '../ui/Badge';
-import { 
-  FolderOpen, 
-  Calendar as CalendarIcon, 
-  MessageSquare, 
-  Mail, 
-  ExternalLink, 
-  RefreshCw, 
-  Plus, 
-  Send, 
-  Search, 
-  Clock, 
-  MapPin, 
-  CheckCircle2, 
-  AlertCircle, 
-  FileText, 
+import {
+  FolderOpen,
+  Calendar as CalendarIcon,
+  MessageSquare,
+  Mail,
+  ExternalLink,
+  RefreshCw,
+  Plus,
+  Send,
+  Search,
+  Clock,
+  MapPin,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
   Video,
   FileCode,
   FileSpreadsheet,
@@ -31,7 +31,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
     error,
     connectWorkspace,
     disconnectWorkspace,
-    
+
     // Drive
     driveFiles,
     isLoadingDrive,
@@ -182,7 +182,7 @@ export const GoogleWorkspaceHub: React.FC = () => {
     return <FolderOpen className="w-5 h-5 text-amber-500" />;
   };
 
-  const filteredDriveFiles = driveFiles.filter(f => 
+  const filteredDriveFiles = driveFiles.filter(f =>
     f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -271,11 +271,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 mb-6 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab('drive')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${
-            activeTab === 'drive'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${activeTab === 'drive'
               ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
+            }`}
         >
           <FolderOpen className="w-4 h-4" />
           Google Drive ({driveFiles.length})
@@ -283,11 +282,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('calendar')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${
-            activeTab === 'calendar'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${activeTab === 'calendar'
               ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
+            }`}
         >
           <CalendarIcon className="w-4 h-4" />
           Google Calendar ({calendarEvents.length})
@@ -295,11 +293,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('chat')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${
-            activeTab === 'chat'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${activeTab === 'chat'
               ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
+            }`}
         >
           <MessageSquare className="w-4 h-4" />
           Google Chat ({chatSpaces.length} Spaces)
@@ -307,11 +304,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
 
         <button
           onClick={() => setActiveTab('gmail')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${
-            activeTab === 'gmail'
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shrink-0 cursor-pointer ${activeTab === 'gmail'
               ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/60'
               : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-          }`}
+            }`}
         >
           <Mail className="w-4 h-4" />
           Gmail ({gmailMessages.filter(m => m.unread).length} Unread)
@@ -507,11 +503,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
                         setActiveSpace(space);
                         loadMessagesForSpace(space.name);
                       }}
-                      className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                        isSelected
+                      className={`w-full text-left p-3 rounded-2xl transition-all cursor-pointer flex items-center justify-between gap-2 ${isSelected
                           ? 'bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800/60 text-blue-600 dark:text-blue-400 font-semibold'
                           : 'hover:bg-neutral-100 dark:hover:bg-neutral-800/60 text-neutral-700 dark:text-neutral-300'
-                      }`}
+                        }`}
                     >
                       <div className="flex items-center gap-2.5 truncate">
                         <MessageSquare className="w-4 h-4 shrink-0 text-blue-500" />
@@ -611,11 +606,10 @@ export const GoogleWorkspaceHub: React.FC = () => {
             {gmailMessages.map((mail) => (
               <div
                 key={mail.id}
-                className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-                  mail.unread
+                className={`p-4 rounded-2xl border transition-all cursor-pointer ${mail.unread
                     ? 'bg-blue-50/40 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800/60 shadow-sm'
                     : 'bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
-                }`}
+                  }`}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">

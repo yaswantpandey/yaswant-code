@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAnalytics, isSupported, Analytics } from 'firebase/analytics';
 import firebaseConfigData from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
@@ -20,13 +21,25 @@ export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
 export const GOOGLE_CLIENT_ID = firebaseConfigData.oAuthClientId;
 
+// Initialize Analytics safely in supported browser environments
+export let analytics: Analytics | null = null;
+if (typeof window !== 'undefined') {
+  isSupported().then((supported) => {
+    if (supported) {
+      analytics = getAnalytics(app);
+    }
+  }).catch(() => { });
+}
+
 // Connection validator as mandated by the Firebase Integration Skill
 async function validateFirestoreConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firebase is configured, running in offline/cached mode until network is established.');
+    // Silently fall back to offline/local mode when database is not provisioned or offline
+    const msg = error instanceof Error ? error.message : '';
+    if (msg.includes('the client is offline')) {
+      console.info('Firebase running in offline/cached mode.');
     }
   }
 }
@@ -40,6 +53,7 @@ export default {
   app,
   db,
   auth,
+  analytics,
   googleAuthProvider,
   GOOGLE_CLIENT_ID,
 };

@@ -1,4 +1,4 @@
-export type RoleType = 'student' | 'instructor' | 'admin' | 'guest';
+export type RoleType = 'student' | 'admin';
 
 export type ActiveView = 
   | 'landing'
@@ -10,19 +10,15 @@ export type ActiveView =
   | 'student-dashboard'
   | 'learning-paths'
   | 'certificate'
-  | 'instructor-profile'
   | 'community'
   | 'student-profile'
-  | 'instructor-dashboard'
-  | 'course-creation'
   | 'admin-dashboard'
   | 'settings'
   | 'blog'
   | 'resources'
   | 'notes'
   | 'tools'
-  | 'projects'
-  | 'workspace';
+  | 'projects';
 
 export interface Lesson {
   id: string;
@@ -260,17 +256,37 @@ export interface ResourceItem {
   contentSnippet?: string;
 }
 
+export type NoteResourceType = 'pdf' | 'google_drive' | 'google_docs' | 'google_sheets' | 'google_slides' | 'link';
+
 export interface StudyNote {
   id: string;
   title: string;
   courseOrTopic: string;
-  category: 'System Design' | 'React & Web' | 'Distributed Systems' | 'Databases & SQL' | 'Machine Learning' | 'General';
+  category: 
+    | 'System Design' 
+    | 'React & Web' 
+    | 'Distributed Systems' 
+    | 'Databases & SQL' 
+    | 'Machine Learning' 
+    | 'DevOps & Cloud' 
+    | 'Data Structures & Algorithms'
+    | 'Languages & Programming'
+    | 'Core CS & B.Tech'
+    | 'General'
+    | (string & {});
   tags: string[];
-  content: string;
+  content?: string;
   pinned: boolean;
   starred: boolean;
   createdAt: string;
   updatedAt: string;
+  resourceType: NoteResourceType;
+  url: string;
+  fileSize?: string;
+  description?: string;
+  author?: string;
+  thumbnail?: string;
+  previewUrl?: string;
 }
 
 export interface ProjectMilestone {

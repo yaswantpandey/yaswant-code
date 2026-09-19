@@ -3,45 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+
+    <!-- ── Inline fetch-setter safeguard (Hostinger / sandboxed iframe fix) ── -->
     <script>
       (function() {
-        // Prevent "Cannot set property fetch of #<Window> which has only a getter"
         try {
           var originalFetch = window.fetch;
           var fetchHandler = typeof originalFetch === 'function' ? originalFetch.bind(window) : originalFetch;
-
           function defineFetchProperty(target) {
             try {
               if (!target) return false;
               var desc = Object.getOwnPropertyDescriptor(target, 'fetch');
-              if (desc && (desc.set || desc.writable)) {
-                return true;
-              }
+              if (desc && (desc.set || desc.writable)) { return true; }
               Object.defineProperty(target, 'fetch', {
-                get: function() {
-                  return fetchHandler;
-                },
-                set: function(val) {
-                  fetchHandler = val;
-                },
+                get: function() { return fetchHandler; },
+                set: function(val) { fetchHandler = val; },
                 configurable: true,
                 enumerable: true
               });
               return true;
-            } catch (e) {
-              return false;
-            }
+            } catch (e) { return false; }
           }
-
-          if (typeof Window !== 'undefined' && Window.prototype) {
-            defineFetchProperty(Window.prototype);
-          }
+          if (typeof Window !== 'undefined' && Window.prototype) { defineFetchProperty(Window.prototype); }
           defineFetchProperty(window);
-        } catch (e) {
-          // ignore
-        }
-
-        // Global safeguard against unhandled errors for fetch setter in sandboxed iframes
+        } catch (e) { /* ignore */ }
         window.addEventListener('error', function(event) {
           if (event && event.message && event.message.indexOf('Cannot set property fetch') !== -1) {
             event.preventDefault();
@@ -51,19 +37,136 @@
         }, true);
       })();
     </script>
-    <title>Yaswant Code</title>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         PRIMARY SEO META TAGS
+         (JS router updates these dynamically on each navigation)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <title>Yaswant Code — Full-Stack Engineering &amp; AI Masterclasses</title>
+
+    <meta name="description" content="Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native architecture from staff engineers. Earn verifiable credentials. Join 140k+ developers on Yaswant Code." />
+
+    <meta name="author" content="Yaswant Pandey" />
+    <meta name="robots" content="index, follow" />
+    <meta name="keywords" content="full-stack engineering courses, AI LLM masterclass, React 19 course, Next.js 15 training, distributed systems, cloud native DevOps, software engineering certification, online coding courses India" />
+    <meta name="theme-color" content="#030712" />
+
+    <!-- ── Canonical URL (updated per-route by seo.ts) ── -->
+    <link rel="canonical" href="https://yaswant.co.in/" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         OPEN GRAPH (Social Sharing — Facebook, LinkedIn, WhatsApp)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="Yaswant Code" />
+    <meta property="og:locale"      content="en_IN" />
+    <meta property="og:title"       content="Yaswant Code — Full-Stack Engineering &amp; AI Masterclasses" />
+    <meta property="og:description" content="Learn full-stack engineering, AI/LLM systems, and distributed systems from staff engineers. Earn verifiable credentials. Join 140k+ developers." />
+    <meta property="og:url"         content="https://yaswant.co.in/" />
+    <meta property="og:image"       content="https://yaswant.co.in/og-image.svg" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt"    content="Yaswant Code — Architect the Future of Software &amp; AI Engineering" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         TWITTER / X CARD
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@yaswantcode" />
+    <meta name="twitter:title"       content="Yaswant Code — Full-Stack Engineering &amp; AI Masterclasses" />
+    <meta name="twitter:description" content="Learn from staff engineers. Master React 19, Next.js 15, LLM systems, distributed systems. Verifiable credentials." />
+    <meta name="twitter:image"       content="https://yaswant.co.in/og-image.svg" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         ICONS & MANIFEST
+    ═══════════════════════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" type="image/svg+xml" href="/logo-icon.svg" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    <meta name="theme-color" content="#030712" />
-    <meta name="description" content="Premium Glassmorphism & Bento UI EdTech platform with Firebase Firestore persistence, Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community." />
-    <meta property="og:title" content="Yaswant Code" />
-    <meta property="og:description" content="Premium Glassmorphism & Bento UI EdTech platform with Firebase Firestore persistence, Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community." />
-    <meta property="og:type" content="website" />
-    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         STATIC JSON-LD SCHEMA — Organization + WebSite
+         (Always present regardless of JS execution — critical for crawlers)
+    ═══════════════════════════════════════════════════════════════════════ -->
+    <script type="application/ld+json" id="ld-json-static">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://yaswant.co.in/#organization",
+          "name": "Yaswant Code",
+          "alternateName": "Yaswant Code LMS",
+          "url": "https://yaswant.co.in",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://yaswant.co.in/logo.svg",
+            "width": 200,
+            "height": 60
+          },
+          "image": "https://yaswant.co.in/og-image.svg",
+          "description": "Yaswant Code is a developer-first online learning platform for serious software engineers. Master full-stack architecture, AI/LLM engineering, distributed systems, and cloud-native development through production-grade courses with verifiable credentials.",
+          "foundingDate": "2024",
+          "founder": {
+            "@type": "Person",
+            "name": "Yaswant Pandey",
+            "url": "https://yaswant.co.in"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "email": "admin@yaswantcode.com",
+            "contactType": "customer support",
+            "availableLanguage": "English"
+          },
+          "sameAs": [
+            "https://github.com/yaswant-pandey",
+            "https://linkedin.com/in/yaswant-pandey",
+            "https://twitter.com/yaswantcode"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://yaswant.co.in/#website",
+          "name": "Yaswant Code",
+          "url": "https://yaswant.co.in",
+          "description": "Full-Stack Engineering & AI Masterclasses — learn from principal engineers and earn verifiable credentials.",
+          "publisher": { "@id": "https://yaswant.co.in/#organization" },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://yaswant.co.in/courses?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://yaswant.co.in/#edu-org",
+          "name": "Yaswant Code",
+          "url": "https://yaswant.co.in",
+          "description": "Online platform offering masterclasses in full-stack engineering, AI/LLM development, distributed systems, and cloud-native architecture.",
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "Engineering Masterclasses",
+            "itemListElement": [
+              { "@type": "Offer", "itemOffered": { "@type": "Course", "name": "Full-Stack Architecture", "description": "Production-grade full-stack development with React 19 and Next.js 15" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Course", "name": "AI & LLM Engineering", "description": "Build and fine-tune large language models and AI-powered systems" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Course", "name": "Distributed Systems", "description": "Design scalable, fault-tolerant distributed architectures" } },
+              { "@type": "Offer", "itemOffered": { "@type": "Course", "name": "Cloud Native & DevOps", "description": "Kubernetes, CI/CD, and cloud-native patterns for production systems" } }
+            ]
+          }
+        }
+      ]
+    }
+    </script>
+
+    <!-- ── Fonts ── -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- ── Google Sign-In SDK ── -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
@@ -71,4 +174,3 @@
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

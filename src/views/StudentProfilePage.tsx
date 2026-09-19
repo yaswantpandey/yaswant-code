@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_CERTIFICATES, MOCK_COURSES } from '../data/mockData';
+import { MOCK_CERTIFICATES } from '../data/mockData';
 import { 
   User, 
   MapPin, 
@@ -21,10 +21,14 @@ import {
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { tokenStorage } from '../services/api';
 
 export const StudentProfilePage: React.FC = () => {
   const { setCertificateModal, addToast } = useLms();
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'certificates'>('overview');
+  const currentUser = tokenStorage.getUser<{ name?: string; email?: string; avatar?: string }>();
+  const studentName = currentUser?.name || 'Alex Mercer';
+  const avatarUrl = currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=6366f1&color=fff`;
 
   const skills = [
     { name: 'React 19 & Next.js 15', level: 'Advanced', verified: true },
@@ -38,16 +42,16 @@ export const StudentProfilePage: React.FC = () => {
     {
       title: "Real-Time Collaborative Kanban Board",
       desc: "Full-stack project featuring optimistic mutations, distributed WebSockets, and Postgres rollback triggers.",
-      tech: ['Next.js 15', 'React 19', 'PostgreSQL', 'Tailwind'],
-      github: 'https://github.com/alexmercer/kanban-capstone',
-      demo: 'https://kanban-demo.apex.io'
+      tags: ["Next.js 15", "TailwindCSS", "PostgreSQL", "Socket.io"],
+      github: "https://github.com/example/kanban",
+      demo: "https://kanban-board.demo"
     },
     {
-      title: "Autonomous Agent Multi-Turn Orchestrator",
-      desc: "Local agentic pipeline using Gemini Flash with function calling, state rollback, and streaming UI.",
-      tech: ['TypeScript', 'Gemini SDK', 'Node.js'],
-      github: 'https://github.com/alexmercer/agent-runner',
-      demo: 'https://agent-runner.demo'
+      title: "Agentic AI Code Refactoring Engine",
+      desc: "CLI tool leveraging local LLMs to detect code smells and generate automated AST migration transforms.",
+      tags: ["TypeScript", "LangChain", "Tree-sitter", "Node.js"],
+      github: "https://github.com/example/agent-runner",
+      demo: "https://agent-runner.demo"
     }
   ];
 
@@ -58,8 +62,8 @@ export const StudentProfilePage: React.FC = () => {
       <GlassCard className="p-6 sm:p-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 sm:gap-8">
           <img
-            src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80"
-            alt="Alex Mercer"
+            src={avatarUrl}
+            alt={studentName}
             className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl object-cover ring-2 ring-neutral-300 dark:ring-neutral-700 shadow-xl"
           />
 
@@ -70,7 +74,7 @@ export const StudentProfilePage: React.FC = () => {
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-              Alex Mercer
+              {studentName}
             </h1>
             <p className="text-xs sm:text-sm text-neutral-500 font-medium">
               Software Engineer specializing in Distributed Frontends & Machine Learning Systems

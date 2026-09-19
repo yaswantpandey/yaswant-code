@@ -100,8 +100,8 @@ export const firebaseDb = {
       return onSnapshot(colRef, (snapshot) => {
         const data = snapshot.docs.map(d => d.data() as FirebaseProjectSubmission);
         callback(data);
-      }, (err) => {
-        console.warn('Firestore snapshot notice:', err);
+      }, () => {
+        // Fall back quietly if Firestore is not provisioned or offline
       });
     } catch {
       return () => {};

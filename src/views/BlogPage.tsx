@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_BLOG_POSTS } from '../data/blogData';
 import { BlogPost } from '../types/lms';
 import { 
   BookOpen, 
@@ -23,6 +22,8 @@ import { Button } from '../components/ui/Button';
 
 export const BlogPage: React.FC = () => {
   const { addToast } = useLms();
+  const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activePost, setActivePost] = useState<BlogPost | null>(null);
@@ -30,6 +31,26 @@ export const BlogPage: React.FC = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Record<string, boolean>>({});
   const [emailInput, setEmailInput] = useState<string>('');
   const [subscribed, setSubscribed] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      try {
+        setIsLoading(true);
+        const res = await fetch('/api/blog.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setPosts(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch blog posts:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const categories = [
     'All',
@@ -42,17 +63,17 @@ export const BlogPage: React.FC = () => {
   ];
 
   const filteredPosts = useMemo(() => {
-    return MOCK_BLOG_POSTS.filter((post) => {
+    return posts.filter((post) => {
       const matchesCategory = selectedCategory === 'All' || post.category === selectedCategory;
       const matchesSearch = 
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        (post.tags && post.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [posts, selectedCategory, searchQuery]);
 
-  const featuredPost = MOCK_BLOG_POSTS.find(p => p.featured) || MOCK_BLOG_POSTS[0];
+  const featuredPost = posts.find(p => p.featured) || (posts.length > 0 ? posts[0] : null);
 
   const handleToggleLike = (postId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

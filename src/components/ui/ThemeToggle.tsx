@@ -3,7 +3,7 @@ import { useTheme, ThemeMode } from '../../context/ThemeContext';
 import { Sun, Moon, Monitor, Check } from 'lucide-react';
 
 interface ThemeToggleProps {
-  variant?: 'segmented' | 'dropdown' | 'cards';
+  variant?: 'segmented' | 'dropdown' | 'cards' | 'icon';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   showLabels?: boolean;
@@ -72,7 +72,26 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     );
   }
 
-  // 2. Rich 3-card layout (ideal for Settings Page)
+  // 2. Compact single-icon toggle button (ideal for mobile / tablet headers)
+  if (variant === 'icon') {
+    return (
+      <button
+        type="button"
+        onClick={() => setTheme(isDark ? 'light' : 'dark')}
+        title={`Switch to ${isDark ? 'Light' : 'Dark'} mode (Currently ${resolvedTheme})`}
+        aria-label={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
+        className={`p-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-colors ${className}`}
+      >
+        {isDark ? (
+          <Sun className="w-4 h-4 text-amber-400" />
+        ) : (
+          <Moon className="w-4 h-4 text-neutral-700" />
+        )}
+      </button>
+    );
+  }
+
+  // 3. Rich 3-card layout (ideal for Settings Page)
   if (variant === 'cards') {
     return (
       <div className={`grid grid-cols-1 sm:grid-cols-3 gap-3.5 ${className}`}>

@@ -1,0 +1,52 @@
+# ==============================================================================
+# Yaswant Code LMS — robots.txt
+# https://yaswant.co.in/robots.txt
+# ==============================================================================
+
+User-agent: *
+
+# ── Public pages: allow full indexing ──────────────────────────────────────
+Allow: /$
+Allow: /courses
+Allow: /courses/
+Allow: /blog
+Allow: /blog/
+Allow: /roadmaps
+Allow: /roadmaps/
+Allow: /projects
+Allow: /projects/
+Allow: /tools
+Allow: /tools/
+Allow: /resources
+Allow: /resources/
+Allow: /community
+Allow: /community/
+
+# ── Private / authenticated pages: block indexing ──────────────────────────
+Disallow: /admin
+Disallow: /admin/
+Disallow: /settings
+Disallow: /settings/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /profile
+Disallow: /profile/
+Disallow: /quiz
+Disallow: /quiz/
+Disallow: /assignment
+Disallow: /assignment/
+Disallow: /certificate
+Disallow: /certificate/
+Disallow: /learn
+Disallow: /learn/
+Disallow: /api/
+Disallow: /api
+
+# ── Assets: allow crawling ──────────────────────────────────────────────────
+Allow: /assets/
+Allow: /favicon.svg
+Allow: /logo.svg
+Allow: /og-image.svg
+
+# Sitemap location
+Sitemap: https://yaswant.co.in/sitemap.xml

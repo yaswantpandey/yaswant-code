@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_COURSES, MOCK_LEARNING_PATHS, MOCK_INSTRUCTORS } from '../data/mockData';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -25,9 +24,10 @@ import {
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { GlassCard } from '../components/ui/GlassCard';
+import { injectSchema, buildFAQSchema } from '../services/seo';
 
 export const LandingPage: React.FC = () => {
-  const { setCurrentView, setSelectedCourse, brandName, openAuthModal } = useLms();
+  const { setCurrentView, setSelectedCourse, brandName, openAuthModal, courses } = useLms();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   const categories = [
@@ -58,6 +58,12 @@ export const LandingPage: React.FC = () => {
     }
   ];
 
+  // Inject FAQ schema on mount for AEO / People Also Ask eligibility
+  useEffect(() => {
+    injectSchema(buildFAQSchema(faqs));
+    return () => { /* schema is cleaned up by router on navigation */ };
+  }, []);
+
   return (
     <div className="space-y-24 sm:space-y-32">
       
@@ -83,25 +89,38 @@ export const LandingPage: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 w-full max-w-xs sm:max-w-none mx-auto">
-            <Button
-              size="lg"
-              variant="primary"
+            {/* Real <a href> for crawler discoverability — SPA nav via onClick */}
+            <a
+              href="/courses"
+              onClick={(e) => { e.preventDefault(); openAuthModal('signup'); }}
               className="w-full sm:w-auto"
-              icon={<ArrowRight className="w-4 h-4" />}
-              iconPosition="right"
-              onClick={() => openAuthModal('signup')}
+              aria-label="Start learning full-stack engineering for free"
             >
-              Start Learning Free
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
+              <Button
+                size="lg"
+                variant="primary"
+                className="w-full"
+                icon={<ArrowRight className="w-4 h-4" />}
+                iconPosition="right"
+              >
+                Start Learning Free
+              </Button>
+            </a>
+            <a
+              href="/courses"
+              onClick={(e) => { e.preventDefault(); setCurrentView('courses'); }}
               className="w-full sm:w-auto"
-              icon={<Play className="w-4 h-4 fill-current" />}
-              onClick={() => setCurrentView('courses')}
+              aria-label="Browse the full engineering course catalog"
             >
-              Explore Course Catalog
-            </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="w-full"
+                icon={<Play className="w-4 h-4 fill-current" />}
+              >
+                Explore Course Catalog
+              </Button>
+            </a>
           </div>
 
           {/* Trust Meta */}
@@ -116,6 +135,12 @@ export const LandingPage: React.FC = () => {
               <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Interactive In-Browser Labs
             </span>
           </div>
+
+          {/* E-E-A-T: Founder / About signal — visible to crawlers & AI engines */}
+          <p className="text-xs text-neutral-400 dark:text-neutral-600 mt-6 max-w-xl mx-auto leading-relaxed">
+            Founded by <strong className="text-neutral-500 dark:text-neutral-500">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
+            Every course is designed around real-world systems used by top technology companies.
+          </p>
         </div>
 
         {/* Hero Interactive Bento Showcase Preview */}
@@ -166,8 +191,12 @@ export const LandingPage: React.FC = () => {
                     variant="primary"
                     className="w-full sm:w-auto"
                     onClick={() => {
-                      setSelectedCourse(MOCK_COURSES[0]);
-                      setCurrentView('learning-interface');
+                      if (courses.length > 0) {
+                        setSelectedCourse(courses[0]);
+                        setCurrentView('learning-interface');
+                      } else {
+                        setCurrentView('courses');
+                      }
                     }}
                   >
                     Resume Lesson
@@ -213,7 +242,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 2. Featured Categories Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Course disciplines and categories">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
           <div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">
@@ -223,15 +252,20 @@ export const LandingPage: React.FC = () => {
               Curated masterclasses mapped to engineering career levels.
             </p>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            icon={<ArrowRight className="w-4 h-4" />}
-            iconPosition="right"
-            onClick={() => setCurrentView('courses')}
+          <a
+            href="/courses"
+            onClick={(e) => { e.preventDefault(); setCurrentView('courses'); }}
+            aria-label="Browse all engineering disciplines and courses"
           >
-            All 64 Disciplines
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              icon={<ArrowRight className="w-4 h-4" />}
+              iconPosition="right"
+            >
+              All 64 Disciplines
+            </Button>
+          </a>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
@@ -277,78 +311,86 @@ export const LandingPage: React.FC = () => {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {MOCK_COURSES.slice(0, 3).map((course) => (
-            <GlassCard
-              key={course.id}
-              hoverEffect
-              className="overflow-hidden flex flex-col cursor-pointer group"
-              onClick={() => {
-                setSelectedCourse(course);
-                setCurrentView('course-detail');
-              }}
-            >
-              <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
-                <img
-                  src={course.thumbnail}
-                  alt={course.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 left-3 flex gap-1.5">
-                  {course.isBestseller && (
-                    <Badge variant="primary" size="sm">Bestseller</Badge>
-                  )}
-                  <Badge variant="neutral" size="sm">{course.difficulty}</Badge>
-                </div>
-                <div className="absolute bottom-3 right-3 bg-neutral-950/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-[11px] font-mono text-white">
-                  {course.durationHours}h • {course.lessonsCount} lessons
-                </div>
-              </div>
-
-              <div className="p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between text-xs text-neutral-500 mb-2">
-                    <span>{course.category}</span>
-                    <span className="flex items-center gap-1 font-semibold text-amber-500">
-                      ★ {course.rating} <span className="text-neutral-400 font-normal">({course.reviewsCount})</span>
-                    </span>
-                  </div>
-
-                  <h3 className="text-base font-bold text-neutral-950 dark:text-white group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors line-clamp-2 mb-2">
-                    {course.title}
-                  </h3>
-
-                  <p className="text-xs text-neutral-500 line-clamp-2 mb-4 leading-relaxed">
-                    {course.tagline}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <img
-                      src={course.instructor.avatar}
-                      alt={course.instructor.name}
-                      className="w-6 h-6 rounded-full object-cover"
-                    />
-                    <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                      {course.instructor.name}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-base font-bold text-neutral-950 dark:text-white">
-                      ${course.price}
-                    </span>
-                    {course.originalPrice && (
-                      <span className="text-xs text-neutral-400 line-through ml-1.5 font-mono">
-                        ${course.originalPrice}
-                      </span>
+        {courses.length === 0 ? (
+          <div className="py-12 text-center border border-dashed border-neutral-300 dark:border-neutral-800 rounded-2xl bg-neutral-50/50 dark:bg-neutral-900/30">
+            <BookOpen className="w-8 h-8 text-neutral-400 mx-auto mb-2 opacity-50" />
+            <p className="text-sm font-semibold text-neutral-900 dark:text-white">No courses published yet</p>
+            <p className="text-xs text-neutral-500 mt-1">Check back soon or explore our learning roadmaps.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.slice(0, 6).map((course) => (
+              <GlassCard
+                key={course.id}
+                hoverEffect
+                className="overflow-hidden flex flex-col cursor-pointer group"
+                onClick={() => {
+                  setSelectedCourse(course);
+                  setCurrentView('course-detail');
+                }}
+              >
+                <div className="relative aspect-video w-full overflow-hidden bg-neutral-900">
+                  <img
+                    src={course.thumbnail}
+                    alt={course.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 left-3 flex gap-1.5">
+                    {course.isBestseller && (
+                      <Badge variant="primary" size="sm">Bestseller</Badge>
                     )}
+                    <Badge variant="neutral" size="sm">{course.difficulty}</Badge>
+                  </div>
+                  <div className="absolute bottom-3 right-3 bg-neutral-950/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-[11px] font-mono text-white">
+                    {course.durationHours}h • {course.lessonsCount} lessons
                   </div>
                 </div>
-              </div>
-            </GlassCard>
-          ))}
-        </div>
+
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-xs text-neutral-500 mb-2">
+                      <span>{course.category}</span>
+                      <span className="flex items-center gap-1 font-semibold text-amber-500">
+                        ★ {course.rating} <span className="text-neutral-400 font-normal">({course.reviewsCount})</span>
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-neutral-950 dark:text-white group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors line-clamp-2 mb-2">
+                      {course.title}
+                    </h3>
+
+                    <p className="text-xs text-neutral-500 line-clamp-2 mb-4 leading-relaxed">
+                      {course.tagline || course.description}
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={course.instructor?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor?.name || 'Yaswant Pandey')}&background=6366f1&color=fff`}
+                        alt={course.instructor?.name || 'Instructor'}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+                        {course.instructor?.name || 'Yaswant Pandey'}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-base font-bold text-neutral-950 dark:text-white">
+                        {course.price === 0 ? 'Free' : `$${course.price}`}
+                      </span>
+                      {course.originalPrice && course.originalPrice > course.price && (
+                        <span className="text-xs text-neutral-400 line-through ml-1.5 font-mono">
+                          ${course.originalPrice}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* 4. Trending Learning Paths */}
@@ -477,7 +519,7 @@ export const LandingPage: React.FC = () => {
               key={inst.id}
               hoverEffect
               className="p-6 text-center cursor-pointer group"
-              onClick={() => setCurrentView('instructor-profile')}
+              onClick={() => setCurrentView('courses')}
             >
               <img
                 src={inst.avatar}
@@ -501,7 +543,7 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* 7. FAQ Accordion */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Frequently asked questions about Yaswant Code">
         <div className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">
             Frequently Asked Questions

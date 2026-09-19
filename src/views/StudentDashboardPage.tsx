@@ -1,48 +1,48 @@
 import React from 'react';
 import { useLms } from '../context/LmsContext';
 import { MOCK_STUDENT_STATS, MOCK_CERTIFICATES, MOCK_ASSIGNMENT } from '../data/mockData';
-import { 
-  Flame, 
-  Clock, 
-  BookOpen, 
-  Award, 
-  Sparkles, 
-  ArrowRight, 
-  Play, 
-  CheckCircle2, 
-  AlertCircle, 
-  TrendingUp, 
-  Calendar, 
-  FileText, 
+import {
+  Flame,
+  Clock,
+  BookOpen,
+  Award,
+  Sparkles,
+  ArrowRight,
+  Play,
+  CheckCircle2,
+  AlertCircle,
+  TrendingUp,
+  Calendar,
+  FileText,
   HelpCircle,
   ExternalLink,
   FolderOpen,
   MessageSquare,
-  Mail,
-  Cloud
+  Mail
 } from 'lucide-react';
-import { useWorkspace } from '../context/WorkspaceContext';
 import { GlassCard } from '../components/ui/GlassCard';
 import { BentoCard } from '../components/ui/BentoCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
+import { tokenStorage } from '../services/api';
+
 export const StudentDashboardPage: React.FC = () => {
-  const { 
-    courses, 
-    setCurrentView, 
-    setSelectedCourse, 
+  const {
+    courses,
+    setCurrentView,
+    setSelectedCourse,
     setCertificateModal,
-    emptyStateSimulated 
+    emptyStateSimulated
   } = useLms();
 
-  const { calendarEvents, driveFiles, isConnected: isWorkspaceConnected } = useWorkspace();
-
   const enrolledCourses = emptyStateSimulated ? [] : courses.filter(c => c.enrolled);
+  const currentUser = tokenStorage.getUser<{ name?: string; email?: string }>();
+  const studentFirstName = currentUser?.name ? currentUser.name.split(' ')[0] : 'Engineer';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
-      
+
       {/* 1. Welcome Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -50,7 +50,7 @@ export const StudentDashboardPage: React.FC = () => {
             Student Productivity Hub
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-            Welcome back, Alex
+            Welcome back, {studentFirstName}
           </h1>
           <p className="text-xs sm:text-sm text-neutral-500 mt-1">
             You are currently on a <span className="font-semibold text-amber-500">19-day learning streak</span>. 2 tasks require your attention today.
@@ -120,7 +120,7 @@ export const StudentDashboardPage: React.FC = () => {
 
       {/* 3. Continue Learning Hero & Weekly Progress Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Continue Learning Featured Card */}
         <div className="lg:col-span-2">
           <GlassCard className="p-6 h-full flex flex-col justify-between relative overflow-hidden">
@@ -240,7 +240,7 @@ export const StudentDashboardPage: React.FC = () => {
 
       {/* 4. Upcoming Tasks & Assignments Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        
+
         {/* Urgent Tasks */}
         <GlassCard className="p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-neutral-100 dark:border-neutral-800">
@@ -252,7 +252,7 @@ export const StudentDashboardPage: React.FC = () => {
 
           <div className="space-y-3">
             {/* Task 1 */}
-            <div 
+            <div
               onClick={() => setCurrentView('assignment')}
               className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
             >
@@ -271,7 +271,7 @@ export const StudentDashboardPage: React.FC = () => {
             </div>
 
             {/* Task 2 */}
-            <div 
+            <div
               onClick={() => setCurrentView('quiz')}
               className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
             >
@@ -335,76 +335,6 @@ export const StudentDashboardPage: React.FC = () => {
         </GlassCard>
 
       </div>
-
-      {/* 4.5. Google Workspace & Live Schedule Quick Strip */}
-      <GlassCard className="p-6 bg-gradient-to-r from-blue-900/10 via-neutral-900/20 to-neutral-900/40 border border-blue-500/20">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 mb-4 border-b border-neutral-200/60 dark:border-neutral-800">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-600/20 text-blue-500 rounded-xl border border-blue-500/30">
-              <Cloud className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-neutral-950 dark:text-white">Google Workspace & Live Sync</h3>
-                <Badge variant={isWorkspaceConnected ? 'emerald' : 'blue'} size="sm">
-                  {isWorkspaceConnected ? 'Live Synced' : 'Ready'}
-                </Badge>
-              </div>
-              <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                Direct integration with Google Drive, Google Calendar, Google Chat, and Gmail.
-              </p>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCurrentView('workspace')}
-            icon={<ArrowRight className="w-3.5 h-3.5" />}
-            iconPosition="right"
-          >
-            Open Workspace Hub
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Upcoming Event Snippet */}
-          <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-neutral-850/70 border border-neutral-200/80 dark:border-neutral-750 flex items-start gap-3">
-            <div className="p-2.5 bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 rounded-xl shrink-0">
-              <Calendar className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">
-                Next Calendar Session
-              </div>
-              <div className="text-xs font-bold text-neutral-900 dark:text-white truncate mt-0.5">
-                {calendarEvents[0]?.summary || 'Cohort Live Q&A Session'}
-              </div>
-              <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                {calendarEvents[0]?.start.dateTime ? new Date(calendarEvents[0].start.dateTime).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : 'Scheduled'}
-              </div>
-            </div>
-          </div>
-
-          {/* Drive Materials Snippet */}
-          <div className="p-3.5 rounded-2xl bg-white/70 dark:bg-neutral-850/70 border border-neutral-200/80 dark:border-neutral-750 flex items-start gap-3">
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 rounded-xl shrink-0">
-              <FolderOpen className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 tracking-wider">
-                Google Drive Materials ({driveFiles.length} files)
-              </div>
-              <div className="text-xs font-bold text-neutral-900 dark:text-white truncate mt-0.5">
-                {driveFiles[0]?.name || 'Course-Syllabus.pdf'}
-              </div>
-              <div className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">
-                {driveFiles[0]?.size || 'Synced to Google Cloud'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </GlassCard>
 
       {/* 5. Enrolled Courses Gallery */}
       <div>

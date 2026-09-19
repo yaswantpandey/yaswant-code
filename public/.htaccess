@@ -1,5 +1,7 @@
 # ==============================================================================
-# Hostinger Apache / LiteSpeed Configuration for Yaswant Code LMS (React SPA + PHP)
+# Yaswant Code LMS — Apache / LiteSpeed Configuration
+# Hostinger Shared Hosting Compatible
+# Place in: public_html/.htaccess
 # ==============================================================================
 
 # 1. Directory Index Priority
@@ -11,68 +13,83 @@ DefaultLanguage en-US
 
 # 3. MIME Types for Modern Web Assets & Fonts
 <IfModule mod_mime.c>
-  AddType image/svg+xml .svg .svgz
-  AddEncoding gzip .svgz
-  AddType application/json .json
+  AddType image/svg+xml         .svg .svgz
+  AddEncoding gzip              .svgz
+  AddType application/json      .json
   AddType application/javascript .js .mjs
-  AddType text/css .css
-  AddType font/woff2 .woff2
-  AddType font/woff .woff
-  AddType font/ttf .ttf
-  AddType font/otf .otf
-  AddType image/webp .webp
-  AddType image/avif .avif
-  AddType application/wasm .wasm
+  AddType text/css              .css
+  AddType font/woff2            .woff2
+  AddType font/woff             .woff
+  AddType font/ttf              .ttf
+  AddType font/otf              .otf
+  AddType image/webp            .webp
+  AddType image/avif            .avif
+  AddType application/wasm      .wasm
 </IfModule>
 
-# 4. Enable URL Rewriting for Single Page Application (SPA) & PHP API
+# 4. URL Rewriting — SPA (React Router) + PHP API
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
 
-  # Optional: Uncomment the following two lines to enforce HTTPS on Hostinger
+  # ── Pass Authorization header to PHP (FastCGI / PHP-FPM on Hostinger) ────
+  RewriteCond %{HTTP:Authorization} .
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # Enforce HTTPS on Hostinger (uncomment if needed)
   # RewriteCond %{HTTPS} off
   # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-  # Allow direct execution of PHP API endpoints in /api/
-  RewriteRule ^api/(.*)$ api/$1 [L,QSA]
+  # ── Allow PHP API endpoints to execute directly ──────────────
+  # All requests to /api/*.php are served as PHP scripts
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteCond %{REQUEST_FILENAME} -f
+  RewriteRule ^ - [L]
 
-  # Do NOT rewrite files or directories that exist physically
+  # ── Allow static files and directories ───────────────────────
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # Fallback all other frontend routes to index.html for React Router / SPA navigation
-  RewriteRule ^ index.html [L]
+  # ── Missing API endpoints return 404 (do not fallback to React SPA) ──
+  RewriteCond %{REQUEST_URI} ^/api/
+  RewriteRule ^ - [R=404,L]
+
+  # ── Fallback: All other routes → React SPA (/index.html) ──────
+  RewriteRule ^ /index.html [L]
 </IfModule>
 
-# 5. Browser Caching & Performance (Expires & Cache-Control)
+# 5. Browser Caching (Cache-Control & Expires)
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresDefault "access plus 1 month"
 
-  # HTML & App Manifest: Never cache so updates are immediate
-  ExpiresByType text/html "access plus 0 seconds"
-  ExpiresByType application/xhtml+xml "access plus 0 seconds"
-  ExpiresByType application/json "access plus 0 seconds"
+  # HTML — no cache (React app shell)
+  ExpiresByType text/html              "access plus 0 seconds"
+  ExpiresByType application/xhtml+xml  "access plus 0 seconds"
 
-  # Hashed JS & CSS Assets: Cache aggressively (1 year)
-  ExpiresByType text/css "access plus 1 year"
+  # JSON API responses — no cache
+  ExpiresByType application/json       "access plus 0 seconds"
+
+  # Hashed JS & CSS bundles (Vite adds content hashes) — cache 1 year
+  ExpiresByType text/css               "access plus 1 year"
   ExpiresByType application/javascript "access plus 1 year"
-  ExpiresByType text/javascript "access plus 1 year"
+  ExpiresByType text/javascript        "access plus 1 year"
 
-  # Images & Icons
-  ExpiresByType image/svg+xml "access plus 1 month"
-  ExpiresByType image/webp "access plus 1 month"
-  ExpiresByType image/png "access plus 1 month"
-  ExpiresByType image/jpeg "access plus 1 month"
-  ExpiresByType image/gif "access plus 1 month"
-  ExpiresByType image/x-icon "access plus 1 year"
+  # Images & icons
+  ExpiresByType image/svg+xml          "access plus 1 month"
+  ExpiresByType image/webp             "access plus 1 month"
+  ExpiresByType image/png              "access plus 1 month"
+  ExpiresByType image/jpeg             "access plus 1 month"
+  ExpiresByType image/gif              "access plus 1 month"
+  ExpiresByType image/x-icon           "access plus 1 year"
+  ExpiresByType image/avif             "access plus 1 month"
 
-  # Web Fonts
-  ExpiresByType font/woff2 "access plus 1 year"
-  ExpiresByType font/woff "access plus 1 year"
-  ExpiresByType font/ttf "access plus 1 year"
+  # Web fonts
+  ExpiresByType font/woff2             "access plus 1 year"
+  ExpiresByType font/woff              "access plus 1 year"
+  ExpiresByType font/ttf               "access plus 1 year"
+  ExpiresByType font/otf               "access plus 1 year"
 </IfModule>
 
 # 6. Gzip / Deflate Compression
@@ -93,24 +110,28 @@ DefaultLanguage en-US
 
 # 7. Security Headers
 <IfModule mod_headers.c>
-  # Protect against MIME sniffing
+  # Prevent MIME type sniffing
   Header set X-Content-Type-Options "nosniff"
 
-  # Help protect against Clickjacking
+  # Clickjacking protection
   Header set X-Frame-Options "SAMEORIGIN"
 
-  # Referrer policy for privacy
+  # Referrer policy
   Header set Referrer-Policy "strict-origin-when-cross-origin"
 
-  # Disable server signature
+  # HSTS — enable HTTPS-only (uncomment after SSL is configured)
+  # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+  # Remove server fingerprint
   Header unset X-Powered-By
+  Header unset Server
 </IfModule>
 
 # 8. Prevent Directory Browsing
 Options -Indexes
 
-# 9. Block sensitive files from being accessed directly
-<FilesMatch "(\.(env|git|bak|config|sql|sh|lock)|composer\.json|package\.json)$">
+# 9. Block Direct Access to Sensitive Files
+<FilesMatch "(\.env|\.git|\.bak|\.sql|\.sh|\.lock|composer\.json|package\.json|package-lock\.json|bun\.lock|tsconfig\.json|vite\.config\.(ts|js))$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -119,3 +140,9 @@ Options -Indexes
     Deny from all
   </IfModule>
 </FilesMatch>
+
+# 10. PHP Error Handling (Production — hide errors from output)
+<IfModule mod_php.c>
+  php_flag display_errors off
+  php_flag log_errors on
+</IfModule>

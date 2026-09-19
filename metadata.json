@@ -1,6 +1,8 @@
 {
-  "name": "Yaswant Code",
-  "description": "Premium Glassmorphism & Bento UI EdTech platform with Firebase Firestore persistence, Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community.",
+  "name": "Yaswant developer",
+  "description": "EdTech platform with Google Workspace integration (Google Drive, Calendar, Chat, Gmail), interactive learning paths, developer tools, and community .",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

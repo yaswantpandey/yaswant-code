@@ -77,14 +77,6 @@ export const MobileNav: React.FC = () => {
   // Material Bottom Sheet Grid Apps
   const sheetApps = [
     {
-      id: 'workspace',
-      label: 'Google Workspace',
-      desc: 'Drive, Calendar, Chat, Gmail',
-      icon: Cloud,
-      color: 'bg-blue-600/15 text-blue-600 dark:text-blue-400',
-      tag: 'Google'
-    },
-    {
       id: 'projects',
       label: 'Projects & Capstones',
       desc: 'Hands-on repositories & reviews',
@@ -124,7 +116,7 @@ export const MobileNav: React.FC = () => {
       color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
     },
     {
-      id: role === 'instructor' ? 'instructor-dashboard' : role === 'admin' ? 'admin-dashboard' : 'student-dashboard',
+      id: 'student-dashboard',
       label: 'Learning Dashboard',
       desc: 'Enrolled courses & metrics',
       icon: GraduationCap,
@@ -276,36 +268,6 @@ export const MobileNav: React.FC = () => {
                     </button>
                   );
                 })}
-              </div>
-            </div>
-
-            {/* Persona Switcher Strip */}
-            <div className="p-3 rounded-2xl bg-neutral-100 dark:bg-neutral-800/70 border border-neutral-200/60 dark:border-neutral-700/60 space-y-2">
-              <div className="flex items-center justify-between text-xs font-semibold text-neutral-600 dark:text-neutral-400">
-                <span>Active Persona Role</span>
-                <span className="font-mono text-[11px] text-emerald-500 capitalize">{role}</span>
-              </div>
-              <div className="grid grid-cols-4 gap-1.5 text-xs font-medium">
-                {(['student', 'instructor', 'admin', 'guest'] as RoleType[]).map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => {
-                      setRole(r);
-                      if (r === 'student') setCurrentView('student-dashboard');
-                      if (r === 'instructor') setCurrentView('instructor-dashboard');
-                      if (r === 'admin') setCurrentView('admin-dashboard');
-                      if (r === 'guest') setCurrentView('landing');
-                      setBottomSheetOpen(false);
-                    }}
-                    className={`py-1.5 px-2 rounded-xl text-center capitalize transition-all ${
-                      role === r
-                        ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs'
-                        : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200'
-                    }`}
-                  >
-                    {r}
-                  </button>
-                ))}
               </div>
             </div>
 

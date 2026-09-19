@@ -26,7 +26,8 @@ export const SearchModal: React.FC = () => {
     searchModalOpen, 
     setSearchModalOpen, 
     setCurrentView, 
-    setSelectedCourse 
+    setSelectedCourse,
+    courses 
   } = useLms();
 
   const [query, setQuery] = useState('');
@@ -52,7 +53,8 @@ export const SearchModal: React.FC = () => {
     if (!query.trim()) return null;
     const q = query.toLowerCase();
 
-    const matchedCourses = MOCK_COURSES.filter(c => 
+    const currentCourses = courses && courses.length > 0 ? courses : MOCK_COURSES;
+    const matchedCourses = currentCourses.filter(c => 
       c.title.toLowerCase().includes(q) || 
       c.description.toLowerCase().includes(q) ||
       c.skills.some(s => s.toLowerCase().includes(q))

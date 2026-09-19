@@ -346,7 +346,7 @@ export class GoogleWorkspaceService {
   public async listGmailMessages(query: string = ''): Promise<GmailMessageItem[]> {
     const url = `https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=15${query ? `&q=${encodeURIComponent(query)}` : ''}`;
     const listRes = await this.fetchGoogleApi<{ messages?: { id: string; threadId: string }[] }>(url);
-    
+
     if (!listRes.messages || listRes.messages.length === 0) {
       return [];
     }
@@ -419,6 +419,11 @@ export class GoogleWorkspaceService {
       },
       body: JSON.stringify({ raw: base64EncodedEmail })
     });
+  }
+}
+
+export const googleWorkspace = new GoogleWorkspaceService();
+export default googleWorkspace;
   }
 }
 
