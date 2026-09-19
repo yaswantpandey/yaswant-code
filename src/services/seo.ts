@@ -247,6 +247,47 @@ export function buildBreadcrumbSchema(items: BreadcrumbItem[]): object {
   };
 }
 
+export interface RoadmapSchemaData {
+  title: string;
+  slug: string;
+  description: string;
+  stages: {
+    title: string;
+    stepNumber: number;
+    tagline?: string;
+    topics: { title: string; description?: string }[];
+  }[];
+}
+
+/** Build ItemList & HowTo schema for Roadmap tracks for AI & Google Search engines */
+export function buildRoadmapSchema(track: RoadmapSchemaData): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${track.title} 2026 — Step-by-Step Mind Tree Career Roadmap`,
+    description: track.description,
+    url: `${BASE_URL}/roadmaps/${track.slug}`,
+    numberOfItems: track.stages.length,
+    itemListElement: track.stages.map((stage, idx) => ({
+      '@type': 'ListItem',
+      position: idx + 1,
+      name: `Stage ${stage.stepNumber}: ${stage.title}`,
+      description: stage.tagline || stage.title,
+      item: {
+        '@type': 'HowToSection',
+        name: stage.title,
+        position: stage.stepNumber,
+        itemListElement: stage.topics.map((topic, tIdx) => ({
+          '@type': 'HowToStep',
+          position: tIdx + 1,
+          name: topic.title,
+          text: topic.description || topic.title,
+        })),
+      },
+    })),
+  };
+}
+
 /** Build combined schema with multiple types */
 export function buildCombinedSchema(...schemas: object[]): object {
   return {

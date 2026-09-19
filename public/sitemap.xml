@@ -28,12 +28,36 @@
     <priority>0.9</priority>
   </url>
 
-  <!-- Tech Roadmaps & Learning Paths -->
+  <!-- Tech Roadmaps & Learning Paths (Career Tracks) -->
   <url>
     <loc>https://yaswant.co.in/roadmaps</loc>
     <lastmod>2026-09-19</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yaswant.co.in/roadmaps/full-stack</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yaswant.co.in/roadmaps/frontend</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yaswant.co.in/roadmaps/backend</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://yaswant.co.in/roadmaps/devops</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 
   <!-- Capstone Engineering Projects -->

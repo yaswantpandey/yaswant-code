@@ -9,7 +9,10 @@ import {
   removeSchema,
   buildFAQSchema,
   buildBreadcrumbSchema,
+  buildRoadmapSchema,
+  buildCombinedSchema,
 } from './seo';
+import { ALL_ROADMAP_TRACKS, FULLSTACK_ROADMAP } from '../data/fullstackRoadmap';
 
 const BRAND = 'Yaswant Code';
 const BASE_URL = 'https://yaswant.co.in';
@@ -27,9 +30,9 @@ const PRIVATE_VIEWS: ReadonlySet<ActiveView> = new Set([
 ]);
 
 /**
- * Get page title for a given view and course
+ * Get page title for a given view, course, or roadmap track
  */
-export function getTitleForView(view: ActiveView, courseTitle?: string): string {
+export function getTitleForView(view: ActiveView, courseTitle?: string, roadmapSlug?: string): string {
   switch (view) {
     case 'landing':
       return `${BRAND} — Full-Stack Engineering & AI Masterclasses`;
@@ -43,8 +46,18 @@ export function getTitleForView(view: ActiveView, courseTitle?: string): string 
       return `Study Notes & Architecture Whitepapers | ${BRAND}`;
     case 'tools':
       return `Developer Tools & Utilities — JSON, Regex, JWT, Cron | ${BRAND}`;
-    case 'learning-paths':
-      return `Tech Roadmaps & Career Paths — Full-Stack to Staff Engineer | ${BRAND}`;
+    case 'learning-paths': {
+      if (roadmapSlug === 'frontend') {
+        return `Frontend Developer Roadmap 2026 — React 19, TypeScript & Modern CSS | ${BRAND}`;
+      }
+      if (roadmapSlug === 'backend') {
+        return `Backend Developer Roadmap 2026 — Node.js, Python, Go & SQL | ${BRAND}`;
+      }
+      if (roadmapSlug === 'devops') {
+        return `DevOps & Cloud Engineer Roadmap 2026 — Docker, Kubernetes & CI/CD | ${BRAND}`;
+      }
+      return `Full Stack Developer Roadmap 2026 — Step by Step Mind Tree Guide | ${BRAND}`;
+    }
     case 'projects':
       return `Capstone Engineering Projects & GitHub Assignments | ${BRAND}`;
     case 'student-dashboard':
@@ -73,9 +86,9 @@ export function getTitleForView(view: ActiveView, courseTitle?: string): string 
 }
 
 /**
- * Get meta description for a given view
+ * Get meta description for a given view, course, or roadmap track
  */
-export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string): string {
+export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string, roadmapSlug?: string): string {
   switch (view) {
     case 'landing':
       return `Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native development from staff engineers. Earn verifiable credentials. Join 140k+ developers on ${BRAND}.`;
@@ -87,8 +100,18 @@ export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string
         : `Explore this engineering masterclass on ${BRAND}. Learn from principal engineers with real-world production curriculum and earn a verifiable credential.`;
     case 'blog':
       return `Deep-dive technical articles on distributed systems, AI/LLM architecture, React 19, Rust, cloud-native DevOps, and frontend engineering. Written by staff engineers on ${BRAND}.`;
-    case 'learning-paths':
-      return `Structured career roadmaps from mid-level to staff engineer. Follow curated multi-course tracks vetted by Silicon Valley hiring managers on ${BRAND}.`;
+    case 'learning-paths': {
+      if (roadmapSlug === 'frontend') {
+        return `Comprehensive 2026 Frontend Developer Roadmap. Interactive mind tree covering HTML5 semantic web, CSS3 layouts, JavaScript ES6+, TypeScript, React 19, Next.js 15, and web performance.`;
+      }
+      if (roadmapSlug === 'backend') {
+        return `Production-grade 2026 Backend Developer Roadmap. Interactive mind tree covering Node.js, Express, Python FastAPI, Go, PostgreSQL, Redis caching, RESTful APIs, and microservices.`;
+      }
+      if (roadmapSlug === 'devops') {
+        return `Definitive 2026 DevOps and Cloud Engineer Roadmap. Master Linux, Git, Docker containerization, Kubernetes orchestration, CI/CD pipelines, and cloud architecture.`;
+      }
+      return `Definitive 2026 Full Stack Developer Roadmap. Interactive mind tree covering web protocols, frontend frameworks, backend runtimes, databases, authentication, Docker, and system design on ${BRAND}.`;
+    }
     case 'projects':
       return `Hands-on capstone engineering projects with GitHub repository submissions, automated CI test suites, and instructor code reviews. Build your portfolio on ${BRAND}.`;
     case 'tools':
@@ -103,11 +126,14 @@ export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string
       return `${BRAND} — The developer-first learning platform for serious software engineers. Master production systems and earn verifiable credentials.`;
   }
 }
-
 /**
- * Maps an ActiveView and optional course to a clean URL path
+ * Maps an ActiveView and optional course or roadmapSlug to a clean URL path
  */
-export function getPathForView(view: ActiveView, course?: { id: string; title?: string } | null): string {
+export function getPathForView(
+  view: ActiveView, 
+  course?: { id: string; title?: string } | null,
+  roadmapSlug?: string
+): string {
   switch (view) {
     case 'landing':
       return '/';
@@ -122,7 +148,7 @@ export function getPathForView(view: ActiveView, course?: { id: string; title?: 
     case 'tools':
       return '/tools';
     case 'learning-paths':
-      return '/roadmaps';
+      return roadmapSlug ? `/roadmaps/${roadmapSlug}` : '/roadmaps/full-stack';
     case 'projects':
       return '/projects';
     case 'student-dashboard':
@@ -162,7 +188,8 @@ export function isPrivateView(view: ActiveView): boolean {
  */
 function applySchemaForView(
   view: ActiveView,
-  course?: { id: string; title?: string } | null
+  course?: { id: string; title?: string } | null,
+  roadmapSlug?: string
 ): void {
   switch (view) {
     case 'landing': {
@@ -202,12 +229,15 @@ function applySchemaForView(
       break;
     }
     case 'learning-paths': {
-      injectSchema(
-        buildBreadcrumbSchema([
-          { name: 'Home', url: '/' },
-          { name: 'Learning Paths', url: '/roadmaps' },
-        ])
-      );
+      const slug = roadmapSlug || 'full-stack';
+      const track = ALL_ROADMAP_TRACKS.find(t => t.id === slug || t.slug === slug) || FULLSTACK_ROADMAP;
+      const breadcrumb = buildBreadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: 'Tech Roadmaps', url: '/roadmaps' },
+        { name: track.title, url: `/roadmaps/${track.slug}` },
+      ]);
+      const roadmapSchema = buildRoadmapSchema(track);
+      injectSchema(buildCombinedSchema(breadcrumb, roadmapSchema));
       break;
     }
     case 'projects': {
@@ -252,9 +282,14 @@ function applySchemaForView(
 }
 
 /**
- * Parses current window.location (pathname + hash) into an ActiveView and courseId
+ * Parses current window.location (pathname + hash) into an ActiveView, courseId, and roadmapSlug
  */
-export function parseCurrentLocation(): { view: ActiveView; courseId?: string; isHashRedirect?: boolean } {
+export function parseCurrentLocation(): { 
+  view: ActiveView; 
+  courseId?: string; 
+  roadmapSlug?: string; 
+  isHashRedirect?: boolean 
+} {
   if (typeof window === 'undefined') {
     return { view: 'landing' };
   }
@@ -272,8 +307,12 @@ export function parseCurrentLocation(): { view: ActiveView; courseId?: string; i
       const parts = hash.split('/');
       return { view: 'course-detail', courseId: parts[1], isHashRedirect: true };
     }
+    if (hash.startsWith('roadmaps/') || hash.startsWith('paths/')) {
+      const parts = hash.split('/');
+      return { view: 'learning-paths', roadmapSlug: parts[1], isHashRedirect: true };
+    }
     if (hash === 'paths' || hash === 'roadmaps' || hash === 'learning-paths') {
-      return { view: 'learning-paths', isHashRedirect: true };
+      return { view: 'learning-paths', roadmapSlug: 'full-stack', isHashRedirect: true };
     }
     if (hash === 'projects') return { view: 'projects', isHashRedirect: true };
     if (hash === 'google-hub' || hash === 'workspace') return { view: 'student-dashboard', isHashRedirect: true };
@@ -317,8 +356,15 @@ export function parseCurrentLocation(): { view: ActiveView; courseId?: string; i
     return { view: 'tools' };
   }
 
+  // Dedicated Roadmaps Clean URLs (/roadmaps/full-stack, /roadmaps/frontend, etc.)
+  if (pathname.startsWith('/roadmaps/') || pathname.startsWith('/paths/') || pathname.startsWith('/learning-paths/')) {
+    const parts = pathname.split('/').filter(Boolean);
+    const roadmapSlug = parts[1] || 'full-stack';
+    return { view: 'learning-paths', roadmapSlug };
+  }
+
   if (pathname === '/roadmaps' || pathname === '/paths' || pathname === '/learning-paths') {
-    return { view: 'learning-paths' };
+    return { view: 'learning-paths', roadmapSlug: 'full-stack' };
   }
 
   if (pathname === '/projects') {
@@ -375,29 +421,30 @@ export function parseCurrentLocation(): { view: ActiveView; courseId?: string; i
 export function syncUrlWithView(
   view: ActiveView,
   course?: { id: string; title?: string } | null,
-  replace: boolean = false
+  replace: boolean = false,
+  roadmapSlug?: string
 ): void {
   if (typeof window === 'undefined') return;
 
-  const targetPath = getPathForView(view, course);
+  const targetPath = getPathForView(view, course, roadmapSlug);
   const currentPath = window.location.pathname;
-  const title = getTitleForView(view, course?.title);
-  const description = getMetaDescriptionForView(view, course?.title);
+  const title = getTitleForView(view, course?.title, roadmapSlug);
+  const description = getMetaDescriptionForView(view, course?.title, roadmapSlug);
   const canonicalUrl = targetPath === '/' ? BASE_URL + '/' : BASE_URL + targetPath;
   const ogImage = 'https://yaswant.co.in/og-image.svg';
 
   // ── 1. Update browser history ──────────────────────────────────────────
   if (window.location.hash) {
     try {
-      window.history.replaceState({ view, courseId: course?.id }, '', targetPath);
+      window.history.replaceState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
     } catch {
       window.location.hash = '';
     }
   } else if (currentPath !== targetPath) {
     if (replace) {
-      window.history.replaceState({ view, courseId: course?.id }, '', targetPath);
+      window.history.replaceState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
     } else {
-      window.history.pushState({ view, courseId: course?.id }, '', targetPath);
+      window.history.pushState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
     }
   }
 
@@ -421,5 +468,5 @@ export function syncUrlWithView(
   }
 
   // ── 4. Inject page-level JSON-LD schema ────────────────────────────────
-  applySchemaForView(view, course);
+  applySchemaForView(view, course, roadmapSlug);
 }

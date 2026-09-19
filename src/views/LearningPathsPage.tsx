@@ -44,12 +44,22 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
+import { syncUrlWithView } from '../services/router';
 
 export const LearningPathsPage: React.FC = () => {
   const { setCurrentView, addToast } = useLms();
 
-  // Active track selection (default Full Stack)
-  const [selectedTrackId, setSelectedTrackId] = useState<string>('full-stack');
+  // Active track selection (default Full Stack, or detected from deep URL /roadmaps/:track)
+  const [selectedTrackId, setSelectedTrackId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const pathname = window.location.pathname.toLowerCase();
+      if (pathname.includes('/roadmaps/frontend')) return 'frontend';
+      if (pathname.includes('/roadmaps/backend')) return 'backend';
+      if (pathname.includes('/roadmaps/devops')) return 'devops';
+      if (pathname.includes('/roadmaps/full-stack')) return 'full-stack';
+    }
+    return 'full-stack';
+  });
   const [activeViewMode, setActiveViewMode] = useState<'flowchart' | 'milestones' | 'checklist'>('flowchart');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [inspectingTopic, setInspectingTopic] = useState<{ topic: RoadmapTopic; stageTitle: string } | null>(null);
@@ -89,6 +99,24 @@ export const LearningPathsPage: React.FC = () => {
       console.error('Failed to save in-progress topics to localStorage', e);
     }
   }, [inProgressTopicIds]);
+
+  // Synchronize browser URL bar, title, meta tags, and schema with active roadmap track
+  useEffect(() => {
+    syncUrlWithView('learning-paths', null, false, selectedTrackId);
+  }, [selectedTrackId]);
+
+  // Handle browser Back / Forward navigation between roadmap tracks
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.toLowerCase();
+      if (path.includes('/roadmaps/frontend')) setSelectedTrackId('frontend');
+      else if (path.includes('/roadmaps/backend')) setSelectedTrackId('backend');
+      else if (path.includes('/roadmaps/devops')) setSelectedTrackId('devops');
+      else if (path.includes('/roadmaps/full-stack') || path === '/roadmaps') setSelectedTrackId('full-stack');
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   // Current active track object
   const currentTrack: RoadmapTrack = useMemo(() => {
@@ -167,9 +195,10 @@ export const LearningPathsPage: React.FC = () => {
   };
 
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.origin + '/roadmaps');
+    const url = `${window.location.origin}/roadmaps/${selectedTrackId}`;
+    navigator.clipboard.writeText(url);
     setCopiedLink(true);
-    addToast("Roadmap URL Copied", "Link copied to your clipboard.", "info");
+    addToast("Roadmap URL Copied", `${currentTrack.title} URL copied to your clipboard.`, "info");
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
@@ -189,7 +218,10 @@ export const LearningPathsPage: React.FC = () => {
             {ALL_ROADMAP_TRACKS.map(track => (
               <button
                 key={track.id}
-                onClick={() => setSelectedTrackId(track.id)}
+                onClick={() => {
+                  setSelectedTrackId(track.id);
+                  syncUrlWithView('learning-paths', null, false, track.id);
+                }}
                 className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
                   selectedTrackId === track.id
                     ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
