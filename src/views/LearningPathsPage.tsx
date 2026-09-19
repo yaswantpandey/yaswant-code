@@ -109,11 +109,36 @@ export const LearningPathsPage: React.FC = () => {
     return { total, completed, inProgress, percent };
   }, [allTopicsInTrack, completedTopicIds, inProgressTopicIds]);
 
-  // Filtered stages based on search
+  // Filter topics by status / recommendation
+  const [nodeFilter, setNodeFilter] = useState<'all' | 'recommended' | 'mastered' | 'in-progress'>('all');
+
+  // Filtered stages based on search and status filters
   const filteredStages = useMemo(() => {
-    if (!searchQuery.trim()) return currentTrack.stages;
+    let stages = currentTrack.stages;
+
+    if (nodeFilter === 'recommended') {
+      stages = stages.map(stage => ({
+        ...stage,
+        topics: stage.topics.filter(t => t.type === 'recommended' || t.type === 'essential')
+      }));
+    } else if (nodeFilter === 'mastered') {
+      stages = stages.map(stage => ({
+        ...stage,
+        topics: stage.topics.filter(t => completedTopicIds.includes(t.id))
+      }));
+    } else if (nodeFilter === 'in-progress') {
+      stages = stages.map(stage => ({
+        ...stage,
+        topics: stage.topics.filter(t => inProgressTopicIds.includes(t.id) && !completedTopicIds.includes(t.id))
+      }));
+    }
+
+    if (!searchQuery.trim()) {
+      return stages.filter(stage => stage.topics.length > 0);
+    }
+
     const q = searchQuery.toLowerCase();
-    return currentTrack.stages
+    return stages
       .map(stage => ({
         ...stage,
         topics: stage.topics.filter(t => 
@@ -123,7 +148,7 @@ export const LearningPathsPage: React.FC = () => {
         )
       }))
       .filter(stage => stage.topics.length > 0);
-  }, [currentTrack, searchQuery]);
+  }, [currentTrack, searchQuery, nodeFilter, completedTopicIds, inProgressTopicIds]);
 
   // Toggle status helper
   const setTopicStatus = (topicId: string, status: 'completed' | 'in-progress' | 'to-learn') => {
@@ -329,154 +354,236 @@ export const LearningPathsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* ── Signature Roadmap.sh Legend ─────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] font-mono text-neutral-600 dark:text-neutral-400">
-          <span className="font-bold text-neutral-900 dark:text-white">Legend:</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-yellow-400/15 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 font-semibold">
+        {/* ── Signature Roadmap.sh Legend & Quick Filters ─────────────────── */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 text-[11px] font-mono">
+          <span className="font-bold text-neutral-900 dark:text-white mr-1">Filter Nodes:</span>
+          
+          <button
+            onClick={() => setNodeFilter('all')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+              nodeFilter === 'all'
+                ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 shadow-xs'
+                : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+            }`}
+          >
+            All ({allTopicsInTrack.length})
+          </button>
+
+          <button
+            onClick={() => setNodeFilter(nodeFilter === 'recommended' ? 'all' : 'recommended')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+              nodeFilter === 'recommended'
+                ? 'bg-yellow-400 text-neutral-950 shadow-xs font-bold'
+                : 'bg-yellow-400/15 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 hover:bg-yellow-400/25'
+            }`}
+          >
             <span className="w-2 h-2 rounded-full bg-yellow-400" />
-            Personal Recommendation
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-semibold">
-            <span className="w-2 h-2 rounded-full bg-sky-500" />
-            Alternative Option
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+            Recommended
+          </button>
+
+          <button
+            onClick={() => setNodeFilter(nodeFilter === 'mastered' ? 'all' : 'mastered')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+              nodeFilter === 'mastered'
+                ? 'bg-emerald-600 text-white shadow-xs font-bold'
+                : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+            }`}
+          >
             <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-            Mastered
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">
+            Mastered ({progressStats.completed})
+          </button>
+
+          <button
+            onClick={() => setNodeFilter(nodeFilter === 'in-progress' ? 'all' : 'in-progress')}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
+              nodeFilter === 'in-progress'
+                ? 'bg-amber-500 text-white shadow-xs font-bold'
+                : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300'
+            }`}
+          >
             <Clock className="w-3 h-3 text-yellow-500" />
-            In Progress
-          </span>
+            In Progress ({progressStats.inProgress})
+          </button>
         </div>
 
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════════
-           VIEW 1: SIGNATURE FLOWCHART VIEW (Roadmap.sh Style)
+           VIEW 1: SIGNATURE MIND TREE FLOWCHART (Compact Connected Nodes)
       ═══════════════════════════════════════════════════════════════════════ */}
       {activeViewMode === 'flowchart' && (
-        <div className="space-y-6 animate-fade-in relative">
+        <div className="relative rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/60 dark:bg-neutral-900/40 p-4 sm:p-8 backdrop-blur-xs overflow-x-auto shadow-sm">
           
-          {filteredStages.map((stage, stageIdx) => (
-            <React.Fragment key={stage.id}>
-              {/* Connector between stages */}
-              {stageIdx > 0 && (
-                <div className="flex flex-col items-center justify-center my-2">
-                  <div className="w-0.5 h-8 bg-neutral-300 dark:bg-neutral-750" />
-                  <div className="w-5 h-5 rounded-full bg-white dark:bg-neutral-900 border-2 border-yellow-400 flex items-center justify-center -my-2.5 z-10 shadow-xs">
-                    <ArrowDown className="w-3 h-3 text-yellow-500" />
-                  </div>
-                  <div className="w-0.5 h-8 bg-neutral-300 dark:bg-neutral-750" />
-                </div>
-              )}
+          {/* Canvas Dot Matrix Pattern */}
+          <div 
+            className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #a1a1aa 1.2px, transparent 1.2px)',
+              backgroundSize: '24px 24px'
+            }}
+          />
 
-              {/* Stage Card Box */}
-              <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-neutral-300 dark:hover:border-neutral-700 transition-all space-y-6 relative overflow-hidden">
+          {/* Canvas Interactive Helper Bar */}
+          <div className="relative z-10 flex flex-wrap items-center justify-between gap-2 pb-6 mb-4 border-b border-neutral-200/60 dark:border-neutral-800/60 text-xs text-neutral-500">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-mono font-medium">
+                Interactive Mind Tree Graph • {filteredStages.flatMap(s => s.topics).length} Active Nodes
+              </span>
+            </div>
+            <div className="text-[11px] font-mono text-neutral-400">
+              Click any card for full architecture overview, checklist & docs
+            </div>
+          </div>
+
+          {/* Empty Filter State */}
+          {filteredStages.length === 0 && (
+            <div className="relative z-10 py-16 text-center space-y-3">
+              <p className="text-sm text-neutral-500">No nodes match your search or filter.</p>
+              <button
+                onClick={() => { setSearchQuery(''); setNodeFilter('all'); }}
+                className="px-4 py-2 rounded-xl bg-yellow-400 text-neutral-950 font-bold text-xs cursor-pointer"
+              >
+                Reset Filters
+              </button>
+            </div>
+          )}
+
+          {/* Mind Tree Spine & Connected Stages */}
+          <div className="relative z-10 flex flex-col items-center space-y-1 min-w-fit sm:min-w-0">
+            {filteredStages.map((stage, stageIdx) => (
+              <React.Fragment key={stage.id}>
                 
-                {/* Stage Header */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-800">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-black flex items-center justify-center text-sm shadow-md">
-                      {stage.stepNumber < 10 ? `0${stage.stepNumber}` : stage.stepNumber}
+                {/* ── STAGE CLUSTER ────────────────────────────────────────── */}
+                <div className="flex flex-col items-center relative w-full max-w-5xl">
+                  
+                  {/* Stage Hub Root Node */}
+                  <div className="relative z-20 flex flex-col items-center group">
+                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-extrabold text-xs sm:text-sm border-2 border-yellow-400 shadow-md hover:scale-105 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-yellow-400 text-neutral-950 font-black text-[10px] flex items-center justify-center">
+                        {stage.stepNumber < 10 ? `0${stage.stepNumber}` : stage.stepNumber}
+                      </span>
+                      <span className="tracking-tight">{stage.title}</span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-neutral-800 text-yellow-400 dark:bg-neutral-200 dark:text-neutral-900 font-bold">
+                        {stage.topics.length}
+                      </span>
                     </div>
-                    <div>
-                      <h2 className="text-lg sm:text-xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-                        {stage.title}
-                      </h2>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-                        {stage.tagline}
-                      </p>
-                    </div>
+                    <span className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1 max-w-md text-center line-clamp-1 px-2">
+                      {stage.tagline}
+                    </span>
                   </div>
 
-                  <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 self-start sm:self-auto">
-                    {stage.topics.length} Key Topics
-                  </span>
-                </div>
+                  {/* Central Trunk Stem from Stage Hub */}
+                  <div className="w-0.5 h-6 bg-yellow-400 dark:bg-yellow-500 z-10" />
 
-                {/* Topics Flow Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                  {stage.topics.map((topic) => {
-                    const isDone = completedTopicIds.includes(topic.id);
-                    const isInProg = inProgressTopicIds.includes(topic.id) && !isDone;
-
-                    return (
-                      <div
-                        key={topic.id}
-                        onClick={() => setInspectingTopic({ topic, stageTitle: stage.title })}
-                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between group relative ${
-                          isDone
-                            ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/40 hover:border-emerald-500 shadow-xs'
-                            : isInProg
-                            ? 'bg-yellow-400/5 dark:bg-yellow-400/10 border-yellow-400/50 hover:border-yellow-400 shadow-xs'
-                            : topic.type === 'recommended'
-                            ? 'bg-neutral-50/50 dark:bg-neutral-850/50 border-neutral-200 dark:border-neutral-750 hover:border-yellow-400 dark:hover:border-yellow-400 hover:shadow-md'
-                            : 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800 hover:border-sky-400 dark:hover:border-sky-400'
-                        }`}
-                      >
-                        <div className="space-y-2">
-                          {/* Top Tag & Status */}
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                              topic.type === 'recommended'
-                                ? 'bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30'
-                                : topic.type === 'alternative'
-                                ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/20'
-                                : 'bg-neutral-200 dark:bg-neutral-750 text-neutral-600 dark:text-neutral-300'
-                            }`}>
-                              {topic.type}
-                            </span>
-
-                            {/* Quick status toggle button */}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (isDone) setTopicStatus(topic.id, 'to-learn');
-                                else if (isInProg) setTopicStatus(topic.id, 'completed');
-                                else setTopicStatus(topic.id, 'in-progress');
-                              }}
-                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
-                              title={isDone ? "Status: Completed (Click to reset)" : isInProg ? "Status: In Progress (Click to mark done)" : "Click to mark in-progress"}
-                            >
-                              {isDone ? (
-                                <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
-                              ) : isInProg ? (
-                                <Clock className="w-4 h-4 text-yellow-500" />
-                              ) : (
-                                <Circle className="w-4 h-4 text-neutral-400" />
-                              )}
-                            </button>
-                          </div>
-
-                          {/* Topic Title */}
-                          <h3 className="text-sm font-extrabold text-neutral-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
-                            {topic.title}
-                          </h3>
-
-                          {/* Snippet Description */}
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
-                            {topic.description}
-                          </p>
-                        </div>
-
-                        {/* Footer: Learn items preview */}
-                        <div className="pt-3 mt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
-                          <span className="text-neutral-400 font-mono">
-                            ~{topic.estimatedHours}h
-                          </span>
-                          <span className="text-neutral-600 dark:text-neutral-300 font-semibold group-hover:underline inline-flex items-center gap-0.5">
-                            Learn more <ChevronRight className="w-3 h-3" />
-                          </span>
-                        </div>
+                  {/* Horizontal Branching Rail & Child Cards */}
+                  <div className="relative w-full flex flex-col items-center">
+                    
+                    {/* Horizontal Branching Line (connects all child stems) */}
+                    {stage.topics.length > 1 && (
+                      <div className="relative w-full max-w-4xl px-8 sm:px-12 flex items-center justify-center">
+                        <div className="h-0.5 bg-neutral-300 dark:bg-neutral-700 w-full" />
                       </div>
-                    );
-                  })}
+                    )}
+
+                    {/* Connected Small Topic Cards */}
+                    <div className="flex flex-wrap justify-center items-start gap-3 sm:gap-4.5 pt-0 w-full max-w-5xl">
+                      {stage.topics.map((topic) => {
+                        const isDone = completedTopicIds.includes(topic.id);
+                        const isInProg = inProgressTopicIds.includes(topic.id) && !isDone;
+
+                        return (
+                          <div key={topic.id} className="flex flex-col items-center relative group">
+                            {/* Vertical Drop Stem from Rail to Card */}
+                            <div className="w-0.5 h-4 sm:h-5 bg-neutral-300 dark:bg-neutral-700 group-hover:bg-yellow-400 transition-colors" />
+
+                            {/* Micro Connector Node Dot */}
+                            <div className="w-2 h-2 rounded-full -my-1 z-10 bg-neutral-300 dark:bg-neutral-600 group-hover:bg-yellow-400 group-hover:scale-125 transition-all" />
+
+                            {/* Compact Mind Tree Card ("Chhote Chhote Card") */}
+                            <div
+                              onClick={() => setInspectingTopic({ topic, stageTitle: stage.title })}
+                              className={`w-36 sm:w-44 md:w-48 p-2.5 sm:p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer flex flex-col justify-between select-none hover:-translate-y-1 hover:shadow-lg mt-1 text-left ${
+                                isDone
+                                  ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500 shadow-xs shadow-emerald-500/20 ring-1 ring-emerald-500/30'
+                                  : isInProg
+                                  ? 'bg-yellow-400/10 dark:bg-yellow-400/15 border-yellow-400 shadow-xs shadow-yellow-400/20 ring-2 ring-yellow-400/20'
+                                  : topic.type === 'recommended'
+                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-yellow-400 dark:hover:border-yellow-400 shadow-xs'
+                                  : topic.type === 'alternative'
+                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-sky-400 dark:hover:border-sky-400 shadow-xs'
+                                  : 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800 hover:border-neutral-400'
+                              }`}
+                            >
+                              {/* Header: Type Badge & Status Toggle Check */}
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <span className={`text-[9px] font-black font-mono px-1.5 py-0.5 rounded tracking-wider uppercase ${
+                                  topic.type === 'recommended'
+                                    ? 'bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30'
+                                    : topic.type === 'alternative'
+                                    ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/20'
+                                    : 'bg-neutral-200 dark:bg-neutral-750 text-neutral-600 dark:text-neutral-400'
+                                }`}>
+                                  {topic.type === 'recommended' ? 'REC' : topic.type === 'alternative' ? 'ALT' : 'CORE'}
+                                </span>
+
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isDone) setTopicStatus(topic.id, 'to-learn');
+                                    else if (isInProg) setTopicStatus(topic.id, 'completed');
+                                    else setTopicStatus(topic.id, 'in-progress');
+                                  }}
+                                  className="p-0.5 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
+                                  title={isDone ? "Status: Completed (Click to reset)" : isInProg ? "Status: In Progress (Click to complete)" : "Click to mark in-progress"}
+                                >
+                                  {isDone ? (
+                                    <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+                                  ) : isInProg ? (
+                                    <Clock className="w-4 h-4 text-yellow-500" />
+                                  ) : (
+                                    <Circle className="w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200" />
+                                  )}
+                                </button>
+                              </div>
+
+                              {/* Node Title */}
+                              <div className="text-xs sm:text-[13px] font-extrabold text-neutral-900 dark:text-white leading-snug group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors line-clamp-2 my-0.5">
+                                {topic.title}
+                              </div>
+
+                              {/* Node Footer: Estimated Hours & Learn Link */}
+                              <div className="flex items-center justify-between text-[10px] text-neutral-400 font-mono pt-1.5 mt-1 border-t border-neutral-100 dark:border-neutral-800">
+                                <span>~{topic.estimatedHours}h</span>
+                                <span className="text-neutral-500 group-hover:text-yellow-500 font-sans font-semibold flex items-center gap-0.5">
+                                  Guide <ChevronRight className="w-2.5 h-2.5" />
+                                </span>
+                              </div>
+                            </div>
+
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                  </div>
+
                 </div>
 
-              </div>
-            </React.Fragment>
-          ))}
+                {/* ── INTER-STAGE SPINE CONNECTOR ─────────────────────────── */}
+                {stageIdx < filteredStages.length - 1 && (
+                  <div className="flex flex-col items-center my-3 sm:my-4 relative z-10">
+                    <div className="w-0.5 h-6 sm:h-8 bg-neutral-300 dark:bg-neutral-750" />
+                    <div className="w-6 h-6 rounded-full bg-white dark:bg-neutral-900 border-2 border-yellow-400 flex items-center justify-center shadow-xs text-yellow-500 my-0.5">
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="w-0.5 h-6 sm:h-8 bg-neutral-300 dark:bg-neutral-750" />
+                  </div>
+                )}
+
+              </React.Fragment>
+            ))}
+          </div>
 
         </div>
       )}
