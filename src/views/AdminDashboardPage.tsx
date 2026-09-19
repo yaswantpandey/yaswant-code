@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLms } from '../context/LmsContext';
 import { tokenStorage } from '../services/api';
+import { RoadmapStage } from '../data/fullstackRoadmap';
 import { 
   Users, 
   BookOpen, 
@@ -245,17 +246,25 @@ interface AdminProject {
 
 interface AdminRoadmap {
   id: string;
+  slug: string;
   title: string;
+  subtitle?: string;
+  description?: string;
+  badge?: string;
   category: string;
-  categoryLabel: string;
-  tagline: string;
-  description: string;
-  difficulty: string;
-  duration: string;
-  weeklyCommitment: string;
-  totalTopics: number;
-  salaryBenchmark: string;
-  careerRoles: string[];
+  categoryLabel?: string;
+  tagline?: string;
+  difficulty?: string;
+  duration?: string;
+  weeklyCommitment?: string;
+  totalTopics?: number;
+  salaryBenchmark?: string;
+  careerRoles?: string[];
+  stages?: RoadmapStage[];
+  status?: string;
+  orderIndex?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface AdminWorkspaceLink {
@@ -461,20 +470,29 @@ export const AdminDashboardPage: React.FC = () => {
   // Roadmap Modal
   const [isRoadmapModalOpen, setIsRoadmapModalOpen] = useState<boolean>(false);
   const [editingRoadmap, setEditingRoadmap] = useState<AdminRoadmap | null>(null);
+  const [roadmapStagesJson, setRoadmapStagesJson] = useState<string>('[]');
+  const [stagesJsonError, setStagesJsonError] = useState<string | null>(null);
+  const [roadmapModalTab, setRoadmapModalTab] = useState<'info' | 'curriculum'>('info');
   const [roadmapForm, setRoadmapForm] = useState({
+    slug: '',
     title: '',
-    category: 'web',
-    categoryLabel: 'Web Development',
-    tagline: '',
+    subtitle: '',
     description: '',
+    badge: 'Official Career Track',
+    category: 'full-stack',
+    categoryLabel: 'Full Stack Development',
+    tagline: '',
     difficulty: 'Intermediate',
     duration: '6 months',
     weeklyCommitment: '10–15 hrs/week',
-    totalTopics: 50,
-    salaryBenchmark: '₹8–20 LPA',
-    careerRoles: 'Frontend Developer, Full-Stack Engineer',
+    totalTopics: 15,
+    salaryBenchmark: '₹8–25 LPA',
+    status: 'published',
+    orderIndex: 0,
+    careerRoles: 'Software Engineer, Full Stack Developer, Tech Lead',
   });
   const [isSubmittingRoadmap, setIsSubmittingRoadmap] = useState<boolean>(false);
+  const [isSeedingRoadmaps, setIsSeedingRoadmaps] = useState<boolean>(false);
 
   // Inquiry View Modal
   const [activeInquiryModal, setActiveInquiryModal] = useState<AdminInquiry | null>(null);
@@ -1158,18 +1176,19 @@ export const AdminDashboardPage: React.FC = () => {
   const filteredRoadmaps = roadmapsList.filter(r => {
     if (roadmapSearch.trim()) {
       const q = roadmapSearch.toLowerCase();
-      return r.title.toLowerCase().includes(q) || r.categoryLabel.toLowerCase().includes(q) || r.tagline.toLowerCase().includes(q);
+      return (
+        (r.title || '').toLowerCase().includes(q) ||
+        (r.slug || '').toLowerCase().includes(q) ||
+        (r.categoryLabel || '').toLowerCase().includes(q) ||
+        (r.category || '').toLowerCase().includes(q) ||
+        (r.badge || '').toLowerCase().includes(q) ||
+        (r.subtitle || '').toLowerCase().includes(q) ||
+        (r.tagline || '').toLowerCase().includes(q)
+      );
     }
     return true;
   });
 
-  const filteredWorkspaceLinks = workspaceLinksList.filter(w => {
-    if (workspaceSearch.trim()) {
-      const q = workspaceSearch.toLowerCase();
-      return w.title.toLowerCase().includes(q) || w.description.toLowerCase().includes(q) || w.category.toLowerCase().includes(q);
-    }
-    return true;
-  });
 
 
   return (
@@ -3447,63 +3466,240 @@ export const AdminDashboardPage: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <Map className="w-5 h-5 text-sky-500" /> Tech Roadmaps & Learning Paths
+                <Map className="w-5 h-5 text-sky-500" /> Career Roadmaps & Learning Tracks
               </h2>
-              <p className="text-xs text-neutral-500 mt-0.5">{roadmapsList.length} roadmaps in catalog</p>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                {roadmapsList.length} interactive tracks stored dynamically in database • Changes reflect instantly on website
+              </p>
             </div>
-            <Button variant="primary" size="sm" icon={<Plus className="w-3.5 h-3.5" />}
-              onClick={() => { setEditingRoadmap(null); setRoadmapForm({ title:'', category:'web', categoryLabel:'Web Development', tagline:'', description:'', difficulty:'Intermediate', duration:'6 months', weeklyCommitment:'10–15 hrs/week', totalTopics:50, salaryBenchmark:'₹8–20 LPA', careerRoles:'Frontend Developer, Full-Stack Engineer' }); setIsRoadmapModalOpen(true); }}>
-              Add Roadmap
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                icon={<Sparkles className="w-3.5 h-3.5 text-amber-500" />}
+                isLoading={isSeedingRoadmaps}
+                onClick={async () => {
+                  if (!window.confirm("Sync/seed all 4 canonical 2026 roadmaps (Full Stack, Frontend, Backend, DevOps) with complete 37+ topics from verified seed curriculum?")) return;
+                  setIsSeedingRoadmaps(true);
+                  try {
+                    const res = await adminFetch('seed_roadmaps', { method: 'POST' });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                      addToast('Roadmaps Synced', data.message || 'Canonical 2026 roadmaps synced successfully.', 'success');
+                      await fetchRoadmaps();
+                    } else {
+                      addToast('Sync Failed', data.error || 'Could not sync roadmaps.', 'warning');
+                    }
+                  } catch (err) {
+                    addToast('Network Error', 'Failed to connect to admin API.', 'warning');
+                  } finally {
+                    setIsSeedingRoadmaps(false);
+                  }
+                }}
+              >
+                Sync Canonical 2026 Roadmaps
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Plus className="w-3.5 h-3.5" />}
+                onClick={() => {
+                  setEditingRoadmap(null);
+                  setRoadmapForm({
+                    slug: '',
+                    title: '',
+                    subtitle: '',
+                    description: '',
+                    badge: 'Specialized Track',
+                    category: 'full-stack',
+                    categoryLabel: 'Full Stack Development',
+                    tagline: '',
+                    difficulty: 'Intermediate',
+                    duration: '6 months',
+                    weeklyCommitment: '10–15 hrs/week',
+                    totalTopics: 1,
+                    salaryBenchmark: '₹8–25 LPA',
+                    status: 'published',
+                    orderIndex: roadmapsList.length,
+                    careerRoles: 'Software Engineer, Full Stack Developer, Tech Lead',
+                  });
+                  const defaultStage = [
+                    {
+                      id: "stage-1",
+                      stepNumber: 1,
+                      title: "Core Fundamentals & Theory",
+                      category: "foundations",
+                      tagline: "Master essential core principles and theoretical foundations.",
+                      description: "Foundational conceptual knowledge required before building production systems.",
+                      topics: [
+                        {
+                          id: "core-basics",
+                          title: "Architecture & Core Concepts",
+                          type: "essential",
+                          level: "Beginner",
+                          description: "Fundamental protocols, mental models, and architectural fundamentals.",
+                          whatToLearn: [
+                            "Core mental models and standards",
+                            "Runtime environment execution",
+                            "Tooling and developer ergonomics"
+                          ],
+                          officialDocs: "https://developer.mozilla.org",
+                          practiceChallenge: "Create a minimal proof-of-concept project demonstrating core principles.",
+                          estimatedHours: 8
+                        }
+                      ]
+                    }
+                  ];
+                  setRoadmapStagesJson(JSON.stringify(defaultStage, null, 2));
+                  setStagesJsonError(null);
+                  setRoadmapModalTab('info');
+                  setIsRoadmapModalOpen(true);
+                }}
+              >
+                Add Roadmap
+              </Button>
+            </div>
           </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-            <input type="text" placeholder="Search roadmaps…" value={roadmapSearch} onChange={e => setRoadmapSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
+            <input
+              type="text"
+              placeholder="Search by title, slug, category, badge, or description…"
+              value={roadmapSearch}
+              onChange={e => setRoadmapSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 rounded-xl bg-neutral-100 dark:bg-neutral-800 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+            />
           </div>
 
           {filteredRoadmaps.length === 0 ? (
             <GlassCard className="p-12 text-center">
               <Map className="w-10 h-10 text-neutral-300 mx-auto mb-3" />
-              <p className="text-neutral-500 font-medium">No roadmaps yet.</p>
-              <p className="text-xs text-neutral-400 mt-1">Click "Add Roadmap" to create a learning path.</p>
+              <p className="text-neutral-500 font-medium">No roadmaps found.</p>
+              <p className="text-xs text-neutral-400 mt-1">Click "Sync Canonical 2026 Roadmaps" to seed default tracks, or "Add Roadmap" to create one.</p>
             </GlassCard>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredRoadmaps.map(rm => (
-                <GlassCard key={rm.id} className="p-5 space-y-3">
-                  <div className="flex items-start justify-between gap-2">
+                <GlassCard key={rm.id} className="p-5 space-y-3 flex flex-col justify-between hover:border-sky-500/40 transition-all">
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                          {rm.categoryLabel || rm.category}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                          {rm.badge || 'Official Career Track'}
+                        </span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
+                          rm.status === 'draft' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' : 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                        }`}>
+                          {rm.status === 'draft' ? 'Draft' : 'Published'}
+                        </span>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${
+                        rm.difficulty === 'Advanced' ? 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-400' :
+                        rm.difficulty === 'Intermediate' ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400' :
+                        'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400'
+                      }`}>
+                        {rm.difficulty || 'Intermediate'}
+                      </span>
+                    </div>
+
                     <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-sky-500">{rm.categoryLabel}</span>
-                      <h3 className="font-bold text-sm text-neutral-900 dark:text-white mt-0.5 leading-tight">{rm.title}</h3>
+                      <h3 className="font-bold text-base text-neutral-900 dark:text-white leading-snug">
+                        {rm.title}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-neutral-500 mt-1">
+                        <Map className="w-3 h-3 text-sky-500" />
+                        <span>/roadmaps/{rm.slug || rm.id}</span>
+                      </div>
                     </div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${rm.difficulty === 'Advanced' ? 'bg-rose-100 text-rose-700' : rm.difficulty === 'Intermediate' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>{rm.difficulty}</span>
+
+                    <p className="text-xs text-neutral-500 line-clamp-2 leading-relaxed">
+                      {rm.subtitle || rm.tagline || rm.description}
+                    </p>
+
+                    <div className="grid grid-cols-4 gap-1.5 text-center pt-1">
+                      <div className="bg-neutral-50 dark:bg-neutral-800/70 rounded-xl p-2 border border-neutral-100 dark:border-neutral-800">
+                        <div className="text-sm font-bold text-neutral-900 dark:text-white">{rm.stages?.length || 0}</div>
+                        <div className="text-[10px] text-neutral-400">Stages</div>
+                      </div>
+                      <div className="bg-neutral-50 dark:bg-neutral-800/70 rounded-xl p-2 border border-neutral-100 dark:border-neutral-800">
+                        <div className="text-sm font-bold text-neutral-900 dark:text-white">{rm.totalTopics || 0}</div>
+                        <div className="text-[10px] text-neutral-400">Topics</div>
+                      </div>
+                      <div className="bg-neutral-50 dark:bg-neutral-800/70 rounded-xl p-2 border border-neutral-100 dark:border-neutral-800">
+                        <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">{rm.duration || '6 mos'}</div>
+                        <div className="text-[10px] text-neutral-400">Duration</div>
+                      </div>
+                      <div className="bg-neutral-50 dark:bg-neutral-800/70 rounded-xl p-2 border border-neutral-100 dark:border-neutral-800">
+                        <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">{rm.salaryBenchmark || '₹8–25L'}</div>
+                        <div className="text-[10px] text-neutral-400">Salary</div>
+                      </div>
+                    </div>
                   </div>
-                  <p className="text-xs text-neutral-500 line-clamp-2">{rm.tagline}</p>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-2">
-                      <div className="text-sm font-bold text-neutral-900 dark:text-white">{rm.totalTopics}</div>
-                      <div className="text-[10px] text-neutral-400">Topics</div>
+
+                  <div className="flex items-center justify-between gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                    <a
+                      href={`/roadmaps/${rm.slug || rm.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:underline"
+                    >
+                      <ExternalLink className="w-3 h-3" /> View Live
+                    </a>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        icon={<Edit3 className="w-3 h-3" />}
+                        onClick={() => {
+                          setEditingRoadmap(rm);
+                          setRoadmapForm({
+                            slug: rm.slug || rm.id,
+                            title: rm.title || '',
+                            subtitle: rm.subtitle || rm.tagline || '',
+                            description: rm.description || '',
+                            badge: rm.badge || 'Official Career Track',
+                            category: rm.category || 'full-stack',
+                            categoryLabel: rm.categoryLabel || 'Web Development',
+                            tagline: rm.tagline || rm.subtitle || '',
+                            difficulty: rm.difficulty || 'Intermediate',
+                            duration: rm.duration || '6 months',
+                            weeklyCommitment: rm.weeklyCommitment || '10–15 hrs/week',
+                            totalTopics: rm.totalTopics || 0,
+                            salaryBenchmark: rm.salaryBenchmark || '₹8–25 LPA',
+                            status: rm.status || 'published',
+                            orderIndex: rm.orderIndex || 0,
+                            careerRoles: Array.isArray(rm.careerRoles) ? rm.careerRoles.join(', ') : (rm.careerRoles || ''),
+                          });
+                          setRoadmapStagesJson(JSON.stringify(rm.stages && rm.stages.length > 0 ? rm.stages : [], null, 2));
+                          setStagesJsonError(null);
+                          setRoadmapModalTab('info');
+                          setIsRoadmapModalOpen(true);
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        icon={<Trash2 className="w-3 h-3" />}
+                        onClick={async () => {
+                          if (!window.confirm(`Delete roadmap "${rm.title}"? This will remove it from the database.`)) return;
+                          const res = await adminFetch('delete_roadmap', { method: 'POST', body: JSON.stringify({ id: rm.id }) });
+                          if (res.ok) {
+                            setRoadmapsList(prev => prev.filter(r => r.id !== rm.id));
+                            addToast('Roadmap Deleted', `"${rm.title}" removed.`, 'info');
+                          } else {
+                            addToast('Delete Failed', 'Could not delete roadmap.', 'warning');
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
                     </div>
-                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-2">
-                      <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">{rm.duration}</div>
-                      <div className="text-[10px] text-neutral-400">Duration</div>
-                    </div>
-                    <div className="bg-neutral-50 dark:bg-neutral-800 rounded-lg p-2">
-                      <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400 truncate">{rm.salaryBenchmark}</div>
-                      <div className="text-[10px] text-neutral-400">Salary</div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 pt-1 border-t border-neutral-100 dark:border-neutral-800">
-                    <Button variant="outline" size="sm" icon={<Edit3 className="w-3 h-3" />}
-                      onClick={() => { setEditingRoadmap(rm); setRoadmapForm({ title: rm.title, category: rm.category, categoryLabel: rm.categoryLabel, tagline: rm.tagline, description: rm.description, difficulty: rm.difficulty, duration: rm.duration, weeklyCommitment: rm.weeklyCommitment, totalTopics: rm.totalTopics, salaryBenchmark: rm.salaryBenchmark, careerRoles: rm.careerRoles.join(', ') }); setIsRoadmapModalOpen(true); }}>
-                      Edit
-                    </Button>
-                    <Button variant="danger" size="sm" icon={<Trash2 className="w-3 h-3" />}
-                      onClick={async () => { if (!window.confirm(`Delete roadmap "${rm.title}"?`)) return; const res = await adminFetch('delete_roadmap', { method: 'POST', body: JSON.stringify({ id: rm.id }) }); if (res.ok) { setRoadmapsList(prev => prev.filter(r => r.id !== rm.id)); addToast('Roadmap Deleted', `"${rm.title}" removed.`, 'info'); } }}>
-                      Delete
-                    </Button>
                   </div>
                 </GlassCard>
               ))}
@@ -3622,92 +3818,391 @@ export const AdminDashboardPage: React.FC = () => {
       {/* ── MODAL: ADD / EDIT ROADMAP ─────────────────────────────────────── */}
       {isRoadmapModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
                 <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
                   <Map className="w-4 h-4 text-sky-500" />
-                  {editingRoadmap ? 'Edit Roadmap' : 'Add New Roadmap'}
+                  {editingRoadmap ? `Edit Roadmap: ${editingRoadmap.title}` : 'Add New Career Roadmap Track'}
                 </h3>
-                <button onClick={() => setIsRoadmapModalOpen(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-white font-bold">✕</button>
+                <button onClick={() => setIsRoadmapModalOpen(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-white font-bold cursor-pointer">✕</button>
               </div>
+
+              {/* Modal Tabs: General Info vs Stages & Topics */}
+              <div className="flex items-center gap-2 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+                <button
+                  type="button"
+                  onClick={() => setRoadmapModalTab('info')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                    roadmapModalTab === 'info'
+                      ? 'bg-sky-500 text-white shadow-xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  1. Track Overview & SEO
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRoadmapModalTab('curriculum')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer flex items-center gap-1.5 ${
+                    roadmapModalTab === 'curriculum'
+                      ? 'bg-sky-500 text-white shadow-xs'
+                      : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800'
+                  }`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  2. Mind Tree Stages & Topics
+                </button>
+              </div>
+
               <form onSubmit={async (e) => {
                 e.preventDefault();
-                if (!roadmapForm.title.trim()) { addToast('Validation Error', 'Roadmap title is required.', 'warning'); return; }
+                if (!roadmapForm.title.trim()) {
+                  addToast('Validation Error', 'Roadmap title is required.', 'warning');
+                  return;
+                }
+                const slugClean = (roadmapForm.slug || roadmapForm.title)
+                  .toLowerCase()
+                  .replace(/[^a-z0-9_-]+/g, '-')
+                  .replace(/^-|-$/g, '');
+                if (!slugClean) {
+                  addToast('Validation Error', 'Roadmap URL slug is required.', 'warning');
+                  return;
+                }
+
+                let parsedStages = [];
+                try {
+                  parsedStages = JSON.parse(roadmapStagesJson);
+                  if (!Array.isArray(parsedStages)) {
+                    throw new Error('Stages must be a JSON array of stages.');
+                  }
+                } catch (err: any) {
+                  setStagesJsonError(err.message);
+                  setRoadmapModalTab('curriculum');
+                  addToast('Invalid Stages JSON', err.message, 'warning');
+                  return;
+                }
+
                 setIsSubmittingRoadmap(true);
                 try {
                   const isEditing = Boolean(editingRoadmap);
-                  const payload = { ...(isEditing ? { id: editingRoadmap?.id } : {}), ...roadmapForm, careerRoles: roadmapForm.careerRoles.split(',').map(s => s.trim()).filter(Boolean) };
-                  const res = await adminFetch(isEditing ? 'update_roadmap' : 'create_roadmap', { method: 'POST', body: JSON.stringify(payload) });
+                  const payload = {
+                    ...(isEditing ? { id: editingRoadmap?.id } : { id: slugClean }),
+                    ...roadmapForm,
+                    slug: slugClean,
+                    stages: parsedStages,
+                    careerRoles: roadmapForm.careerRoles.split(',').map(s => s.trim()).filter(Boolean)
+                  };
+                  const res = await adminFetch(isEditing ? 'update_roadmap' : 'create_roadmap', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                  });
                   const data = await res.json();
                   if (res.ok && data.success) {
-                    addToast(isEditing ? 'Roadmap Updated' : 'Roadmap Created', `${roadmapForm.title} saved.`, 'success');
-                    setIsRoadmapModalOpen(false); fetchRoadmaps();
-                  } else { addToast('Error', data.error || 'Could not save roadmap.', 'warning'); }
-                } catch { addToast('Network Error', 'Failed to connect.', 'warning'); }
-                finally { setIsSubmittingRoadmap(false); }
+                    addToast(isEditing ? 'Roadmap Updated' : 'Roadmap Created', `${roadmapForm.title} saved to database.`, 'success');
+                    setIsRoadmapModalOpen(false);
+                    await fetchRoadmaps();
+                  } else {
+                    addToast('Error', data.error || 'Could not save roadmap.', 'warning');
+                  }
+                } catch {
+                  addToast('Network Error', 'Failed to connect to admin API.', 'warning');
+                } finally {
+                  setIsSubmittingRoadmap(false);
+                }
               }} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Roadmap Title *</label>
-                    <input type="text" required value={roadmapForm.title} onChange={e => setRoadmapForm({...roadmapForm, title: e.target.value})} placeholder="Full-Stack Web Development Roadmap"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
+                {roadmapModalTab === 'info' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Roadmap Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={roadmapForm.title}
+                        onChange={e => {
+                          const title = e.target.value;
+                          setRoadmapForm(prev => ({
+                            ...prev,
+                            title,
+                            slug: prev.slug === '' || prev.slug === prev.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+                              ? title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+                              : prev.slug
+                          }));
+                        }}
+                        placeholder="Full-Stack Web Development Roadmap 2026"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                        URL Slug (/roadmaps/...) *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={roadmapForm.slug}
+                        onChange={e => setRoadmapForm({...roadmapForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '')})}
+                        placeholder="full-stack"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm font-mono text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                      <span className="text-[10px] text-neutral-400 mt-0.5 block truncate">
+                        Live at: /roadmaps/{roadmapForm.slug || 'slug'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Badge Tag</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.badge}
+                        onChange={e => setRoadmapForm({...roadmapForm, badge: e.target.value})}
+                        placeholder="Official Career Track"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Subtitle / Tagline</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.subtitle}
+                        onChange={e => setRoadmapForm({...roadmapForm, subtitle: e.target.value, tagline: e.target.value})}
+                        placeholder="Step by step guide to becoming a modern full stack developer in 2026"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Detailed Description</label>
+                      <textarea
+                        rows={2}
+                        value={roadmapForm.description}
+                        onChange={e => setRoadmapForm({...roadmapForm, description: e.target.value})}
+                        placeholder="The definitive career roadmap covering foundations, client architectures, servers, databases, and deployments."
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Category</label>
+                      <select
+                        value={roadmapForm.category}
+                        onChange={e => {
+                          const val = e.target.value;
+                          const labels: Record<string, string> = {
+                            'full-stack': 'Full Stack Development',
+                            'frontend': 'Frontend Engineering',
+                            'backend': 'Backend Engineering',
+                            'devops': 'DevOps & Cloud',
+                            'ai': 'AI & Machine Learning',
+                            'security': 'Cybersecurity'
+                          };
+                          setRoadmapForm({
+                            ...roadmapForm,
+                            category: val,
+                            categoryLabel: labels[val] || val
+                          });
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        <option value="full-stack">Full Stack Development</option>
+                        <option value="frontend">Frontend Engineering</option>
+                        <option value="backend">Backend Engineering</option>
+                        <option value="devops">DevOps & Cloud</option>
+                        <option value="ai">AI & Machine Learning</option>
+                        <option value="security">Cybersecurity</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Publish Status</label>
+                      <select
+                        value={roadmapForm.status}
+                        onChange={e => setRoadmapForm({...roadmapForm, status: e.target.value})}
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        <option value="published">Published (Visible on site)</option>
+                        <option value="draft">Draft (Admin only)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Difficulty</label>
+                      <select
+                        value={roadmapForm.difficulty}
+                        onChange={e => setRoadmapForm({...roadmapForm, difficulty: e.target.value})}
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      >
+                        {['Beginner','Intermediate','Advanced'].map(d => <option key={d}>{d}</option>)}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Duration</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.duration}
+                        onChange={e => setRoadmapForm({...roadmapForm, duration: e.target.value})}
+                        placeholder="6 months"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Salary Benchmark</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.salaryBenchmark}
+                        onChange={e => setRoadmapForm({...roadmapForm, salaryBenchmark: e.target.value})}
+                        placeholder="₹8–25 LPA"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Weekly Commitment</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.weeklyCommitment}
+                        onChange={e => setRoadmapForm({...roadmapForm, weeklyCommitment: e.target.value})}
+                        placeholder="10–15 hrs/week"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Career Roles (comma-separated)</label>
+                      <input
+                        type="text"
+                        value={roadmapForm.careerRoles}
+                        onChange={e => setRoadmapForm({...roadmapForm, careerRoles: e.target.value})}
+                        placeholder="Software Engineer, Full Stack Developer, Tech Lead"
+                        className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Category</label>
-                    <select value={roadmapForm.category} onChange={e => setRoadmapForm({...roadmapForm, category: e.target.value})}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500">
-                      {['web','security','cloud','automation','ai','data'].map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-100 dark:bg-neutral-800/60 p-2.5 rounded-xl border border-neutral-200 dark:border-neutral-750 text-xs">
+                      <span className="text-neutral-600 dark:text-neutral-300 font-semibold">
+                        Curriculum Stages & Topics (JSON structure)
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              const parsed = JSON.parse(roadmapStagesJson);
+                              setRoadmapStagesJson(JSON.stringify(parsed, null, 2));
+                              setStagesJsonError(null);
+                              addToast('Formatted', 'Stages JSON formatted nicely.', 'info');
+                            } catch (e: any) {
+                              setStagesJsonError(e.message);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-neutral-200 dark:bg-neutral-700 hover:bg-neutral-300 dark:hover:bg-neutral-600 text-[11px] font-bold cursor-pointer"
+                        >
+                          Format JSON
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            try {
+                              let current = JSON.parse(roadmapStagesJson);
+                              if (!Array.isArray(current)) current = [];
+                              const newStageNum = current.length + 1;
+                              current.push({
+                                id: `stage-${newStageNum}`,
+                                stepNumber: newStageNum,
+                                title: `Stage ${newStageNum}: New Skill Module`,
+                                category: 'foundations',
+                                tagline: 'Module tagline and core outcomes',
+                                description: 'Description of what students learn in this module.',
+                                topics: [
+                                  {
+                                    id: `topic-${newStageNum}-1`,
+                                    title: 'Key Topic Name',
+                                    type: 'essential',
+                                    level: 'Beginner',
+                                    description: 'Topic description and core purpose.',
+                                    whatToLearn: ['Core theory', 'Code example', 'Best practice'],
+                                    officialDocs: 'https://developer.mozilla.org',
+                                    practiceChallenge: 'Build a small application testing this concept.',
+                                    estimatedHours: 6
+                                  }
+                                ]
+                              });
+                              setRoadmapStagesJson(JSON.stringify(current, null, 2));
+                              setStagesJsonError(null);
+                              addToast('Stage Added', `Added Stage ${newStageNum} template.`, 'success');
+                            } catch (e: any) {
+                              setStagesJsonError(e.message);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[11px] font-bold cursor-pointer"
+                        >
+                          + Append Stage
+                        </button>
+                      </div>
+                    </div>
+
+                    {stagesJsonError && (
+                      <div className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-600 dark:text-rose-400 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                        <span>JSON Syntax Error: {stagesJsonError}</span>
+                      </div>
+                    )}
+
+                    <textarea
+                      rows={14}
+                      value={roadmapStagesJson}
+                      onChange={e => {
+                        setRoadmapStagesJson(e.target.value);
+                        try {
+                          JSON.parse(e.target.value);
+                          setStagesJsonError(null);
+                        } catch (err: any) {
+                          setStagesJsonError(err.message);
+                        }
+                      }}
+                      className="w-full p-3 font-mono text-xs rounded-xl bg-neutral-950 text-neutral-100 border border-neutral-800 focus:outline-none focus:ring-1 focus:ring-sky-500 leading-relaxed"
+                      placeholder="[ { id: 'stage-1', stepNumber: 1, title: '...', topics: [...] } ]"
+                    />
+
+                    {(() => {
+                      try {
+                        const parsed = JSON.parse(roadmapStagesJson);
+                        if (Array.isArray(parsed)) {
+                          const stagesCount = parsed.length;
+                          const topicsCount = parsed.reduce((acc: number, stg: any) => acc + (Array.isArray(stg.topics) ? stg.topics.length : 0), 0);
+                          return (
+                            <div className="flex items-center gap-3 text-xs text-neutral-500">
+                              <span className="font-semibold text-sky-600 dark:text-sky-400">✓ Valid JSON</span>
+                              <span>{stagesCount} stage(s)</span>
+                              <span>•</span>
+                              <span>{topicsCount} topic(s) detected</span>
+                            </div>
+                          );
+                        }
+                      } catch {}
+                      return null;
+                    })()}
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Category Label</label>
-                    <input type="text" value={roadmapForm.categoryLabel} onChange={e => setRoadmapForm({...roadmapForm, categoryLabel: e.target.value})} placeholder="Web Development"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
+                )}
+
+                <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
+                  <div className="text-[11px] text-neutral-400">
+                    Changes save directly to Hostinger MySQL and render live on website.
                   </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Tagline</label>
-                    <input type="text" value={roadmapForm.tagline} onChange={e => setRoadmapForm({...roadmapForm, tagline: e.target.value})} placeholder="Master modern web development from zero to production"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
+                  <div className="flex items-center gap-2">
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setIsRoadmapModalOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingRoadmap}>
+                      {editingRoadmap ? 'Update Roadmap' : 'Create Roadmap'}
+                    </Button>
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Difficulty</label>
-                    <select value={roadmapForm.difficulty} onChange={e => setRoadmapForm({...roadmapForm, difficulty: e.target.value})}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500">
-                      {['Beginner','Intermediate','Advanced'].map(d => <option key={d}>{d}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Total Topics</label>
-                    <input type="number" min={1} value={roadmapForm.totalTopics} onChange={e => setRoadmapForm({...roadmapForm, totalTopics: Number(e.target.value)})}
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Duration</label>
-                    <input type="text" value={roadmapForm.duration} onChange={e => setRoadmapForm({...roadmapForm, duration: e.target.value})} placeholder="6 months"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Weekly Commitment</label>
-                    <input type="text" value={roadmapForm.weeklyCommitment} onChange={e => setRoadmapForm({...roadmapForm, weeklyCommitment: e.target.value})} placeholder="10–15 hrs/week"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Salary Benchmark</label>
-                    <input type="text" value={roadmapForm.salaryBenchmark} onChange={e => setRoadmapForm({...roadmapForm, salaryBenchmark: e.target.value})} placeholder="₹8–20 LPA"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">Career Roles (comma-separated)</label>
-                    <input type="text" value={roadmapForm.careerRoles} onChange={e => setRoadmapForm({...roadmapForm, careerRoles: e.target.value})} placeholder="Frontend Developer, Full-Stack Engineer, React Developer"
-                      className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-sky-500" />
-                  </div>
-                </div>
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                  <Button type="button" variant="ghost" size="sm" onClick={() => setIsRoadmapModalOpen(false)}>Cancel</Button>
-                  <Button type="submit" variant="primary" size="sm" isLoading={isSubmittingRoadmap}>
-                    {editingRoadmap ? 'Update Roadmap' : 'Create Roadmap'}
-                  </Button>
                 </div>
               </form>
             </div>

@@ -53,10 +53,10 @@ export const LearningPathsPage: React.FC = () => {
   const [selectedTrackId, setSelectedTrackId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
       const pathname = window.location.pathname.toLowerCase();
-      if (pathname.includes('/roadmaps/frontend')) return 'frontend';
-      if (pathname.includes('/roadmaps/backend')) return 'backend';
-      if (pathname.includes('/roadmaps/devops')) return 'devops';
-      if (pathname.includes('/roadmaps/full-stack')) return 'full-stack';
+      const match = pathname.match(/^\/(?:roadmaps|paths|learning-paths)\/([a-z0-9_-]+)/);
+      if (match && match[1]) {
+        return match[1];
+      }
     }
     return 'full-stack';
   });
@@ -64,6 +64,51 @@ export const LearningPathsPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [inspectingTopic, setInspectingTopic] = useState<{ topic: RoadmapTopic; stageTitle: string } | null>(null);
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+  // Dynamic Roadmaps loaded from database API, falling back to static canonical tracks
+  const [allTracks, setAllTracks] = useState<RoadmapTrack[]>(ALL_ROADMAP_TRACKS);
+  const [isLoadingTracks, setIsLoadingTracks] = useState<boolean>(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDatabaseRoadmaps = async () => {
+      try {
+        setIsLoadingTracks(true);
+        const res = await fetch('/api/roadmaps.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+            const tracks: RoadmapTrack[] = json.data.map((item: any) => {
+              let stages = Array.isArray(item.stages) && item.stages.length > 0 ? item.stages : [];
+              if (stages.length === 0) {
+                const staticMatch = ALL_ROADMAP_TRACKS.find(t => t.id === item.id || t.slug === item.slug);
+                if (staticMatch) stages = staticMatch.stages;
+              }
+              return {
+                id: item.id || item.slug,
+                slug: item.slug || item.id,
+                title: item.title,
+                subtitle: item.subtitle || item.tagline || '',
+                description: item.description || '',
+                badge: item.badge || 'Official Career Track',
+                stages
+              };
+            });
+            if (isMounted && tracks.length > 0) {
+              setAllTracks(tracks);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load database roadmaps, using static tracks fallback:', err);
+      } finally {
+        if (isMounted) setIsLoadingTracks(false);
+      }
+    };
+
+    fetchDatabaseRoadmaps();
+    return () => { isMounted = false; };
+  }, []);
 
   // Completed & In-Progress state stored in localStorage
   const [completedTopicIds, setCompletedTopicIds] = useState<string[]>(() => {
@@ -108,20 +153,24 @@ export const LearningPathsPage: React.FC = () => {
   // Handle browser Back / Forward navigation between roadmap tracks
   useEffect(() => {
     const handlePopState = () => {
-      const path = window.location.pathname.toLowerCase();
-      if (path.includes('/roadmaps/frontend')) setSelectedTrackId('frontend');
-      else if (path.includes('/roadmaps/backend')) setSelectedTrackId('backend');
-      else if (path.includes('/roadmaps/devops')) setSelectedTrackId('devops');
-      else if (path.includes('/roadmaps/full-stack') || path === '/roadmaps') setSelectedTrackId('full-stack');
+      const pathname = window.location.pathname.toLowerCase();
+      const match = pathname.match(/^\/(?:roadmaps|paths|learning-paths)\/([a-z0-9_-]+)/);
+      if (match && match[1]) {
+        setSelectedTrackId(match[1]);
+      } else if (pathname === '/roadmaps' || pathname === '/paths' || pathname === '/learning-paths') {
+        setSelectedTrackId('full-stack');
+      }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Current active track object
+  // Current active track object (resolved dynamically from database or fallback)
   const currentTrack: RoadmapTrack = useMemo(() => {
-    return ALL_ROADMAP_TRACKS.find(t => t.id === selectedTrackId) || FULLSTACK_ROADMAP;
-  }, [selectedTrackId]);
+    return allTracks.find(t => t.id === selectedTrackId || t.slug === selectedTrackId)
+      || allTracks[0]
+      || FULLSTACK_ROADMAP;
+  }, [allTracks, selectedTrackId]);
 
   // Total topics count in current track
   const allTopicsInTrack = useMemo(() => {
@@ -215,26 +264,31 @@ export const LearningPathsPage: React.FC = () => {
         {/* Track Switcher Navigation Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
-            {ALL_ROADMAP_TRACKS.map(track => (
-              <button
-                key={track.id}
-                onClick={() => {
-                  setSelectedTrackId(track.id);
-                  syncUrlWithView('learning-paths', null, false, track.id);
-                }}
-                className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
-                  selectedTrackId === track.id
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
-                    : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-                }`}
-              >
-                {track.id === 'full-stack' && <Sparkles className="w-3.5 h-3.5 text-yellow-400" />}
-                {track.id === 'frontend' && <Layout className="w-3.5 h-3.5 text-sky-400" />}
-                {track.id === 'backend' && <Server className="w-3.5 h-3.5 text-emerald-400" />}
-                {track.id === 'devops' && <Terminal className="w-3.5 h-3.5 text-purple-400" />}
-                {track.title}
-              </button>
-            ))}
+            {allTracks.map(track => {
+              const isActive = selectedTrackId === track.id || selectedTrackId === track.slug;
+              const slugOrId = track.slug || track.id;
+              return (
+                <button
+                  key={track.id}
+                  onClick={() => {
+                    setSelectedTrackId(slugOrId);
+                    syncUrlWithView('learning-paths', null, false, slugOrId);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
+                      : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                  }`}
+                >
+                  {(track.id === 'full-stack' || track.slug === 'full-stack') && <Sparkles className="w-3.5 h-3.5 text-yellow-400" />}
+                  {(track.id === 'frontend' || track.slug === 'frontend') && <Layout className="w-3.5 h-3.5 text-sky-400" />}
+                  {(track.id === 'backend' || track.slug === 'backend') && <Server className="w-3.5 h-3.5 text-emerald-400" />}
+                  {(track.id === 'devops' || track.slug === 'devops') && <Terminal className="w-3.5 h-3.5 text-purple-400" />}
+                  {!['full-stack', 'frontend', 'backend', 'devops'].includes(track.slug || track.id) && <Map className="w-3.5 h-3.5 text-amber-400" />}
+                  {track.title}
+                </button>
+              );
+            })}
           </div>
 
           {/* Action Buttons: Download & Share */}

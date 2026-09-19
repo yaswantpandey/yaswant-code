@@ -1,0 +1,1876 @@
+[
+  {
+    "id": "full-stack",
+    "slug": "full-stack",
+    "title": "Full Stack Developer",
+    "subtitle": "Step by step guide to becoming a modern full stack developer in 2026",
+    "description": "The definitive roadmap for full-stack software engineers. Covers web fundamentals, type-safe frontend reactive frameworks, high-throughput backend runtimes, relational & NoSQL databases, API architectures, containerization, CI/CD, and distributed system design.",
+    "badge": "Official Career Track",
+    "stages": [
+      {
+        "id": "internet-basics",
+        "stepNumber": 1,
+        "title": "Internet & Web Fundamentals",
+        "category": "foundations",
+        "tagline": "Understand the underlying protocols and mechanics of how the worldwide web operates.",
+        "description": "Before writing frontend or backend code, you must understand how data travels across the globe, how DNS maps names to IP addresses, and how browsers parse responses.",
+        "topics": [
+          {
+            "id": "how-internet-works",
+            "title": "How does the Internet Work?",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The physical and logical infrastructure connecting billions of computers worldwide through packet switching, TCP/IP, and internet service providers.",
+            "whatToLearn": [
+              "Packet switching and IP addressing (IPv4 vs IPv6)",
+              "The OSI 7-Layer Model vs TCP/IP stack",
+              "Routers, switches, optical cables, and border gateway protocol (BGP)",
+              "Latency, bandwidth, packet loss, and jitter"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/How_does_the_Internet_work",
+            "practiceChallenge": "Use traceroute / ping in terminal to track packets from your machine to github.com.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "http-https",
+            "title": "HTTP / HTTPS Protocols",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "The foundational client-server communication protocol for transferring hypertext, JSON payloads, and media across the web.",
+            "whatToLearn": [
+              "HTTP request methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+              "HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx)",
+              "Headers: Content-Type, Authorization, Cache-Control, User-Agent",
+              "HTTPS & TLS/SSL handshake encryption",
+              "HTTP/2 multiplexing vs HTTP/3 (QUIC over UDP)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+            "practiceChallenge": "Inspect network tab in DevTools and inspect request/response headers for 5 different websites.",
+            "estimatedHours": 6
+          },
+          {
+            "id": "dns-domain-names",
+            "title": "DNS & Domain Resolution",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The phonebook of the Internet. Resolves human-readable domain names like yaswant.co.in into machine-routable IP addresses.",
+            "whatToLearn": [
+              "Root nameservers, TLD nameservers, and authoritative DNS",
+              "DNS Record Types: A, AAAA, CNAME, MX, TXT, NS, SOA",
+              "DNS propagation and Time-To-Live (TTL)",
+              "DNS over HTTPS (DoH) and DNS security extensions (DNSSEC)"
+            ],
+            "officialDocs": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+            "practiceChallenge": "Use dig or nslookup to query the A and MX records of google.com and your custom domain.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "browser-mechanics",
+            "title": "Browsers & Rendering Engines",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "How modern web browsers (Chromium, Gecko, WebKit) parse HTML/CSS, build the DOM and CSSOM, execute JavaScript, and paint pixels.",
+            "whatToLearn": [
+              "DOM tree and CSSOM construction",
+              "The Render Tree, Layout (Reflow), and Paint (Repaint)",
+              "Critical Rendering Path (CRP) optimization",
+              "JavaScript execution thread and the Browser Event Loop"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+            "practiceChallenge": "Profile a web page in Chrome DevTools Performance tab and identify layout shifts and long tasks.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "core-frontend",
+        "stepNumber": 2,
+        "title": "Frontend Foundations (HTML, CSS, JS)",
+        "category": "frontend",
+        "tagline": "The three core building blocks of all user interfaces on the modern web.",
+        "description": "Every web engineer must write clean, accessible, semantic markup, build responsive layouts, and master JavaScript as a programming language.",
+        "topics": [
+          {
+            "id": "semantic-html",
+            "title": "HTML5 & Semantic Markup",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Structure web documents using meaningful tags that screen readers, search engines, and browsers understand natively.",
+            "whatToLearn": [
+              "Semantic elements: <header>, <nav>, <main>, <article>, <section>, <footer>",
+              "Accessible forms: <form>, <input>, <label>, <fieldset>, <select>, validation attributes",
+              "Web Accessibility (WCAG & WAI-ARIA roles, aria-live, aria-expanded)",
+              "SEO metadata tags, Open Graph, and Structured Data (JSON-LD)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/HTML",
+            "practiceChallenge": "Build an accessible checkout form with client-side validation and semantic ARIA attributes without JavaScript.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "modern-css",
+            "title": "Modern CSS, Flexbox & Grid",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Master CSS layouts, the Box Model, modern responsive typography, custom properties (variables), and animations.",
+            "whatToLearn": [
+              "The CSS Box Model (margin, border, padding, content-box vs border-box)",
+              "Flexbox: justify-content, align-items, flex-direction, flex-wrap, gap",
+              "CSS Grid: grid-template-columns, fr units, minmax, auto-fit, auto-fill",
+              "Responsive Design: fluid clamp(), container queries, media queries",
+              "CSS Custom Properties (Variables) & Dark Mode theming"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/CSS",
+            "practiceChallenge": "Build a responsive 12-column dashboard layout with CSS Grid that collapses cleanly on mobile devices.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "modern-javascript",
+            "title": "JavaScript (ES6+ Deep Dive)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The primary language of the web. Learn closures, prototypes, asynchronous programming, and DOM manipulation.",
+            "whatToLearn": [
+              "Data types, scoping (let, const, var), hoisting, and closures",
+              "Arrow functions, destructuring, rest/spread operators, template literals",
+              "Array methods: map, filter, reduce, find, some, every, sort",
+              "Asynchronous JS: Event Loop, Callbacks, Promises, and async/await",
+              "DOM Manipulation, Event Bubbling, Delegation, and fetch() API"
+            ],
+            "officialDocs": "https://javascript.info/",
+            "practiceChallenge": "Build an interactive weather dashboard consuming a public API using async/await with error handling.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "typescript-foundations",
+            "title": "TypeScript (Type-Safe JS)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Static typing for JavaScript. Catches errors during development and powers enterprise full-stack codebases.",
+            "whatToLearn": [
+              "Primitive types, interfaces, and type aliases",
+              "Generics: reusable classes, functions, and interfaces",
+              "Union types, intersection types, and type narrowing",
+              "Utility types: Partial, Pick, Omit, Record, Readonly",
+              "tsconfig.json strict mode configurations"
+            ],
+            "officialDocs": "https://www.typescriptlang.org/docs/",
+            "practiceChallenge": "Convert a 200-line vanilla JS API client to strict TypeScript with zero any types.",
+            "estimatedHours": 14
+          }
+        ]
+      },
+      {
+        "id": "tools-vcs",
+        "stepNumber": 3,
+        "title": "Git, VCS & Package Managers",
+        "category": "foundations",
+        "tagline": "Essential developer workflow tools for tracking code history and managing third-party modules.",
+        "description": "Professional engineering requires mastering Git branching workflows, resolving merge conflicts, and leveraging package managers.",
+        "topics": [
+          {
+            "id": "git-version-control",
+            "title": "Git & GitHub Workflows",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Distributed version control system to track changes in source code during software development.",
+            "whatToLearn": [
+              "Core commands: git init, add, commit, status, log, diff",
+              "Branching strategies: Git Flow, Trunk-based development",
+              "Merging vs Rebasing (fast-forward, interactive rebase)",
+              "Resolving merge conflicts and cherry-picking commits",
+              "GitHub Pull Requests, code reviews, and issue tracking"
+            ],
+            "officialDocs": "https://git-scm.com/doc",
+            "practiceChallenge": "Create a repository, make 3 feature branches, trigger an intentional merge conflict, and resolve it cleanly.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "package-managers",
+            "title": "Package Managers (npm, pnpm)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Tools for installing, updating, and managing third-party open-source libraries and scripts.",
+            "whatToLearn": [
+              "package.json scripts, dependencies vs devDependencies",
+              "Semantic Versioning (SemVer: major, minor, patch, caret, tilde)",
+              "Lockfiles (package-lock.json, pnpm-lock.yaml) and determinism",
+              "pnpm content-addressable storage & workspace monorepos"
+            ],
+            "officialDocs": "https://pnpm.io/",
+            "practiceChallenge": "Initialize a pnpm workspace monorepo with a shared UI package and two apps.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "build-tools-vite",
+            "title": "Build Tools & Bundlers (Vite)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Next-generation frontend tooling powered by native ES modules (ESM) and lightning-fast Rollup/esbuild.",
+            "whatToLearn": [
+              "Native ESM in development vs bundled production output",
+              "Hot Module Replacement (HMR) architecture",
+              "Code splitting, dynamic imports, and chunk optimization",
+              "Environment variables (.env, import.meta.env) in Vite"
+            ],
+            "officialDocs": "https://vitejs.dev/guide/",
+            "practiceChallenge": "Configure a custom vite.config.ts with rollupOptions manualChunks to split vendor libraries.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "frontend-frameworks",
+        "stepNumber": 4,
+        "title": "Frontend Frameworks & State",
+        "category": "frontend",
+        "tagline": "Build declarative, reactive, and reusable user interfaces with industry-standard component libraries.",
+        "description": "Component-driven frontend architectures dominate modern engineering. Master React 19, state management, and utility-first CSS.",
+        "topics": [
+          {
+            "id": "react-core",
+            "title": "React 19 & Component Architecture",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The world’s most popular declarative UI library. Master functional components, hooks, and reconciliation.",
+            "whatToLearn": [
+              "JSX syntax, props, children, and component composition",
+              "Core Hooks: useState, useEffect, useRef, useMemo, useCallback",
+              "React 19 Hooks: useActionState, useOptimistic, useFormStatus",
+              "Controlled vs uncontrolled form components",
+              "Error boundaries, Suspense, and lazy loading"
+            ],
+            "officialDocs": "https://react.dev/",
+            "practiceChallenge": "Build an e-commerce product catalog with interactive filters, sorting, and optimistic cart updates.",
+            "estimatedHours": 24
+          },
+          {
+            "id": "tailwind-css",
+            "title": "Tailwind CSS (Utility-First)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Rapidly build modern designs without ever leaving your HTML/JSX using composable atomic utility classes.",
+            "whatToLearn": [
+              "Utility-first philosophy vs traditional BEM CSS",
+              "Responsive modifiers (sm:, md:, lg:, xl:)",
+              "State variants (hover:, focus:, active:, disabled:, dark:)",
+              "Custom themes, color palettes, and arbitrary values"
+            ],
+            "officialDocs": "https://tailwindcss.com/docs",
+            "practiceChallenge": "Recreate a sleek Stripe-style landing hero section purely using Tailwind CSS utility classes.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "state-management",
+            "title": "State Management (Zustand & TanStack Query)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Separate client UI state from asynchronous server cache state with clean, boilerplate-free stores.",
+            "whatToLearn": [
+              "Client State vs Server State distinction",
+              "Zustand store creation, selectors, and middleware (persist)",
+              "TanStack Query: useQuery, useMutation, query keys, invalidation",
+              "Optimistic updates and background refetching"
+            ],
+            "officialDocs": "https://zustand.docs.pmnd.rs/",
+            "practiceChallenge": "Build a Kanban board with Zustand for column state and TanStack Query for background sync.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "nextjs-fullstack",
+            "title": "Next.js 15 (App Router & SSR)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "The enterprise React framework. Hybrid Server Components, static generation (SSG), and Server Actions.",
+            "whatToLearn": [
+              "App Router file conventions: page, layout, loading, error, not-found",
+              "React Server Components (RSC) vs Client Components (\"use client\")",
+              "Server Actions for type-safe form submissions",
+              "Static Site Generation (SSG), SSR, and Incremental Static Regeneration (ISR)"
+            ],
+            "officialDocs": "https://nextjs.org/docs",
+            "practiceChallenge": "Build a full-featured blog with Server Components, dynamic slug routing, and Server Action comments.",
+            "estimatedHours": 20
+          }
+        ]
+      },
+      {
+        "id": "backend-runtimes",
+        "stepNumber": 5,
+        "title": "Backend Runtimes & Languages",
+        "category": "backend",
+        "tagline": "Power server-side logic, handle HTTP requests, and execute business rules.",
+        "description": "Choose a primary backend runtime. JavaScript/TypeScript developers typically excel with Node.js, while enterprise systems often use Python or Go.",
+        "topics": [
+          {
+            "id": "nodejs-express",
+            "title": "Node.js & Express.js / Hono",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "V8-powered asynchronous, non-blocking I/O JavaScript runtime for building scalable server-side applications.",
+            "whatToLearn": [
+              "Node.js Event Loop, streams, and file system (fs/promises)",
+              "Building HTTP servers, middleware architecture, and routing",
+              "Request parsing, query params, path params, and body parsers",
+              "Centralized error-handling middleware and status codes",
+              "Modern lightweight alternatives: Hono, Fastify"
+            ],
+            "officialDocs": "https://nodejs.org/en/docs",
+            "practiceChallenge": "Build a production-grade REST API with JWT authentication, rate limiting, and structured logging.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "python-backend",
+            "title": "Python (FastAPI / Django)",
+            "type": "alternative",
+            "level": "Intermediate",
+            "description": "High-level programming language dominant in AI/ML, data science, and clean asynchronous microservices.",
+            "whatToLearn": [
+              "FastAPI async def routes and automatic OpenAPI/Swagger docs",
+              "Pydantic models for data validation and serialization",
+              "Dependency injection in FastAPI",
+              "Django batteries-included MVC, ORM, and admin portal"
+            ],
+            "officialDocs": "https://fastapi.tiangolo.com/",
+            "practiceChallenge": "Create a microservice in FastAPI with Pydantic validation that predicts text sentiment or processes files.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "go-backend",
+            "title": "Go (Golang)",
+            "type": "alternative",
+            "level": "Advanced",
+            "description": "Statically-typed, compiled language developed by Google for high-concurrency distributed systems.",
+            "whatToLearn": [
+              "Goroutines and Channels for lightweight concurrency",
+              "Structs, interfaces, and implicit implementation",
+              "Standard net/http library and Gin/Echo frameworks",
+              "Memory management and compile-to-single-binary deployment"
+            ],
+            "officialDocs": "https://go.dev/doc/",
+            "practiceChallenge": "Write a concurrent URL health checker in Go that pings 50 endpoints concurrently using worker pools.",
+            "estimatedHours": 18
+          }
+        ]
+      },
+      {
+        "id": "databases-storage",
+        "stepNumber": 6,
+        "title": "Databases & ORMs (SQL & NoSQL)",
+        "category": "database",
+        "tagline": "Reliable, ACID-compliant data persistence, indexing, and schema design.",
+        "description": "Applications live and die by their data layer. Master relational schemas in PostgreSQL and high-speed key-value caching in Redis.",
+        "topics": [
+          {
+            "id": "postgresql-sql",
+            "title": "PostgreSQL (Relational SQL)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The world’s most advanced open-source object-relational database system with robust ACID guarantees.",
+            "whatToLearn": [
+              "Relational modeling: 1-to-1, 1-to-many, many-to-many junction tables",
+              "SQL Joins (INNER, LEFT, RIGHT, FULL) and aggregations (GROUP BY, HAVING)",
+              "ACID properties, transactions, and isolation levels",
+              "Database indexing: B-Tree, GIN, composite indexes, and EXPLAIN ANALYZE",
+              "Foreign keys, cascading updates/deletes, and constraints"
+            ],
+            "officialDocs": "https://www.postgresql.org/docs/",
+            "practiceChallenge": "Design an e-commerce schema (Users, Orders, Items, Inventory) with transactional order checkout.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "prisma-drizzle",
+            "title": "ORMs: Prisma & Drizzle",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Type-safe database toolkits for TypeScript that generate SQL queries without sacrificing type safety.",
+            "whatToLearn": [
+              "Prisma Schema definition, relations, and migrations (prisma migrate)",
+              "Type-safe querying: findUnique, findMany, include, select, transactions",
+              "Drizzle ORM: SQL-like syntax with zero bundle overhead",
+              "Database connection pooling in serverless environments"
+            ],
+            "officialDocs": "https://www.prisma.io/docs",
+            "practiceChallenge": "Write automated seed scripts and migrations using Prisma connecting to a live PostgreSQL database.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "redis-cache",
+            "title": "Redis (In-Memory Key-Value & Cache)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Ultra-fast in-memory data store used for database query caching, user sessions, rate limiting, and pub/sub.",
+            "whatToLearn": [
+              "Data structures: Strings, Hashes, Lists, Sets, Sorted Sets",
+              "TTL (Time-to-Live) expiration and eviction policies (LRU)",
+              "Caching strategies: Cache-Aside, Write-Through, Write-Behind",
+              "Distributed locks and sliding window rate limiting"
+            ],
+            "officialDocs": "https://redis.io/docs/",
+            "practiceChallenge": "Implement Redis caching on a heavy database endpoint with automatic 60-second cache invalidation.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "mongodb-nosql",
+            "title": "MongoDB (Document NoSQL)",
+            "type": "alternative",
+            "level": "Intermediate",
+            "description": "JSON-like flexible document database suitable for rapidly evolving schemas and unstructured data.",
+            "whatToLearn": [
+              "BSON document model, collections, and ObjectIDs",
+              "Mongoose ODM schemas, validation, and virtuals",
+              "Aggregation Pipeline ($match, $group, $project, $lookup)",
+              "When to choose SQL vs NoSQL document stores"
+            ],
+            "officialDocs": "https://www.mongodb.com/docs/",
+            "practiceChallenge": "Build a multi-stage aggregation pipeline calculating monthly sales statistics from raw order documents.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "api-architectures",
+        "stepNumber": 7,
+        "title": "API Architectures & Protocols",
+        "category": "apis",
+        "tagline": "How frontend and backend exchange data efficiently and reliably.",
+        "description": "Full stack developers must design clean, predictable, documented APIs following international web standards.",
+        "topics": [
+          {
+            "id": "rest-api-design",
+            "title": "RESTful API Design Best Practices",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Architectural style for designing networked applications relying on standard HTTP verbs and stateless endpoints.",
+            "whatToLearn": [
+              "Resource naming conventions (/api/v1/users/:id/orders)",
+              "Idempotency of GET, PUT, DELETE vs non-idempotent POST",
+              "Pagination patterns (offset/limit vs cursor-based pagination)",
+              "Filtering, sorting, and field selection query parameters",
+              "OpenAPI 3.0 / Swagger specification documentation"
+            ],
+            "officialDocs": "https://restfulapi.net/",
+            "practiceChallenge": "Document and implement a cursor-based paginated REST API endpoint with Swagger UI integration.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "websockets-realtime",
+            "title": "WebSockets & Server-Sent Events",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Persistent full-duplex TCP connections for real-time live chat, notifications, and telemetry feeds.",
+            "whatToLearn": [
+              "WebSocket handshake upgrade protocol (ws:// and wss://)",
+              "Socket.IO vs native WebSocket API",
+              "Heartbeat ping/pong and auto-reconnection logic",
+              "Server-Sent Events (SSE) for one-way streaming (e.g. AI LLM tokens)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API",
+            "practiceChallenge": "Build a real-time collaborative chat room with live typing indicators and online user lists.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "graphql-apis",
+            "title": "GraphQL (Client-Driven Queries)",
+            "type": "alternative",
+            "level": "Advanced",
+            "description": "A query language for your API that allows clients to request exactly what they need and nothing more.",
+            "whatToLearn": [
+              "Schema Definition Language (SDL): Types, Queries, Mutations",
+              "Resolvers and context handling",
+              "Solving the N+1 problem using DataLoader",
+              "GraphQL Subscriptions for real-time updates"
+            ],
+            "officialDocs": "https://graphql.org/learn/",
+            "practiceChallenge": "Build a GraphQL server with Apollo Server and optimize relations using DataLoader.",
+            "estimatedHours": 14
+          }
+        ]
+      },
+      {
+        "id": "auth-security",
+        "stepNumber": 8,
+        "title": "Authentication & Web Security",
+        "category": "backend",
+        "tagline": "Safeguard user identities, protect against cyber attacks, and enforce access controls.",
+        "description": "Security is not an afterthought. Learn cryptographic password hashing, token validation, and OWASP defense patterns.",
+        "topics": [
+          {
+            "id": "jwt-sessions-auth",
+            "title": "JWT Tokens & HttpOnly Cookie Sessions",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Stateless JSON Web Tokens and secure session cookie storage for verifying user identity.",
+            "whatToLearn": [
+              "Structure of JWT: Header, Payload, Signature",
+              "Access Token (short-lived) + Refresh Token (long-lived) rotation",
+              "HttpOnly, Secure, SameSite=Strict cookie flags (preventing XSS theft)",
+              "Password hashing with bcrypt / argon2 (salting & work factors)"
+            ],
+            "officialDocs": "https://auth0.com/intro-to-iam/what-is-jwt",
+            "practiceChallenge": "Implement refresh token rotation with blacklist revocation in a Node.js / Express API.",
+            "estimatedHours": 14
+          },
+          {
+            "id": "oauth-social-login",
+            "title": "OAuth 2.0 & OpenID Connect",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Industry standard protocol for authorization allowing users to sign in with Google, GitHub, or Apple.",
+            "whatToLearn": [
+              "Authorization Code Grant Flow with PKCE",
+              "Client ID, Client Secret, Redirect URI, and Scopes",
+              "ID Tokens vs Access Tokens in OIDC",
+              "Integrating Google / GitHub OAuth providers"
+            ],
+            "officialDocs": "https://oauth.net/2/",
+            "practiceChallenge": "Add \"Sign In With GitHub\" to your web application using standard OAuth 2.0 Authorization Code flow.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "owasp-web-security",
+            "title": "OWASP Top 10 Security Defenses",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Protect applications against common vulnerabilities: Injection, Broken Auth, XSS, CSRF, and Misconfigurations.",
+            "whatToLearn": [
+              "Cross-Site Scripting (XSS): Stored, Reflected, DOM-based & Content Security Policy (CSP)",
+              "Cross-Site Request Forgery (CSRF) & SameSite cookies",
+              "SQL Injection (SQLi) & parameterized queries",
+              "CORS (Cross-Origin Resource Sharing) headers and preflight checks",
+              "Rate limiting, IP blacklisting, and DDOS mitigation"
+            ],
+            "officialDocs": "https://owasp.org/www-project-top-ten/",
+            "practiceChallenge": "Audit an existing web API for missing security headers, CSRF vulnerabilities, and SQL injection risks.",
+            "estimatedHours": 16
+          }
+        ]
+      },
+      {
+        "id": "testing-quality",
+        "stepNumber": 9,
+        "title": "Testing & Code Quality",
+        "category": "foundations",
+        "tagline": "Write automated unit, integration, and end-to-end tests that ensure production reliability.",
+        "description": "High-performing engineering teams ship features with confidence by maintaining solid automated test suites.",
+        "topics": [
+          {
+            "id": "unit-testing-vitest",
+            "title": "Unit Testing (Vitest / Jest)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Fast, isolated testing of individual pure functions, algorithms, and business logic utilities.",
+            "whatToLearn": [
+              "Test anatomy: describe, it/test, expect, assertions",
+              "Mocking functions, modules, and API calls (vi.fn, vi.spyOn)",
+              "Test coverage metrics (statements, branches, functions, lines)",
+              "Testing React components with React Testing Library"
+            ],
+            "officialDocs": "https://vitest.dev/guide/",
+            "practiceChallenge": "Write unit tests achieving 90%+ branch coverage for a financial billing calculator module.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "e2e-testing-playwright",
+            "title": "E2E Testing (Playwright)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate real browser engines (Chromium, Firefox, WebKit) to test complete user journeys end-to-end.",
+            "whatToLearn": [
+              "Headless vs headed browser execution",
+              "Locators, auto-waiting, user actions (click, fill, press)",
+              "Network mocking and route interception in Playwright",
+              "Visual regression testing and screenshot comparisons"
+            ],
+            "officialDocs": "https://playwright.dev/docs/intro",
+            "practiceChallenge": "Write an automated Playwright test that logs in, adds an item to cart, and verifies the total price.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "devops-deployment",
+        "stepNumber": 10,
+        "title": "Docker, CI/CD & Cloud Deployment",
+        "category": "devops",
+        "tagline": "Package software into reproducible containers and automate continuous delivery to the cloud.",
+        "description": "A true full-stack engineer knows how to take raw code, containerize it, and deploy it securely to production servers.",
+        "topics": [
+          {
+            "id": "docker-containers",
+            "title": "Docker & Containerization",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Package applications and all their dependencies into a standardized, isolated container unit.",
+            "whatToLearn": [
+              "Images vs Containers, Docker Hub registry",
+              "Writing multi-stage Dockerfiles (build stage vs production stage)",
+              "Docker Compose for multi-service environments (App + Postgres + Redis)",
+              "Volumes for persistent storage and bridge networks"
+            ],
+            "officialDocs": "https://docs.docker.com/",
+            "practiceChallenge": "Create a docker-compose.yml file that orchestrates a Next.js frontend, Node.js API, and PostgreSQL.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "github-actions-cicd",
+            "title": "CI/CD with GitHub Actions",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate testing, linting, building, and deployment pipelines directly on every push or pull request.",
+            "whatToLearn": [
+              "Workflow YAML syntax: triggers, jobs, steps, runners",
+              "Matrix builds for multi-version testing",
+              "GitHub Secrets management for API keys and deployment credentials",
+              "Automated SSH deployment or Docker image build & push to registry"
+            ],
+            "officialDocs": "https://docs.github.com/en/actions",
+            "practiceChallenge": "Build a GitHub Actions workflow that runs linter, tests, builds production bundle, and notifies on failure.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "web-servers-nginx",
+            "title": "Web Servers & Reverse Proxy (Nginx)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "High-performance HTTP server, reverse proxy, and load balancer for routing traffic to backend containers.",
+            "whatToLearn": [
+              "Reverse proxy configuration (proxy_pass to local ports)",
+              "SSL termination with Let’s Encrypt Certbot",
+              "Gzip compression, static file caching, and client body limits",
+              "Load balancing algorithms: round-robin, least connections, ip_hash"
+            ],
+            "officialDocs": "https://nginx.org/en/docs/",
+            "practiceChallenge": "Configure an Nginx reverse proxy routing requests for /api to a Node app and /* to static HTML files.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "cloud-hosting-vps",
+            "title": "Cloud VPS & Production Hosting",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Deploy real applications to Linux VPS servers (Hostinger VPS, DigitalOcean) and manage system services.",
+            "whatToLearn": [
+              "Linux server administration basics (Ubuntu, SSH keys, ufw firewall)",
+              "Process management with PM2 / systemd services",
+              "Automated backups, log rotation, and disk space monitoring",
+              "Custom domain DNS mapping and free SSL certificates"
+            ],
+            "officialDocs": "https://www.digitalocean.com/community/tutorials",
+            "practiceChallenge": "Provision an Ubuntu server, set up SSH key auth, configure UFW firewall, and run an app with PM2.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "system-design-architecture",
+        "stepNumber": 11,
+        "title": "System Design & Distributed Systems",
+        "category": "architecture",
+        "tagline": "Scale web applications to millions of concurrent users with fault-tolerant, resilient architectures.",
+        "description": "The transition from mid-level to senior/staff engineer requires mastering scalability bottlenecks, database sharding, and messaging queues.",
+        "topics": [
+          {
+            "id": "monolith-vs-microservices",
+            "title": "Monolith vs Microservices Architecture",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Evaluate architectural trade-offs between modular monoliths and independently deployable microservices.",
+            "whatToLearn": [
+              "Modular Monolith advantages, boundaries, and domain-driven design (DDD)",
+              "Microservices challenges: network latency, distributed transactions, data consistency",
+              "API Gateway pattern and service mesh",
+              "Eventual consistency and the CAP theorem"
+            ],
+            "officialDocs": "https://microservices.io/",
+            "practiceChallenge": "Design an architecture diagram for an Uber or Netflix scale system detailing service boundaries.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "message-queues-kafka",
+            "title": "Message Queues & Event Streaming (Kafka, RabbitMQ)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Asynchronous task processing and high-throughput event streaming between decoupled services.",
+            "whatToLearn": [
+              "Point-to-point queues (RabbitMQ, SQS) vs Event logs (Apache Kafka)",
+              "Producers, Consumers, Consumer Groups, and Partitions",
+              "Background worker queues (BullMQ with Redis in Node.js)",
+              "Handling poison pills, dead-letter queues (DLQ), and retry exponential backoff"
+            ],
+            "officialDocs": "https://kafka.apache.org/documentation/",
+            "practiceChallenge": "Build an asynchronous email / video processing worker queue with BullMQ and Redis.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "observability-monitoring",
+            "title": "Observability (Logging, Metrics, Tracing)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Know what is happening inside production systems before users report bugs.",
+            "whatToLearn": [
+              "Structured JSON logging (Pino, Winston) and log correlation IDs",
+              "Application metrics with Prometheus & visualization in Grafana",
+              "Distributed tracing with OpenTelemetry",
+              "Real-time error monitoring and alerting (Sentry)"
+            ],
+            "officialDocs": "https://opentelemetry.io/docs/",
+            "practiceChallenge": "Add distributed correlation IDs to all incoming requests and trace them across HTTP headers.",
+            "estimatedHours": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "frontend",
+    "slug": "frontend",
+    "title": "Frontend Developer",
+    "subtitle": "Step by step guide to becoming a modern frontend developer in 2026",
+    "description": "Master HTML5, Modern CSS layouts, JavaScript ES6+, React 19, Next.js, Web Performance, and Design Systems.",
+    "badge": "Specialized Track",
+    "stages": [
+      {
+        "id": "internet-basics",
+        "stepNumber": 1,
+        "title": "Internet & Web Fundamentals",
+        "category": "foundations",
+        "tagline": "Understand the underlying protocols and mechanics of how the worldwide web operates.",
+        "description": "Before writing frontend or backend code, you must understand how data travels across the globe, how DNS maps names to IP addresses, and how browsers parse responses.",
+        "topics": [
+          {
+            "id": "how-internet-works",
+            "title": "How does the Internet Work?",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The physical and logical infrastructure connecting billions of computers worldwide through packet switching, TCP/IP, and internet service providers.",
+            "whatToLearn": [
+              "Packet switching and IP addressing (IPv4 vs IPv6)",
+              "The OSI 7-Layer Model vs TCP/IP stack",
+              "Routers, switches, optical cables, and border gateway protocol (BGP)",
+              "Latency, bandwidth, packet loss, and jitter"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/How_does_the_Internet_work",
+            "practiceChallenge": "Use traceroute / ping in terminal to track packets from your machine to github.com.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "http-https",
+            "title": "HTTP / HTTPS Protocols",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "The foundational client-server communication protocol for transferring hypertext, JSON payloads, and media across the web.",
+            "whatToLearn": [
+              "HTTP request methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+              "HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx)",
+              "Headers: Content-Type, Authorization, Cache-Control, User-Agent",
+              "HTTPS & TLS/SSL handshake encryption",
+              "HTTP/2 multiplexing vs HTTP/3 (QUIC over UDP)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+            "practiceChallenge": "Inspect network tab in DevTools and inspect request/response headers for 5 different websites.",
+            "estimatedHours": 6
+          },
+          {
+            "id": "dns-domain-names",
+            "title": "DNS & Domain Resolution",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The phonebook of the Internet. Resolves human-readable domain names like yaswant.co.in into machine-routable IP addresses.",
+            "whatToLearn": [
+              "Root nameservers, TLD nameservers, and authoritative DNS",
+              "DNS Record Types: A, AAAA, CNAME, MX, TXT, NS, SOA",
+              "DNS propagation and Time-To-Live (TTL)",
+              "DNS over HTTPS (DoH) and DNS security extensions (DNSSEC)"
+            ],
+            "officialDocs": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+            "practiceChallenge": "Use dig or nslookup to query the A and MX records of google.com and your custom domain.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "browser-mechanics",
+            "title": "Browsers & Rendering Engines",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "How modern web browsers (Chromium, Gecko, WebKit) parse HTML/CSS, build the DOM and CSSOM, execute JavaScript, and paint pixels.",
+            "whatToLearn": [
+              "DOM tree and CSSOM construction",
+              "The Render Tree, Layout (Reflow), and Paint (Repaint)",
+              "Critical Rendering Path (CRP) optimization",
+              "JavaScript execution thread and the Browser Event Loop"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+            "practiceChallenge": "Profile a web page in Chrome DevTools Performance tab and identify layout shifts and long tasks.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "core-frontend",
+        "stepNumber": 2,
+        "title": "Frontend Foundations (HTML, CSS, JS)",
+        "category": "frontend",
+        "tagline": "The three core building blocks of all user interfaces on the modern web.",
+        "description": "Every web engineer must write clean, accessible, semantic markup, build responsive layouts, and master JavaScript as a programming language.",
+        "topics": [
+          {
+            "id": "semantic-html",
+            "title": "HTML5 & Semantic Markup",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Structure web documents using meaningful tags that screen readers, search engines, and browsers understand natively.",
+            "whatToLearn": [
+              "Semantic elements: <header>, <nav>, <main>, <article>, <section>, <footer>",
+              "Accessible forms: <form>, <input>, <label>, <fieldset>, <select>, validation attributes",
+              "Web Accessibility (WCAG & WAI-ARIA roles, aria-live, aria-expanded)",
+              "SEO metadata tags, Open Graph, and Structured Data (JSON-LD)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/HTML",
+            "practiceChallenge": "Build an accessible checkout form with client-side validation and semantic ARIA attributes without JavaScript.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "modern-css",
+            "title": "Modern CSS, Flexbox & Grid",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Master CSS layouts, the Box Model, modern responsive typography, custom properties (variables), and animations.",
+            "whatToLearn": [
+              "The CSS Box Model (margin, border, padding, content-box vs border-box)",
+              "Flexbox: justify-content, align-items, flex-direction, flex-wrap, gap",
+              "CSS Grid: grid-template-columns, fr units, minmax, auto-fit, auto-fill",
+              "Responsive Design: fluid clamp(), container queries, media queries",
+              "CSS Custom Properties (Variables) & Dark Mode theming"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/CSS",
+            "practiceChallenge": "Build a responsive 12-column dashboard layout with CSS Grid that collapses cleanly on mobile devices.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "modern-javascript",
+            "title": "JavaScript (ES6+ Deep Dive)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The primary language of the web. Learn closures, prototypes, asynchronous programming, and DOM manipulation.",
+            "whatToLearn": [
+              "Data types, scoping (let, const, var), hoisting, and closures",
+              "Arrow functions, destructuring, rest/spread operators, template literals",
+              "Array methods: map, filter, reduce, find, some, every, sort",
+              "Asynchronous JS: Event Loop, Callbacks, Promises, and async/await",
+              "DOM Manipulation, Event Bubbling, Delegation, and fetch() API"
+            ],
+            "officialDocs": "https://javascript.info/",
+            "practiceChallenge": "Build an interactive weather dashboard consuming a public API using async/await with error handling.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "typescript-foundations",
+            "title": "TypeScript (Type-Safe JS)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Static typing for JavaScript. Catches errors during development and powers enterprise full-stack codebases.",
+            "whatToLearn": [
+              "Primitive types, interfaces, and type aliases",
+              "Generics: reusable classes, functions, and interfaces",
+              "Union types, intersection types, and type narrowing",
+              "Utility types: Partial, Pick, Omit, Record, Readonly",
+              "tsconfig.json strict mode configurations"
+            ],
+            "officialDocs": "https://www.typescriptlang.org/docs/",
+            "practiceChallenge": "Convert a 200-line vanilla JS API client to strict TypeScript with zero any types.",
+            "estimatedHours": 14
+          }
+        ]
+      },
+      {
+        "id": "tools-vcs",
+        "stepNumber": 3,
+        "title": "Git, VCS & Package Managers",
+        "category": "foundations",
+        "tagline": "Essential developer workflow tools for tracking code history and managing third-party modules.",
+        "description": "Professional engineering requires mastering Git branching workflows, resolving merge conflicts, and leveraging package managers.",
+        "topics": [
+          {
+            "id": "git-version-control",
+            "title": "Git & GitHub Workflows",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Distributed version control system to track changes in source code during software development.",
+            "whatToLearn": [
+              "Core commands: git init, add, commit, status, log, diff",
+              "Branching strategies: Git Flow, Trunk-based development",
+              "Merging vs Rebasing (fast-forward, interactive rebase)",
+              "Resolving merge conflicts and cherry-picking commits",
+              "GitHub Pull Requests, code reviews, and issue tracking"
+            ],
+            "officialDocs": "https://git-scm.com/doc",
+            "practiceChallenge": "Create a repository, make 3 feature branches, trigger an intentional merge conflict, and resolve it cleanly.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "package-managers",
+            "title": "Package Managers (npm, pnpm)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Tools for installing, updating, and managing third-party open-source libraries and scripts.",
+            "whatToLearn": [
+              "package.json scripts, dependencies vs devDependencies",
+              "Semantic Versioning (SemVer: major, minor, patch, caret, tilde)",
+              "Lockfiles (package-lock.json, pnpm-lock.yaml) and determinism",
+              "pnpm content-addressable storage & workspace monorepos"
+            ],
+            "officialDocs": "https://pnpm.io/",
+            "practiceChallenge": "Initialize a pnpm workspace monorepo with a shared UI package and two apps.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "build-tools-vite",
+            "title": "Build Tools & Bundlers (Vite)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Next-generation frontend tooling powered by native ES modules (ESM) and lightning-fast Rollup/esbuild.",
+            "whatToLearn": [
+              "Native ESM in development vs bundled production output",
+              "Hot Module Replacement (HMR) architecture",
+              "Code splitting, dynamic imports, and chunk optimization",
+              "Environment variables (.env, import.meta.env) in Vite"
+            ],
+            "officialDocs": "https://vitejs.dev/guide/",
+            "practiceChallenge": "Configure a custom vite.config.ts with rollupOptions manualChunks to split vendor libraries.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "frontend-frameworks",
+        "stepNumber": 4,
+        "title": "Frontend Frameworks & State",
+        "category": "frontend",
+        "tagline": "Build declarative, reactive, and reusable user interfaces with industry-standard component libraries.",
+        "description": "Component-driven frontend architectures dominate modern engineering. Master React 19, state management, and utility-first CSS.",
+        "topics": [
+          {
+            "id": "react-core",
+            "title": "React 19 & Component Architecture",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The world’s most popular declarative UI library. Master functional components, hooks, and reconciliation.",
+            "whatToLearn": [
+              "JSX syntax, props, children, and component composition",
+              "Core Hooks: useState, useEffect, useRef, useMemo, useCallback",
+              "React 19 Hooks: useActionState, useOptimistic, useFormStatus",
+              "Controlled vs uncontrolled form components",
+              "Error boundaries, Suspense, and lazy loading"
+            ],
+            "officialDocs": "https://react.dev/",
+            "practiceChallenge": "Build an e-commerce product catalog with interactive filters, sorting, and optimistic cart updates.",
+            "estimatedHours": 24
+          },
+          {
+            "id": "tailwind-css",
+            "title": "Tailwind CSS (Utility-First)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Rapidly build modern designs without ever leaving your HTML/JSX using composable atomic utility classes.",
+            "whatToLearn": [
+              "Utility-first philosophy vs traditional BEM CSS",
+              "Responsive modifiers (sm:, md:, lg:, xl:)",
+              "State variants (hover:, focus:, active:, disabled:, dark:)",
+              "Custom themes, color palettes, and arbitrary values"
+            ],
+            "officialDocs": "https://tailwindcss.com/docs",
+            "practiceChallenge": "Recreate a sleek Stripe-style landing hero section purely using Tailwind CSS utility classes.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "state-management",
+            "title": "State Management (Zustand & TanStack Query)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Separate client UI state from asynchronous server cache state with clean, boilerplate-free stores.",
+            "whatToLearn": [
+              "Client State vs Server State distinction",
+              "Zustand store creation, selectors, and middleware (persist)",
+              "TanStack Query: useQuery, useMutation, query keys, invalidation",
+              "Optimistic updates and background refetching"
+            ],
+            "officialDocs": "https://zustand.docs.pmnd.rs/",
+            "practiceChallenge": "Build a Kanban board with Zustand for column state and TanStack Query for background sync.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "nextjs-fullstack",
+            "title": "Next.js 15 (App Router & SSR)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "The enterprise React framework. Hybrid Server Components, static generation (SSG), and Server Actions.",
+            "whatToLearn": [
+              "App Router file conventions: page, layout, loading, error, not-found",
+              "React Server Components (RSC) vs Client Components (\"use client\")",
+              "Server Actions for type-safe form submissions",
+              "Static Site Generation (SSG), SSR, and Incremental Static Regeneration (ISR)"
+            ],
+            "officialDocs": "https://nextjs.org/docs",
+            "practiceChallenge": "Build a full-featured blog with Server Components, dynamic slug routing, and Server Action comments.",
+            "estimatedHours": 20
+          }
+        ]
+      },
+      {
+        "id": "testing-quality",
+        "stepNumber": 9,
+        "title": "Testing & Code Quality",
+        "category": "foundations",
+        "tagline": "Write automated unit, integration, and end-to-end tests that ensure production reliability.",
+        "description": "High-performing engineering teams ship features with confidence by maintaining solid automated test suites.",
+        "topics": [
+          {
+            "id": "unit-testing-vitest",
+            "title": "Unit Testing (Vitest / Jest)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Fast, isolated testing of individual pure functions, algorithms, and business logic utilities.",
+            "whatToLearn": [
+              "Test anatomy: describe, it/test, expect, assertions",
+              "Mocking functions, modules, and API calls (vi.fn, vi.spyOn)",
+              "Test coverage metrics (statements, branches, functions, lines)",
+              "Testing React components with React Testing Library"
+            ],
+            "officialDocs": "https://vitest.dev/guide/",
+            "practiceChallenge": "Write unit tests achieving 90%+ branch coverage for a financial billing calculator module.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "e2e-testing-playwright",
+            "title": "E2E Testing (Playwright)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate real browser engines (Chromium, Firefox, WebKit) to test complete user journeys end-to-end.",
+            "whatToLearn": [
+              "Headless vs headed browser execution",
+              "Locators, auto-waiting, user actions (click, fill, press)",
+              "Network mocking and route interception in Playwright",
+              "Visual regression testing and screenshot comparisons"
+            ],
+            "officialDocs": "https://playwright.dev/docs/intro",
+            "practiceChallenge": "Write an automated Playwright test that logs in, adds an item to cart, and verifies the total price.",
+            "estimatedHours": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "backend",
+    "slug": "backend",
+    "title": "Backend Developer",
+    "subtitle": "Step by step guide to becoming a modern backend developer in 2026",
+    "description": "Master Node.js, Python, PostgreSQL, Redis, REST/GraphQL APIs, Authentication, Web Security, and System Design.",
+    "badge": "Specialized Track",
+    "stages": [
+      {
+        "id": "internet-basics",
+        "stepNumber": 1,
+        "title": "Internet & Web Fundamentals",
+        "category": "foundations",
+        "tagline": "Understand the underlying protocols and mechanics of how the worldwide web operates.",
+        "description": "Before writing frontend or backend code, you must understand how data travels across the globe, how DNS maps names to IP addresses, and how browsers parse responses.",
+        "topics": [
+          {
+            "id": "how-internet-works",
+            "title": "How does the Internet Work?",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The physical and logical infrastructure connecting billions of computers worldwide through packet switching, TCP/IP, and internet service providers.",
+            "whatToLearn": [
+              "Packet switching and IP addressing (IPv4 vs IPv6)",
+              "The OSI 7-Layer Model vs TCP/IP stack",
+              "Routers, switches, optical cables, and border gateway protocol (BGP)",
+              "Latency, bandwidth, packet loss, and jitter"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/How_does_the_Internet_work",
+            "practiceChallenge": "Use traceroute / ping in terminal to track packets from your machine to github.com.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "http-https",
+            "title": "HTTP / HTTPS Protocols",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "The foundational client-server communication protocol for transferring hypertext, JSON payloads, and media across the web.",
+            "whatToLearn": [
+              "HTTP request methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+              "HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx)",
+              "Headers: Content-Type, Authorization, Cache-Control, User-Agent",
+              "HTTPS & TLS/SSL handshake encryption",
+              "HTTP/2 multiplexing vs HTTP/3 (QUIC over UDP)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+            "practiceChallenge": "Inspect network tab in DevTools and inspect request/response headers for 5 different websites.",
+            "estimatedHours": 6
+          },
+          {
+            "id": "dns-domain-names",
+            "title": "DNS & Domain Resolution",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The phonebook of the Internet. Resolves human-readable domain names like yaswant.co.in into machine-routable IP addresses.",
+            "whatToLearn": [
+              "Root nameservers, TLD nameservers, and authoritative DNS",
+              "DNS Record Types: A, AAAA, CNAME, MX, TXT, NS, SOA",
+              "DNS propagation and Time-To-Live (TTL)",
+              "DNS over HTTPS (DoH) and DNS security extensions (DNSSEC)"
+            ],
+            "officialDocs": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+            "practiceChallenge": "Use dig or nslookup to query the A and MX records of google.com and your custom domain.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "browser-mechanics",
+            "title": "Browsers & Rendering Engines",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "How modern web browsers (Chromium, Gecko, WebKit) parse HTML/CSS, build the DOM and CSSOM, execute JavaScript, and paint pixels.",
+            "whatToLearn": [
+              "DOM tree and CSSOM construction",
+              "The Render Tree, Layout (Reflow), and Paint (Repaint)",
+              "Critical Rendering Path (CRP) optimization",
+              "JavaScript execution thread and the Browser Event Loop"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+            "practiceChallenge": "Profile a web page in Chrome DevTools Performance tab and identify layout shifts and long tasks.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "tools-vcs",
+        "stepNumber": 3,
+        "title": "Git, VCS & Package Managers",
+        "category": "foundations",
+        "tagline": "Essential developer workflow tools for tracking code history and managing third-party modules.",
+        "description": "Professional engineering requires mastering Git branching workflows, resolving merge conflicts, and leveraging package managers.",
+        "topics": [
+          {
+            "id": "git-version-control",
+            "title": "Git & GitHub Workflows",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Distributed version control system to track changes in source code during software development.",
+            "whatToLearn": [
+              "Core commands: git init, add, commit, status, log, diff",
+              "Branching strategies: Git Flow, Trunk-based development",
+              "Merging vs Rebasing (fast-forward, interactive rebase)",
+              "Resolving merge conflicts and cherry-picking commits",
+              "GitHub Pull Requests, code reviews, and issue tracking"
+            ],
+            "officialDocs": "https://git-scm.com/doc",
+            "practiceChallenge": "Create a repository, make 3 feature branches, trigger an intentional merge conflict, and resolve it cleanly.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "package-managers",
+            "title": "Package Managers (npm, pnpm)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Tools for installing, updating, and managing third-party open-source libraries and scripts.",
+            "whatToLearn": [
+              "package.json scripts, dependencies vs devDependencies",
+              "Semantic Versioning (SemVer: major, minor, patch, caret, tilde)",
+              "Lockfiles (package-lock.json, pnpm-lock.yaml) and determinism",
+              "pnpm content-addressable storage & workspace monorepos"
+            ],
+            "officialDocs": "https://pnpm.io/",
+            "practiceChallenge": "Initialize a pnpm workspace monorepo with a shared UI package and two apps.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "build-tools-vite",
+            "title": "Build Tools & Bundlers (Vite)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Next-generation frontend tooling powered by native ES modules (ESM) and lightning-fast Rollup/esbuild.",
+            "whatToLearn": [
+              "Native ESM in development vs bundled production output",
+              "Hot Module Replacement (HMR) architecture",
+              "Code splitting, dynamic imports, and chunk optimization",
+              "Environment variables (.env, import.meta.env) in Vite"
+            ],
+            "officialDocs": "https://vitejs.dev/guide/",
+            "practiceChallenge": "Configure a custom vite.config.ts with rollupOptions manualChunks to split vendor libraries.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "backend-runtimes",
+        "stepNumber": 5,
+        "title": "Backend Runtimes & Languages",
+        "category": "backend",
+        "tagline": "Power server-side logic, handle HTTP requests, and execute business rules.",
+        "description": "Choose a primary backend runtime. JavaScript/TypeScript developers typically excel with Node.js, while enterprise systems often use Python or Go.",
+        "topics": [
+          {
+            "id": "nodejs-express",
+            "title": "Node.js & Express.js / Hono",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "V8-powered asynchronous, non-blocking I/O JavaScript runtime for building scalable server-side applications.",
+            "whatToLearn": [
+              "Node.js Event Loop, streams, and file system (fs/promises)",
+              "Building HTTP servers, middleware architecture, and routing",
+              "Request parsing, query params, path params, and body parsers",
+              "Centralized error-handling middleware and status codes",
+              "Modern lightweight alternatives: Hono, Fastify"
+            ],
+            "officialDocs": "https://nodejs.org/en/docs",
+            "practiceChallenge": "Build a production-grade REST API with JWT authentication, rate limiting, and structured logging.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "python-backend",
+            "title": "Python (FastAPI / Django)",
+            "type": "alternative",
+            "level": "Intermediate",
+            "description": "High-level programming language dominant in AI/ML, data science, and clean asynchronous microservices.",
+            "whatToLearn": [
+              "FastAPI async def routes and automatic OpenAPI/Swagger docs",
+              "Pydantic models for data validation and serialization",
+              "Dependency injection in FastAPI",
+              "Django batteries-included MVC, ORM, and admin portal"
+            ],
+            "officialDocs": "https://fastapi.tiangolo.com/",
+            "practiceChallenge": "Create a microservice in FastAPI with Pydantic validation that predicts text sentiment or processes files.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "go-backend",
+            "title": "Go (Golang)",
+            "type": "alternative",
+            "level": "Advanced",
+            "description": "Statically-typed, compiled language developed by Google for high-concurrency distributed systems.",
+            "whatToLearn": [
+              "Goroutines and Channels for lightweight concurrency",
+              "Structs, interfaces, and implicit implementation",
+              "Standard net/http library and Gin/Echo frameworks",
+              "Memory management and compile-to-single-binary deployment"
+            ],
+            "officialDocs": "https://go.dev/doc/",
+            "practiceChallenge": "Write a concurrent URL health checker in Go that pings 50 endpoints concurrently using worker pools.",
+            "estimatedHours": 18
+          }
+        ]
+      },
+      {
+        "id": "databases-storage",
+        "stepNumber": 6,
+        "title": "Databases & ORMs (SQL & NoSQL)",
+        "category": "database",
+        "tagline": "Reliable, ACID-compliant data persistence, indexing, and schema design.",
+        "description": "Applications live and die by their data layer. Master relational schemas in PostgreSQL and high-speed key-value caching in Redis.",
+        "topics": [
+          {
+            "id": "postgresql-sql",
+            "title": "PostgreSQL (Relational SQL)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "The world’s most advanced open-source object-relational database system with robust ACID guarantees.",
+            "whatToLearn": [
+              "Relational modeling: 1-to-1, 1-to-many, many-to-many junction tables",
+              "SQL Joins (INNER, LEFT, RIGHT, FULL) and aggregations (GROUP BY, HAVING)",
+              "ACID properties, transactions, and isolation levels",
+              "Database indexing: B-Tree, GIN, composite indexes, and EXPLAIN ANALYZE",
+              "Foreign keys, cascading updates/deletes, and constraints"
+            ],
+            "officialDocs": "https://www.postgresql.org/docs/",
+            "practiceChallenge": "Design an e-commerce schema (Users, Orders, Items, Inventory) with transactional order checkout.",
+            "estimatedHours": 20
+          },
+          {
+            "id": "prisma-drizzle",
+            "title": "ORMs: Prisma & Drizzle",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Type-safe database toolkits for TypeScript that generate SQL queries without sacrificing type safety.",
+            "whatToLearn": [
+              "Prisma Schema definition, relations, and migrations (prisma migrate)",
+              "Type-safe querying: findUnique, findMany, include, select, transactions",
+              "Drizzle ORM: SQL-like syntax with zero bundle overhead",
+              "Database connection pooling in serverless environments"
+            ],
+            "officialDocs": "https://www.prisma.io/docs",
+            "practiceChallenge": "Write automated seed scripts and migrations using Prisma connecting to a live PostgreSQL database.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "redis-cache",
+            "title": "Redis (In-Memory Key-Value & Cache)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Ultra-fast in-memory data store used for database query caching, user sessions, rate limiting, and pub/sub.",
+            "whatToLearn": [
+              "Data structures: Strings, Hashes, Lists, Sets, Sorted Sets",
+              "TTL (Time-to-Live) expiration and eviction policies (LRU)",
+              "Caching strategies: Cache-Aside, Write-Through, Write-Behind",
+              "Distributed locks and sliding window rate limiting"
+            ],
+            "officialDocs": "https://redis.io/docs/",
+            "practiceChallenge": "Implement Redis caching on a heavy database endpoint with automatic 60-second cache invalidation.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "mongodb-nosql",
+            "title": "MongoDB (Document NoSQL)",
+            "type": "alternative",
+            "level": "Intermediate",
+            "description": "JSON-like flexible document database suitable for rapidly evolving schemas and unstructured data.",
+            "whatToLearn": [
+              "BSON document model, collections, and ObjectIDs",
+              "Mongoose ODM schemas, validation, and virtuals",
+              "Aggregation Pipeline ($match, $group, $project, $lookup)",
+              "When to choose SQL vs NoSQL document stores"
+            ],
+            "officialDocs": "https://www.mongodb.com/docs/",
+            "practiceChallenge": "Build a multi-stage aggregation pipeline calculating monthly sales statistics from raw order documents.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "api-architectures",
+        "stepNumber": 7,
+        "title": "API Architectures & Protocols",
+        "category": "apis",
+        "tagline": "How frontend and backend exchange data efficiently and reliably.",
+        "description": "Full stack developers must design clean, predictable, documented APIs following international web standards.",
+        "topics": [
+          {
+            "id": "rest-api-design",
+            "title": "RESTful API Design Best Practices",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Architectural style for designing networked applications relying on standard HTTP verbs and stateless endpoints.",
+            "whatToLearn": [
+              "Resource naming conventions (/api/v1/users/:id/orders)",
+              "Idempotency of GET, PUT, DELETE vs non-idempotent POST",
+              "Pagination patterns (offset/limit vs cursor-based pagination)",
+              "Filtering, sorting, and field selection query parameters",
+              "OpenAPI 3.0 / Swagger specification documentation"
+            ],
+            "officialDocs": "https://restfulapi.net/",
+            "practiceChallenge": "Document and implement a cursor-based paginated REST API endpoint with Swagger UI integration.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "websockets-realtime",
+            "title": "WebSockets & Server-Sent Events",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Persistent full-duplex TCP connections for real-time live chat, notifications, and telemetry feeds.",
+            "whatToLearn": [
+              "WebSocket handshake upgrade protocol (ws:// and wss://)",
+              "Socket.IO vs native WebSocket API",
+              "Heartbeat ping/pong and auto-reconnection logic",
+              "Server-Sent Events (SSE) for one-way streaming (e.g. AI LLM tokens)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API",
+            "practiceChallenge": "Build a real-time collaborative chat room with live typing indicators and online user lists.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "graphql-apis",
+            "title": "GraphQL (Client-Driven Queries)",
+            "type": "alternative",
+            "level": "Advanced",
+            "description": "A query language for your API that allows clients to request exactly what they need and nothing more.",
+            "whatToLearn": [
+              "Schema Definition Language (SDL): Types, Queries, Mutations",
+              "Resolvers and context handling",
+              "Solving the N+1 problem using DataLoader",
+              "GraphQL Subscriptions for real-time updates"
+            ],
+            "officialDocs": "https://graphql.org/learn/",
+            "practiceChallenge": "Build a GraphQL server with Apollo Server and optimize relations using DataLoader.",
+            "estimatedHours": 14
+          }
+        ]
+      },
+      {
+        "id": "auth-security",
+        "stepNumber": 8,
+        "title": "Authentication & Web Security",
+        "category": "backend",
+        "tagline": "Safeguard user identities, protect against cyber attacks, and enforce access controls.",
+        "description": "Security is not an afterthought. Learn cryptographic password hashing, token validation, and OWASP defense patterns.",
+        "topics": [
+          {
+            "id": "jwt-sessions-auth",
+            "title": "JWT Tokens & HttpOnly Cookie Sessions",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Stateless JSON Web Tokens and secure session cookie storage for verifying user identity.",
+            "whatToLearn": [
+              "Structure of JWT: Header, Payload, Signature",
+              "Access Token (short-lived) + Refresh Token (long-lived) rotation",
+              "HttpOnly, Secure, SameSite=Strict cookie flags (preventing XSS theft)",
+              "Password hashing with bcrypt / argon2 (salting & work factors)"
+            ],
+            "officialDocs": "https://auth0.com/intro-to-iam/what-is-jwt",
+            "practiceChallenge": "Implement refresh token rotation with blacklist revocation in a Node.js / Express API.",
+            "estimatedHours": 14
+          },
+          {
+            "id": "oauth-social-login",
+            "title": "OAuth 2.0 & OpenID Connect",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Industry standard protocol for authorization allowing users to sign in with Google, GitHub, or Apple.",
+            "whatToLearn": [
+              "Authorization Code Grant Flow with PKCE",
+              "Client ID, Client Secret, Redirect URI, and Scopes",
+              "ID Tokens vs Access Tokens in OIDC",
+              "Integrating Google / GitHub OAuth providers"
+            ],
+            "officialDocs": "https://oauth.net/2/",
+            "practiceChallenge": "Add \"Sign In With GitHub\" to your web application using standard OAuth 2.0 Authorization Code flow.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "owasp-web-security",
+            "title": "OWASP Top 10 Security Defenses",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Protect applications against common vulnerabilities: Injection, Broken Auth, XSS, CSRF, and Misconfigurations.",
+            "whatToLearn": [
+              "Cross-Site Scripting (XSS): Stored, Reflected, DOM-based & Content Security Policy (CSP)",
+              "Cross-Site Request Forgery (CSRF) & SameSite cookies",
+              "SQL Injection (SQLi) & parameterized queries",
+              "CORS (Cross-Origin Resource Sharing) headers and preflight checks",
+              "Rate limiting, IP blacklisting, and DDOS mitigation"
+            ],
+            "officialDocs": "https://owasp.org/www-project-top-ten/",
+            "practiceChallenge": "Audit an existing web API for missing security headers, CSRF vulnerabilities, and SQL injection risks.",
+            "estimatedHours": 16
+          }
+        ]
+      },
+      {
+        "id": "testing-quality",
+        "stepNumber": 9,
+        "title": "Testing & Code Quality",
+        "category": "foundations",
+        "tagline": "Write automated unit, integration, and end-to-end tests that ensure production reliability.",
+        "description": "High-performing engineering teams ship features with confidence by maintaining solid automated test suites.",
+        "topics": [
+          {
+            "id": "unit-testing-vitest",
+            "title": "Unit Testing (Vitest / Jest)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Fast, isolated testing of individual pure functions, algorithms, and business logic utilities.",
+            "whatToLearn": [
+              "Test anatomy: describe, it/test, expect, assertions",
+              "Mocking functions, modules, and API calls (vi.fn, vi.spyOn)",
+              "Test coverage metrics (statements, branches, functions, lines)",
+              "Testing React components with React Testing Library"
+            ],
+            "officialDocs": "https://vitest.dev/guide/",
+            "practiceChallenge": "Write unit tests achieving 90%+ branch coverage for a financial billing calculator module.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "e2e-testing-playwright",
+            "title": "E2E Testing (Playwright)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate real browser engines (Chromium, Firefox, WebKit) to test complete user journeys end-to-end.",
+            "whatToLearn": [
+              "Headless vs headed browser execution",
+              "Locators, auto-waiting, user actions (click, fill, press)",
+              "Network mocking and route interception in Playwright",
+              "Visual regression testing and screenshot comparisons"
+            ],
+            "officialDocs": "https://playwright.dev/docs/intro",
+            "practiceChallenge": "Write an automated Playwright test that logs in, adds an item to cart, and verifies the total price.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "system-design-architecture",
+        "stepNumber": 11,
+        "title": "System Design & Distributed Systems",
+        "category": "architecture",
+        "tagline": "Scale web applications to millions of concurrent users with fault-tolerant, resilient architectures.",
+        "description": "The transition from mid-level to senior/staff engineer requires mastering scalability bottlenecks, database sharding, and messaging queues.",
+        "topics": [
+          {
+            "id": "monolith-vs-microservices",
+            "title": "Monolith vs Microservices Architecture",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Evaluate architectural trade-offs between modular monoliths and independently deployable microservices.",
+            "whatToLearn": [
+              "Modular Monolith advantages, boundaries, and domain-driven design (DDD)",
+              "Microservices challenges: network latency, distributed transactions, data consistency",
+              "API Gateway pattern and service mesh",
+              "Eventual consistency and the CAP theorem"
+            ],
+            "officialDocs": "https://microservices.io/",
+            "practiceChallenge": "Design an architecture diagram for an Uber or Netflix scale system detailing service boundaries.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "message-queues-kafka",
+            "title": "Message Queues & Event Streaming (Kafka, RabbitMQ)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Asynchronous task processing and high-throughput event streaming between decoupled services.",
+            "whatToLearn": [
+              "Point-to-point queues (RabbitMQ, SQS) vs Event logs (Apache Kafka)",
+              "Producers, Consumers, Consumer Groups, and Partitions",
+              "Background worker queues (BullMQ with Redis in Node.js)",
+              "Handling poison pills, dead-letter queues (DLQ), and retry exponential backoff"
+            ],
+            "officialDocs": "https://kafka.apache.org/documentation/",
+            "practiceChallenge": "Build an asynchronous email / video processing worker queue with BullMQ and Redis.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "observability-monitoring",
+            "title": "Observability (Logging, Metrics, Tracing)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Know what is happening inside production systems before users report bugs.",
+            "whatToLearn": [
+              "Structured JSON logging (Pino, Winston) and log correlation IDs",
+              "Application metrics with Prometheus & visualization in Grafana",
+              "Distributed tracing with OpenTelemetry",
+              "Real-time error monitoring and alerting (Sentry)"
+            ],
+            "officialDocs": "https://opentelemetry.io/docs/",
+            "practiceChallenge": "Add distributed correlation IDs to all incoming requests and trace them across HTTP headers.",
+            "estimatedHours": 12
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "devops",
+    "slug": "devops",
+    "title": "DevOps & Cloud Engineer",
+    "subtitle": "Step by step guide to becoming a modern DevOps & Cloud engineer in 2026",
+    "description": "Master Linux, Docker, Kubernetes, CI/CD pipelines, Nginx, Infrastructure as Code, and Cloud VPS deployments.",
+    "badge": "Specialized Track",
+    "stages": [
+      {
+        "id": "internet-basics",
+        "stepNumber": 1,
+        "title": "Internet & Web Fundamentals",
+        "category": "foundations",
+        "tagline": "Understand the underlying protocols and mechanics of how the worldwide web operates.",
+        "description": "Before writing frontend or backend code, you must understand how data travels across the globe, how DNS maps names to IP addresses, and how browsers parse responses.",
+        "topics": [
+          {
+            "id": "how-internet-works",
+            "title": "How does the Internet Work?",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The physical and logical infrastructure connecting billions of computers worldwide through packet switching, TCP/IP, and internet service providers.",
+            "whatToLearn": [
+              "Packet switching and IP addressing (IPv4 vs IPv6)",
+              "The OSI 7-Layer Model vs TCP/IP stack",
+              "Routers, switches, optical cables, and border gateway protocol (BGP)",
+              "Latency, bandwidth, packet loss, and jitter"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Learn/Common_questions/Web_mechanics/How_does_the_Internet_work",
+            "practiceChallenge": "Use traceroute / ping in terminal to track packets from your machine to github.com.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "http-https",
+            "title": "HTTP / HTTPS Protocols",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "The foundational client-server communication protocol for transferring hypertext, JSON payloads, and media across the web.",
+            "whatToLearn": [
+              "HTTP request methods: GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD",
+              "HTTP status codes (1xx, 2xx, 3xx, 4xx, 5xx)",
+              "Headers: Content-Type, Authorization, Cache-Control, User-Agent",
+              "HTTPS & TLS/SSL handshake encryption",
+              "HTTP/2 multiplexing vs HTTP/3 (QUIC over UDP)"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/HTTP",
+            "practiceChallenge": "Inspect network tab in DevTools and inspect request/response headers for 5 different websites.",
+            "estimatedHours": 6
+          },
+          {
+            "id": "dns-domain-names",
+            "title": "DNS & Domain Resolution",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "The phonebook of the Internet. Resolves human-readable domain names like yaswant.co.in into machine-routable IP addresses.",
+            "whatToLearn": [
+              "Root nameservers, TLD nameservers, and authoritative DNS",
+              "DNS Record Types: A, AAAA, CNAME, MX, TXT, NS, SOA",
+              "DNS propagation and Time-To-Live (TTL)",
+              "DNS over HTTPS (DoH) and DNS security extensions (DNSSEC)"
+            ],
+            "officialDocs": "https://www.cloudflare.com/learning/dns/what-is-dns/",
+            "practiceChallenge": "Use dig or nslookup to query the A and MX records of google.com and your custom domain.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "browser-mechanics",
+            "title": "Browsers & Rendering Engines",
+            "type": "essential",
+            "level": "Beginner",
+            "description": "How modern web browsers (Chromium, Gecko, WebKit) parse HTML/CSS, build the DOM and CSSOM, execute JavaScript, and paint pixels.",
+            "whatToLearn": [
+              "DOM tree and CSSOM construction",
+              "The Render Tree, Layout (Reflow), and Paint (Repaint)",
+              "Critical Rendering Path (CRP) optimization",
+              "JavaScript execution thread and the Browser Event Loop"
+            ],
+            "officialDocs": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+            "practiceChallenge": "Profile a web page in Chrome DevTools Performance tab and identify layout shifts and long tasks.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "tools-vcs",
+        "stepNumber": 3,
+        "title": "Git, VCS & Package Managers",
+        "category": "foundations",
+        "tagline": "Essential developer workflow tools for tracking code history and managing third-party modules.",
+        "description": "Professional engineering requires mastering Git branching workflows, resolving merge conflicts, and leveraging package managers.",
+        "topics": [
+          {
+            "id": "git-version-control",
+            "title": "Git & GitHub Workflows",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Distributed version control system to track changes in source code during software development.",
+            "whatToLearn": [
+              "Core commands: git init, add, commit, status, log, diff",
+              "Branching strategies: Git Flow, Trunk-based development",
+              "Merging vs Rebasing (fast-forward, interactive rebase)",
+              "Resolving merge conflicts and cherry-picking commits",
+              "GitHub Pull Requests, code reviews, and issue tracking"
+            ],
+            "officialDocs": "https://git-scm.com/doc",
+            "practiceChallenge": "Create a repository, make 3 feature branches, trigger an intentional merge conflict, and resolve it cleanly.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "package-managers",
+            "title": "Package Managers (npm, pnpm)",
+            "type": "recommended",
+            "level": "Beginner",
+            "description": "Tools for installing, updating, and managing third-party open-source libraries and scripts.",
+            "whatToLearn": [
+              "package.json scripts, dependencies vs devDependencies",
+              "Semantic Versioning (SemVer: major, minor, patch, caret, tilde)",
+              "Lockfiles (package-lock.json, pnpm-lock.yaml) and determinism",
+              "pnpm content-addressable storage & workspace monorepos"
+            ],
+            "officialDocs": "https://pnpm.io/",
+            "practiceChallenge": "Initialize a pnpm workspace monorepo with a shared UI package and two apps.",
+            "estimatedHours": 4
+          },
+          {
+            "id": "build-tools-vite",
+            "title": "Build Tools & Bundlers (Vite)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Next-generation frontend tooling powered by native ES modules (ESM) and lightning-fast Rollup/esbuild.",
+            "whatToLearn": [
+              "Native ESM in development vs bundled production output",
+              "Hot Module Replacement (HMR) architecture",
+              "Code splitting, dynamic imports, and chunk optimization",
+              "Environment variables (.env, import.meta.env) in Vite"
+            ],
+            "officialDocs": "https://vitejs.dev/guide/",
+            "practiceChallenge": "Configure a custom vite.config.ts with rollupOptions manualChunks to split vendor libraries.",
+            "estimatedHours": 6
+          }
+        ]
+      },
+      {
+        "id": "testing-quality",
+        "stepNumber": 9,
+        "title": "Testing & Code Quality",
+        "category": "foundations",
+        "tagline": "Write automated unit, integration, and end-to-end tests that ensure production reliability.",
+        "description": "High-performing engineering teams ship features with confidence by maintaining solid automated test suites.",
+        "topics": [
+          {
+            "id": "unit-testing-vitest",
+            "title": "Unit Testing (Vitest / Jest)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Fast, isolated testing of individual pure functions, algorithms, and business logic utilities.",
+            "whatToLearn": [
+              "Test anatomy: describe, it/test, expect, assertions",
+              "Mocking functions, modules, and API calls (vi.fn, vi.spyOn)",
+              "Test coverage metrics (statements, branches, functions, lines)",
+              "Testing React components with React Testing Library"
+            ],
+            "officialDocs": "https://vitest.dev/guide/",
+            "practiceChallenge": "Write unit tests achieving 90%+ branch coverage for a financial billing calculator module.",
+            "estimatedHours": 12
+          },
+          {
+            "id": "e2e-testing-playwright",
+            "title": "E2E Testing (Playwright)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate real browser engines (Chromium, Firefox, WebKit) to test complete user journeys end-to-end.",
+            "whatToLearn": [
+              "Headless vs headed browser execution",
+              "Locators, auto-waiting, user actions (click, fill, press)",
+              "Network mocking and route interception in Playwright",
+              "Visual regression testing and screenshot comparisons"
+            ],
+            "officialDocs": "https://playwright.dev/docs/intro",
+            "practiceChallenge": "Write an automated Playwright test that logs in, adds an item to cart, and verifies the total price.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "devops-deployment",
+        "stepNumber": 10,
+        "title": "Docker, CI/CD & Cloud Deployment",
+        "category": "devops",
+        "tagline": "Package software into reproducible containers and automate continuous delivery to the cloud.",
+        "description": "A true full-stack engineer knows how to take raw code, containerize it, and deploy it securely to production servers.",
+        "topics": [
+          {
+            "id": "docker-containers",
+            "title": "Docker & Containerization",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Package applications and all their dependencies into a standardized, isolated container unit.",
+            "whatToLearn": [
+              "Images vs Containers, Docker Hub registry",
+              "Writing multi-stage Dockerfiles (build stage vs production stage)",
+              "Docker Compose for multi-service environments (App + Postgres + Redis)",
+              "Volumes for persistent storage and bridge networks"
+            ],
+            "officialDocs": "https://docs.docker.com/",
+            "practiceChallenge": "Create a docker-compose.yml file that orchestrates a Next.js frontend, Node.js API, and PostgreSQL.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "github-actions-cicd",
+            "title": "CI/CD with GitHub Actions",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Automate testing, linting, building, and deployment pipelines directly on every push or pull request.",
+            "whatToLearn": [
+              "Workflow YAML syntax: triggers, jobs, steps, runners",
+              "Matrix builds for multi-version testing",
+              "GitHub Secrets management for API keys and deployment credentials",
+              "Automated SSH deployment or Docker image build & push to registry"
+            ],
+            "officialDocs": "https://docs.github.com/en/actions",
+            "practiceChallenge": "Build a GitHub Actions workflow that runs linter, tests, builds production bundle, and notifies on failure.",
+            "estimatedHours": 10
+          },
+          {
+            "id": "web-servers-nginx",
+            "title": "Web Servers & Reverse Proxy (Nginx)",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "High-performance HTTP server, reverse proxy, and load balancer for routing traffic to backend containers.",
+            "whatToLearn": [
+              "Reverse proxy configuration (proxy_pass to local ports)",
+              "SSL termination with Let’s Encrypt Certbot",
+              "Gzip compression, static file caching, and client body limits",
+              "Load balancing algorithms: round-robin, least connections, ip_hash"
+            ],
+            "officialDocs": "https://nginx.org/en/docs/",
+            "practiceChallenge": "Configure an Nginx reverse proxy routing requests for /api to a Node app and /* to static HTML files.",
+            "estimatedHours": 8
+          },
+          {
+            "id": "cloud-hosting-vps",
+            "title": "Cloud VPS & Production Hosting",
+            "type": "recommended",
+            "level": "Intermediate",
+            "description": "Deploy real applications to Linux VPS servers (Hostinger VPS, DigitalOcean) and manage system services.",
+            "whatToLearn": [
+              "Linux server administration basics (Ubuntu, SSH keys, ufw firewall)",
+              "Process management with PM2 / systemd services",
+              "Automated backups, log rotation, and disk space monitoring",
+              "Custom domain DNS mapping and free SSL certificates"
+            ],
+            "officialDocs": "https://www.digitalocean.com/community/tutorials",
+            "practiceChallenge": "Provision an Ubuntu server, set up SSH key auth, configure UFW firewall, and run an app with PM2.",
+            "estimatedHours": 12
+          }
+        ]
+      },
+      {
+        "id": "system-design-architecture",
+        "stepNumber": 11,
+        "title": "System Design & Distributed Systems",
+        "category": "architecture",
+        "tagline": "Scale web applications to millions of concurrent users with fault-tolerant, resilient architectures.",
+        "description": "The transition from mid-level to senior/staff engineer requires mastering scalability bottlenecks, database sharding, and messaging queues.",
+        "topics": [
+          {
+            "id": "monolith-vs-microservices",
+            "title": "Monolith vs Microservices Architecture",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Evaluate architectural trade-offs between modular monoliths and independently deployable microservices.",
+            "whatToLearn": [
+              "Modular Monolith advantages, boundaries, and domain-driven design (DDD)",
+              "Microservices challenges: network latency, distributed transactions, data consistency",
+              "API Gateway pattern and service mesh",
+              "Eventual consistency and the CAP theorem"
+            ],
+            "officialDocs": "https://microservices.io/",
+            "practiceChallenge": "Design an architecture diagram for an Uber or Netflix scale system detailing service boundaries.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "message-queues-kafka",
+            "title": "Message Queues & Event Streaming (Kafka, RabbitMQ)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Asynchronous task processing and high-throughput event streaming between decoupled services.",
+            "whatToLearn": [
+              "Point-to-point queues (RabbitMQ, SQS) vs Event logs (Apache Kafka)",
+              "Producers, Consumers, Consumer Groups, and Partitions",
+              "Background worker queues (BullMQ with Redis in Node.js)",
+              "Handling poison pills, dead-letter queues (DLQ), and retry exponential backoff"
+            ],
+            "officialDocs": "https://kafka.apache.org/documentation/",
+            "practiceChallenge": "Build an asynchronous email / video processing worker queue with BullMQ and Redis.",
+            "estimatedHours": 16
+          },
+          {
+            "id": "observability-monitoring",
+            "title": "Observability (Logging, Metrics, Tracing)",
+            "type": "recommended",
+            "level": "Advanced",
+            "description": "Know what is happening inside production systems before users report bugs.",
+            "whatToLearn": [
+              "Structured JSON logging (Pino, Winston) and log correlation IDs",
+              "Application metrics with Prometheus & visualization in Grafana",
+              "Distributed tracing with OpenTelemetry",
+              "Real-time error monitoring and alerting (Sentry)"
+            ],
+            "officialDocs": "https://opentelemetry.io/docs/",
+            "practiceChallenge": "Add distributed correlation IDs to all incoming requests and trace them across HTTP headers.",
+            "estimatedHours": 12
+          }
+        ]
+      }
+    ]
+  }
+]

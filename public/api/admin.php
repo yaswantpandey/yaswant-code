@@ -1191,98 +1191,369 @@ if ($method === 'POST' && $action === 'delete_project') {
 // ─────────────────────────────────────────────────────────────────────────────
 // ROADMAPS — Tech Learning Paths CRUD
 // ─────────────────────────────────────────────────────────────────────────────
+function seed_canonical_roadmaps(PDO $pdo): int {
+    $seedFile = __DIR__ . '/seed_roadmaps.json';
+    if (!file_exists($seedFile)) {
+        return 0;
+    }
+    $raw = file_get_contents($seedFile);
+    $tracks = json_decode($raw, true);
+    if (!is_array($tracks) || empty($tracks)) {
+        return 0;
+    }
+
+    $driver = get_db_driver($pdo);
+    $inserted = 0;
+    $idx = 0;
+
+    foreach ($tracks as $t) {
+        $id = !empty($t['id']) ? $t['id'] : ('rm-' . ($t['slug'] ?? uniqid()));
+        $slug = !empty($t['slug']) ? $t['slug'] : $id;
+        $title = $t['title'] ?? 'Full Stack Track';
+        $subtitle = $t['subtitle'] ?? '';
+        $desc = $t['description'] ?? '';
+        $badge = $t['badge'] ?? 'Official Career Track';
+        $category = $t['category'] ?? ($t['id'] ?? 'web');
+        $categoryLabel = $t['categoryLabel'] ?? ($t['title'] ?? 'Web Development');
+        $tagline = $t['subtitle'] ?? '';
+        $difficulty = $t['difficulty'] ?? 'Intermediate';
+        $duration = $t['duration'] ?? '6 months';
+        $weekly = $t['weeklyCommitment'] ?? '10-15 hrs/week';
+
+        $stages = $t['stages'] ?? [];
+        $totalTopics = 0;
+        if (is_array($stages)) {
+            foreach ($stages as $stg) {
+                if (!empty($stg['topics']) && is_array($stg['topics'])) {
+                    $totalTopics += count($stg['topics']);
+                }
+            }
+        }
+        $stagesJson = json_encode($stages, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $salary = $t['salaryBenchmark'] ?? '₹8–25 LPA';
+        $careerRoles = 'Software Engineer, Full Stack Developer, Solutions Architect';
+        $status = 'published';
+
+        try {
+            if ($driver === 'mysql') {
+                $stmt = $pdo->prepare("
+                    INSERT INTO roadmaps (id, slug, title, subtitle, description, badge, category, category_label, tagline, difficulty, duration, weekly_commitment, total_topics, salary_benchmark, career_roles, stages, status, order_index)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE
+                        title = VALUES(title),
+                        subtitle = VALUES(subtitle),
+                        description = VALUES(description),
+                        badge = VALUES(badge),
+                        category = VALUES(category),
+                        category_label = VALUES(category_label),
+                        tagline = VALUES(tagline),
+                        difficulty = VALUES(difficulty),
+                        duration = VALUES(duration),
+                        weekly_commitment = VALUES(weekly_commitment),
+                        total_topics = VALUES(total_topics),
+                        salary_benchmark = VALUES(salary_benchmark),
+                        career_roles = VALUES(career_roles),
+                        stages = VALUES(stages),
+                        status = VALUES(status),
+                        order_index = VALUES(order_index),
+                        updated_at = CURRENT_TIMESTAMP
+                ");
+            } else {
+                $stmt = $pdo->prepare("
+                    INSERT OR REPLACE INTO roadmaps (id, slug, title, subtitle, description, badge, category, category_label, tagline, difficulty, duration, weekly_commitment, total_topics, salary_benchmark, career_roles, stages, status, order_index)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ");
+            }
+
+            $stmt->execute([
+                $id, $slug, $title, $subtitle, $desc, $badge, $category, $categoryLabel,
+                $tagline, $difficulty, $duration, $weekly, $totalTopics, $salary, $careerRoles,
+                $stagesJson, $status, $idx
+            ]);
+            $inserted++;
+            $idx++;
+        } catch (\Throwable $e) {
+            // continue silently on duplicate or minor schema difference
+        }
+    }
+    return $inserted;
+}
+
 function ensure_roadmaps_table(PDO $pdo): void {
     $driver = get_db_driver($pdo);
     if ($driver === 'mysql') {
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS `roadmaps` (
                 `id` VARCHAR(64) PRIMARY KEY,
+                `slug` VARCHAR(100) NOT NULL,
                 `title` VARCHAR(255) NOT NULL,
-                `category` VARCHAR(50) DEFAULT 'web',
+                `subtitle` TEXT DEFAULT NULL,
+                `description` LONGTEXT DEFAULT NULL,
+                `badge` VARCHAR(100) DEFAULT 'Official Career Track',
+                `category` VARCHAR(100) DEFAULT 'web',
                 `category_label` VARCHAR(100) DEFAULT 'Web Development',
                 `tagline` VARCHAR(500) DEFAULT '',
-                `description` TEXT DEFAULT NULL,
                 `difficulty` VARCHAR(50) DEFAULT 'Intermediate',
                 `duration` VARCHAR(100) DEFAULT '6 months',
                 `weekly_commitment` VARCHAR(100) DEFAULT '10-15 hrs/week',
-                `total_topics` INT DEFAULT 50,
-                `salary_benchmark` VARCHAR(100) DEFAULT '',
+                `total_topics` INT DEFAULT 0,
+                `salary_benchmark` VARCHAR(100) DEFAULT '₹8–25 LPA',
                 `career_roles` TEXT DEFAULT NULL,
+                `stages` LONGTEXT DEFAULT NULL,
+                `status` VARCHAR(20) DEFAULT 'published',
+                `order_index` INT DEFAULT 0,
                 `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
                 `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
         ");
+
+        // Seamless migration: add any missing columns if table pre-existed with old schema
+        try {
+            $colsStmt = $pdo->query("SHOW COLUMNS FROM `roadmaps`");
+            $existingCols = $colsStmt ? array_map('strtolower', $colsStmt->fetchAll(PDO::FETCH_COLUMN)) : [];
+            if (!in_array('slug', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `slug` VARCHAR(100) NOT NULL DEFAULT 'full-stack'");
+            }
+            if (!in_array('subtitle', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `subtitle` TEXT DEFAULT NULL");
+            }
+            if (!in_array('badge', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `badge` VARCHAR(100) DEFAULT 'Official Career Track'");
+            }
+            if (!in_array('stages', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `stages` LONGTEXT DEFAULT NULL");
+            }
+            if (!in_array('status', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `status` VARCHAR(20) DEFAULT 'published'");
+            }
+            if (!in_array('order_index', $existingCols, true)) {
+                $pdo->exec("ALTER TABLE `roadmaps` ADD COLUMN `order_index` INT DEFAULT 0");
+            }
+        } catch (\Throwable $e) {}
     } else {
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS roadmaps (
                 id TEXT PRIMARY KEY,
+                slug TEXT NOT NULL,
                 title TEXT NOT NULL,
+                subtitle TEXT,
+                description TEXT,
+                badge TEXT DEFAULT 'Official Career Track',
                 category TEXT DEFAULT 'web',
                 category_label TEXT DEFAULT 'Web Development',
                 tagline TEXT DEFAULT '',
-                description TEXT,
                 difficulty TEXT DEFAULT 'Intermediate',
                 duration TEXT DEFAULT '6 months',
                 weekly_commitment TEXT DEFAULT '10-15 hrs/week',
-                total_topics INTEGER DEFAULT 50,
+                total_topics INTEGER DEFAULT 0,
                 salary_benchmark TEXT DEFAULT '',
                 career_roles TEXT,
+                stages TEXT,
+                status TEXT DEFAULT 'published',
+                order_index INTEGER DEFAULT 0,
                 created_at TEXT DEFAULT CURRENT_TIMESTAMP,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
             );
         ");
     }
+
+    // Auto seed if table is empty
+    try {
+        $cnt = (int)$pdo->query("SELECT COUNT(*) FROM roadmaps")->fetchColumn();
+        if ($cnt === 0) {
+            seed_canonical_roadmaps($pdo);
+        }
+    } catch (\Throwable $e) {}
 }
 
 if ($action === 'roadmaps') {
     ensure_roadmaps_table($pdo);
-    $rows = $pdo->query("SELECT * FROM roadmaps ORDER BY created_at DESC")->fetchAll();
+    $rows = $pdo->query("SELECT * FROM roadmaps ORDER BY order_index ASC, created_at ASC")->fetchAll();
     $roadmaps = array_map(function($r) {
+        $stages = !empty($r['stages']) ? json_decode($r['stages'], true) : [];
+        $totalTopics = (int)($r['total_topics'] ?? 0);
+        if ($totalTopics === 0 && is_array($stages)) {
+            foreach ($stages as $stg) {
+                if (!empty($stg['topics']) && is_array($stg['topics'])) {
+                    $totalTopics += count($stg['topics']);
+                }
+            }
+        }
         return [
             'id' => $r['id'],
+            'slug' => $r['slug'] ?? $r['id'],
             'title' => $r['title'],
+            'subtitle' => $r['subtitle'] ?? $r['tagline'] ?? '',
+            'description' => $r['description'] ?? '',
+            'badge' => $r['badge'] ?? 'Official Career Track',
             'category' => $r['category'] ?? 'web',
             'categoryLabel' => $r['category_label'] ?? 'Web Development',
-            'tagline' => $r['tagline'] ?? '',
-            'description' => $r['description'] ?? '',
+            'tagline' => $r['tagline'] ?? $r['subtitle'] ?? '',
             'difficulty' => $r['difficulty'] ?? 'Intermediate',
             'duration' => $r['duration'] ?? '6 months',
             'weeklyCommitment' => $r['weekly_commitment'] ?? '10-15 hrs/week',
-            'totalTopics' => (int)($r['total_topics'] ?? 50),
-            'salaryBenchmark' => $r['salary_benchmark'] ?? '',
-            'careerRoles' => array_filter(array_map('trim', explode(',', $r['career_roles'] ?? ''))),
+            'totalTopics' => $totalTopics,
+            'salaryBenchmark' => $r['salary_benchmark'] ?? '₹8–25 LPA',
+            'careerRoles' => array_values(array_filter(array_map('trim', explode(',', $r['career_roles'] ?? '')))),
+            'stages' => $stages,
+            'status' => $r['status'] ?? 'published',
+            'orderIndex' => (int)($r['order_index'] ?? 0),
+            'createdAt' => $r['created_at'] ?? '',
+            'updatedAt' => $r['updated_at'] ?? '',
         ];
     }, $rows);
     ok($roadmaps, 'Roadmaps loaded');
+}
+
+if ($method === 'POST' && $action === 'seed_roadmaps') {
+    ensure_roadmaps_table($pdo);
+    $seeded = seed_canonical_roadmaps($pdo);
+    ok(['count' => $seeded], "Successfully synced {$seeded} canonical 2026 roadmaps.");
 }
 
 if ($method === 'POST' && $action === 'create_roadmap') {
     ensure_roadmaps_table($pdo);
     $b = json_decode(file_get_contents('php://input'), true) ?? [];
     if (empty($b['title'])) fail('Roadmap title is required.', 400);
-    $id = 'rm-' . uniqid();
+
+    $rawSlug = !empty($b['slug']) ? trim($b['slug']) : trim($b['title']);
+    $slug = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '-', $rawSlug));
+    $slug = trim($slug, '-');
+    if (empty($slug)) $slug = 'roadmap-' . uniqid();
+
+    $id = !empty($b['id']) ? trim($b['id']) : $slug;
+
+    $stages = $b['stages'] ?? [];
+    if (is_string($stages)) {
+        $stages = json_decode($stages, true) ?? [];
+    }
+
+    $totalTopics = 0;
+    if (is_array($stages)) {
+        foreach ($stages as $stg) {
+            if (!empty($stg['topics']) && is_array($stg['topics'])) {
+                $totalTopics += count($stg['topics']);
+            }
+        }
+    }
+    if (!empty($b['totalTopics']) && $totalTopics === 0) {
+        $totalTopics = (int)$b['totalTopics'];
+    }
+
     $careerRoles = is_array($b['careerRoles'] ?? null) ? implode(', ', $b['careerRoles']) : ($b['careerRoles'] ?? '');
-    $pdo->prepare("INSERT INTO roadmaps (id, title, category, category_label, tagline, description, difficulty, duration, weekly_commitment, total_topics, salary_benchmark, career_roles) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)")
-        ->execute([$id, $b['title'], $b['category'] ?? 'web', $b['categoryLabel'] ?? 'Web Development', $b['tagline'] ?? '', $b['description'] ?? '', $b['difficulty'] ?? 'Intermediate', $b['duration'] ?? '6 months', $b['weeklyCommitment'] ?? '10-15 hrs/week', (int)($b['totalTopics'] ?? 50), $b['salaryBenchmark'] ?? '', $careerRoles]);
-    ok(['id' => $id], 'Roadmap created');
+    $stagesJson = json_encode($stages, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $orderIndex = isset($b['orderIndex']) ? (int)$b['orderIndex'] : 0;
+    $status = !empty($b['status']) ? $b['status'] : 'published';
+
+    $stmt = $pdo->prepare("
+        INSERT INTO roadmaps (id, slug, title, subtitle, description, badge, category, category_label, tagline, difficulty, duration, weekly_commitment, total_topics, salary_benchmark, career_roles, stages, status, order_index)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+    ");
+    $stmt->execute([
+        $id,
+        $slug,
+        $b['title'],
+        $b['subtitle'] ?? $b['tagline'] ?? '',
+        $b['description'] ?? '',
+        $b['badge'] ?? 'Official Career Track',
+        $b['category'] ?? 'web',
+        $b['categoryLabel'] ?? 'Web Development',
+        $b['tagline'] ?? $b['subtitle'] ?? '',
+        $b['difficulty'] ?? 'Intermediate',
+        $b['duration'] ?? '6 months',
+        $b['weeklyCommitment'] ?? '10-15 hrs/week',
+        $totalTopics,
+        $b['salaryBenchmark'] ?? '₹8–25 LPA',
+        $careerRoles,
+        $stagesJson,
+        $status,
+        $orderIndex
+    ]);
+    ok(['id' => $id, 'slug' => $slug], 'Roadmap created successfully');
 }
 
 if ($method === 'POST' && $action === 'update_roadmap') {
     ensure_roadmaps_table($pdo);
     $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Roadmap ID required.', 400);
+    if (empty($b['id'])) fail('Roadmap ID is required.', 400);
+
+    $rawSlug = !empty($b['slug']) ? trim($b['slug']) : trim($b['title'] ?? '');
+    $slug = strtolower(preg_replace('/[^a-zA-Z0-9_-]+/', '-', $rawSlug));
+    $slug = trim($slug, '-');
+    if (empty($slug)) $slug = $b['id'];
+
+    $stages = $b['stages'] ?? [];
+    if (is_string($stages)) {
+        $stages = json_decode($stages, true) ?? [];
+    }
+
+    $totalTopics = 0;
+    if (is_array($stages)) {
+        foreach ($stages as $stg) {
+            if (!empty($stg['topics']) && is_array($stg['topics'])) {
+                $totalTopics += count($stg['topics']);
+            }
+        }
+    }
+    if (!empty($b['totalTopics']) && $totalTopics === 0) {
+        $totalTopics = (int)$b['totalTopics'];
+    }
+
     $careerRoles = is_array($b['careerRoles'] ?? null) ? implode(', ', $b['careerRoles']) : ($b['careerRoles'] ?? '');
-    $pdo->prepare("UPDATE roadmaps SET title=?, category=?, category_label=?, tagline=?, description=?, difficulty=?, duration=?, weekly_commitment=?, total_topics=?, salary_benchmark=?, career_roles=? WHERE id=?")
-        ->execute([$b['title'], $b['category'] ?? 'web', $b['categoryLabel'] ?? 'Web Development', $b['tagline'] ?? '', $b['description'] ?? '', $b['difficulty'] ?? 'Intermediate', $b['duration'] ?? '6 months', $b['weeklyCommitment'] ?? '10-15 hrs/week', (int)($b['totalTopics'] ?? 50), $b['salaryBenchmark'] ?? '', $careerRoles, $b['id']]);
-    ok(['id' => $b['id']], 'Roadmap updated');
+    $stagesJson = json_encode($stages, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $orderIndex = isset($b['orderIndex']) ? (int)$b['orderIndex'] : 0;
+    $status = !empty($b['status']) ? $b['status'] : 'published';
+
+    $stmt = $pdo->prepare("
+        UPDATE roadmaps SET
+            slug = ?,
+            title = ?,
+            subtitle = ?,
+            description = ?,
+            badge = ?,
+            category = ?,
+            category_label = ?,
+            tagline = ?,
+            difficulty = ?,
+            duration = ?,
+            weekly_commitment = ?,
+            total_topics = ?,
+            salary_benchmark = ?,
+            career_roles = ?,
+            stages = ?,
+            status = ?,
+            order_index = ?
+        WHERE id = ?
+    ");
+    $stmt->execute([
+        $slug,
+        $b['title'] ?? '',
+        $b['subtitle'] ?? $b['tagline'] ?? '',
+        $b['description'] ?? '',
+        $b['badge'] ?? 'Official Career Track',
+        $b['category'] ?? 'web',
+        $b['categoryLabel'] ?? 'Web Development',
+        $b['tagline'] ?? $b['subtitle'] ?? '',
+        $b['difficulty'] ?? 'Intermediate',
+        $b['duration'] ?? '6 months',
+        $b['weeklyCommitment'] ?? '10-15 hrs/week',
+        $totalTopics,
+        $b['salaryBenchmark'] ?? '₹8–25 LPA',
+        $careerRoles,
+        $stagesJson,
+        $status,
+        $orderIndex,
+        $b['id']
+    ]);
+    ok(['id' => $b['id'], 'slug' => $slug], 'Roadmap updated successfully');
 }
 
 if ($method === 'POST' && $action === 'delete_roadmap') {
     ensure_roadmaps_table($pdo);
     $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Roadmap ID required.', 400);
-    $pdo->prepare("DELETE FROM roadmaps WHERE id=?")->execute([$b['id']]);
-    ok([], 'Roadmap deleted');
+    if (empty($b['id'])) fail('Roadmap ID is required.', 400);
+    $pdo->prepare("DELETE FROM roadmaps WHERE id = ? OR slug = ?")->execute([$b['id'], $b['id']]);
+    ok([], 'Roadmap deleted successfully');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
