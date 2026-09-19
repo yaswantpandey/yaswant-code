@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
 import { PRIMARY_INSTRUCTOR } from '../config/brand';
+import { ALL_ROADMAP_TRACKS } from '../data/fullstackRoadmap';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -419,74 +420,42 @@ export const LandingPage: React.FC = () => {
             </p>
           </div>
 
-          {roadmaps.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-              {roadmaps.slice(0, 3).map((path) => (
-                <div
-                  key={path.id}
-                  onClick={() => setCurrentView('learning-paths')}
-                  className="p-6 rounded-2xl bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 transition-all cursor-pointer flex flex-col justify-between group"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <Badge variant="purple" size="sm">{path.difficulty || 'Intermediate'}</Badge>
-                      <span className="text-xs text-neutral-400 font-mono">{path.duration || '6 Months'}</span>
-                    </div>
-                    <h3 className="text-base font-bold mb-2 group-hover:text-neutral-300 transition-colors">
-                      {path.title}
-                    </h3>
-                    <p className="text-xs text-neutral-400 line-clamp-3 mb-4 leading-relaxed">
-                      {path.description || path.tagline}
-                    </p>
-                  </div>
-
-                  <div>
-                    {path.careerRoles && path.careerRoles.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {path.careerRoles.slice(0, 3).map((role: string) => (
-                          <span key={role} className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
-                            {role}
-                          </span>
-                        ))}
+          {(() => {
+            const tracksToShow = roadmaps.length > 0 ? roadmaps : ALL_ROADMAP_TRACKS.slice(0, 3);
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+                {tracksToShow.map((path) => (
+                  <div
+                    key={path.id}
+                    onClick={() => setCurrentView('learning-paths')}
+                    className="p-6 rounded-2xl bg-neutral-900/90 border border-neutral-800 hover:border-yellow-400/60 transition-all cursor-pointer flex flex-col justify-between group"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <Badge variant="purple" size="sm">{path.badge || '2026 Edition'}</Badge>
+                        <span className="text-xs text-yellow-400 font-mono font-bold">roadmap.sh style</span>
                       </div>
-                    )}
+                      <h3 className="text-base font-bold mb-2 group-hover:text-yellow-400 transition-colors">
+                        {path.title}
+                      </h3>
+                      <p className="text-xs text-neutral-400 line-clamp-3 mb-4 leading-relaxed">
+                        {path.subtitle || path.description}
+                      </p>
+                    </div>
 
-                    <div className="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs">
-                      <span className="text-neutral-400">{path.categoryLabel || 'Curriculum Track'}</span>
-                      <span className="font-semibold text-white group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        View Roadmap <ChevronRight className="w-3.5 h-3.5" />
-                      </span>
+                    <div>
+                      <div className="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs">
+                        <span className="text-neutral-400">{path.stages ? `${path.stages.length} Sequential Stages` : 'Curated Track'}</span>
+                        <span className="font-semibold text-white group-hover:translate-x-1 transition-transform inline-flex items-center gap-1 group-hover:text-yellow-400">
+                          View Roadmap <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="relative z-10 p-8 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 text-center space-y-4 max-w-xl mx-auto">
-              <p className="text-sm text-neutral-300 leading-relaxed">
-                Structured career roadmaps from fundamentals to staff engineer are currently being finalized. Start learning right away with our interactive video masterclasses.
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <Button
-                  variant="primary"
-                  size="sm"
-                  icon={<BookOpen className="w-4 h-4" />}
-                  onClick={() => setCurrentView('courses')}
-                >
-                  Browse Masterclasses
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  icon={<ArrowRight className="w-4 h-4" />}
-                  onClick={() => setCurrentView('learning-paths')}
-                  className="border-neutral-700 text-neutral-300 hover:text-white"
-                >
-                  Roadmaps Hub
-                </Button>
+                ))}
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       </section>
 

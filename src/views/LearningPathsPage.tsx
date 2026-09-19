@@ -1,912 +1,721 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLms } from '../context/LmsContext';
 import { 
-  TechRoadmap, 
-  MindTreeNode, 
-  MindTreeBranch,
-  RoadmapMilestone 
-} from '../types/roadmap';
+  FULLSTACK_ROADMAP, 
+  ALL_ROADMAP_TRACKS, 
+  RoadmapTrack, 
+  RoadmapStage, 
+  RoadmapTopic 
+} from '../data/fullstackRoadmap';
 import { 
+  Map, 
   GitBranch, 
   Layers, 
   CheckCircle2, 
   Circle, 
   Clock, 
   BookOpen, 
-  Award, 
   ChevronRight, 
   Search, 
-  ShieldCheck, 
-  DollarSign, 
   Sparkles, 
   ArrowRight, 
   FileText, 
   Wrench, 
-  ExternalLink,
-  Code2,
-  Terminal,
-  Zap,
-  Globe,
-  Shield,
-  CloudCog,
-  BrainCircuit,
-  Layout,
-  Server,
-  Database,
-  Cpu,
-  Eye,
-  Bot,
-  Filter,
-  RefreshCw,
-  TrendingUp,
-  X,
-  Target
+  ExternalLink, 
+  Code2, 
+  Terminal, 
+  Zap, 
+  Globe, 
+  Shield, 
+  Cpu, 
+  Database, 
+  Server, 
+  Download, 
+  Share2, 
+  Check, 
+  Copy, 
+  RotateCcw, 
+  X, 
+  Target, 
+  HelpCircle,
+  Flame,
+  ArrowDown,
+  Layout
 } from 'lucide-react';
-import { GlassCard } from '../components/ui/GlassCard';
-import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-
-// Icon mapper for tech tracks and branches
-const renderTrackIcon = (iconName?: string, className = "w-5 h-5") => {
-  switch (iconName) {
-    case 'Globe': return <Globe className={className} />;
-    case 'Shield': return <Shield className={className} />;
-    case 'CloudCog': return <CloudCog className={className} />;
-    case 'Zap': return <Zap className={className} />;
-    case 'BrainCircuit': return <BrainCircuit className={className} />;
-    case 'Layout': return <Layout className={className} />;
-    case 'Server': return <Server className={className} />;
-    case 'Database': return <Database className={className} />;
-    case 'Cpu': return <Cpu className={className} />;
-    case 'Terminal': return <Terminal className={className} />;
-    case 'Eye': return <Eye className={className} />;
-    case 'Bot': return <Bot className={className} />;
-    default: return <Sparkles className={className} />;
-  }
-};
+import { Badge } from '../components/ui/Badge';
 
 export const LearningPathsPage: React.FC = () => {
-  const { setCurrentView, setSelectedCourse, courses, addToast } = useLms();
+  const { setCurrentView, addToast } = useLms();
 
-  const [roadmaps, setRoadmaps] = useState<TechRoadmap[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedTrackId, setSelectedTrackId] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  // Active track selection (default Full Stack)
+  const [selectedTrackId, setSelectedTrackId] = useState<string>('full-stack');
+  const [activeViewMode, setActiveViewMode] = useState<'flowchart' | 'milestones' | 'checklist'>('flowchart');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [activeViewMode, setActiveViewMode] = useState<'mindtree' | 'roadmap' | 'checklist'>('mindtree');
-  
-  // Selected Node modal state
-  const [inspectingNode, setInspectingNode] = useState<{ node: MindTreeNode; branchTitle: string } | null>(null);
+  const [inspectingTopic, setInspectingTopic] = useState<{ topic: RoadmapTopic; stageTitle: string } | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
 
-  // LocalStorage persistence for user skills progress
-  const [completedNodeIds, setCompletedNodeIds] = useState<string[]>(() => {
+  // Completed & In-Progress state stored in localStorage
+  const [completedTopicIds, setCompletedTopicIds] = useState<string[]>(() => {
     try {
-      const saved = localStorage.getItem('yaswant_completed_skills');
-      return saved ? JSON.parse(saved) : [];
+      const saved = localStorage.getItem('yaswant_completed_topics');
+      return saved ? JSON.parse(saved) : ['how-internet-works', 'semantic-html'];
     } catch {
-      return [];
+      return ['how-internet-works', 'semantic-html'];
+    }
+  });
+
+  const [inProgressTopicIds, setInProgressTopicIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('yaswant_inprogress_topics');
+      return saved ? JSON.parse(saved) : ['modern-javascript', 'react-core'];
+    } catch {
+      return ['modern-javascript', 'react-core'];
     }
   });
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadRoadmaps() {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/roadmaps.php');
-        const json = await res.json();
-        if (isMounted && json.success && Array.isArray(json.data)) {
-          setRoadmaps(json.data);
-          if (json.data.length > 0) {
-            setSelectedTrackId(json.data[0].id);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to load roadmaps:', err);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
+    try {
+      localStorage.setItem('yaswant_completed_topics', JSON.stringify(completedTopicIds));
+    } catch (e) {
+      console.error('Failed to save completed topics to localStorage', e);
     }
-    loadRoadmaps();
-    return () => { isMounted = false; };
-  }, []);
+  }, [completedTopicIds]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('yaswant_completed_skills', JSON.stringify(completedNodeIds));
+      localStorage.setItem('yaswant_inprogress_topics', JSON.stringify(inProgressTopicIds));
     } catch (e) {
-      console.error('Failed to save skills to localStorage', e);
+      console.error('Failed to save in-progress topics to localStorage', e);
     }
-  }, [completedNodeIds]);
+  }, [inProgressTopicIds]);
 
-  const toggleNodeCompletion = (nodeId: string) => {
-    setCompletedNodeIds(prev => {
-      const exists = prev.includes(nodeId);
-      const updated = exists ? prev.filter(id => id !== nodeId) : [...prev, nodeId];
-      if (!exists) {
-        addToast("Skill Mastered! 🎯", "Progress updated in your learning portfolio.", "success");
-      }
-      return updated;
-    });
+  // Current active track object
+  const currentTrack: RoadmapTrack = useMemo(() => {
+    return ALL_ROADMAP_TRACKS.find(t => t.id === selectedTrackId) || FULLSTACK_ROADMAP;
+  }, [selectedTrackId]);
+
+  // Total topics count in current track
+  const allTopicsInTrack = useMemo(() => {
+    return currentTrack.stages.flatMap(s => s.topics);
+  }, [currentTrack]);
+
+  // Progress metrics
+  const progressStats = useMemo(() => {
+    const total = allTopicsInTrack.length;
+    const completed = allTopicsInTrack.filter(t => completedTopicIds.includes(t.id)).length;
+    const inProgress = allTopicsInTrack.filter(t => inProgressTopicIds.includes(t.id) && !completedTopicIds.includes(t.id)).length;
+    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, inProgress, percent };
+  }, [allTopicsInTrack, completedTopicIds, inProgressTopicIds]);
+
+  // Filtered stages based on search
+  const filteredStages = useMemo(() => {
+    if (!searchQuery.trim()) return currentTrack.stages;
+    const q = searchQuery.toLowerCase();
+    return currentTrack.stages
+      .map(stage => ({
+        ...stage,
+        topics: stage.topics.filter(t => 
+          t.title.toLowerCase().includes(q) || 
+          t.description.toLowerCase().includes(q) ||
+          t.whatToLearn.some(item => item.toLowerCase().includes(q))
+        )
+      }))
+      .filter(stage => stage.topics.length > 0);
+  }, [currentTrack, searchQuery]);
+
+  // Toggle status helper
+  const setTopicStatus = (topicId: string, status: 'completed' | 'in-progress' | 'to-learn') => {
+    if (status === 'completed') {
+      setCompletedTopicIds(prev => prev.includes(topicId) ? prev : [...prev, topicId]);
+      setInProgressTopicIds(prev => prev.filter(id => id !== topicId));
+      addToast("Topic Mastered! 🎯", "Progress saved in your developer roadmap.", "success");
+    } else if (status === 'in-progress') {
+      setInProgressTopicIds(prev => prev.includes(topicId) ? prev : [...prev, topicId]);
+      setCompletedTopicIds(prev => prev.filter(id => id !== topicId));
+      addToast("Status Updated", "Marked as in-progress.", "info");
+    } else {
+      setCompletedTopicIds(prev => prev.filter(id => id !== topicId));
+      setInProgressTopicIds(prev => prev.filter(id => id !== topicId));
+    }
   };
 
-  // Find active track
-  const currentTrack: TechRoadmap | null = useMemo(() => {
-    if (roadmaps.length === 0) return null;
-    return roadmaps.find(r => r.id === selectedTrackId) || roadmaps[0];
-  }, [roadmaps, selectedTrackId]);
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.origin + '/roadmaps');
+    setCopiedLink(true);
+    addToast("Roadmap URL Copied", "Link copied to your clipboard.", "info");
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
 
-  // Calculate track progress
-  const trackStats = useMemo(() => {
-    if (!currentTrack || !currentTrack.mindtree) return { total: 0, completed: 0, percent: 0 };
-    let total = 0;
-    let completed = 0;
-    currentTrack.mindtree.forEach(branch => {
-      branch.nodes?.forEach(node => {
-        total++;
-        if (completedNodeIds.includes(node.id)) completed++;
-      });
-    });
-    const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
-    return { total, completed, percent };
-  }, [currentTrack, completedNodeIds]);
-
-  // Filtered tracks for category selector
-  const visibleTracks = useMemo(() => {
-    if (selectedCategory === 'all') return roadmaps;
-    return roadmaps.filter(t => t.category === selectedCategory);
-  }, [roadmaps, selectedCategory]);
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-4 animate-fade-in">
-        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
-        <p className="text-xs font-mono text-neutral-500 uppercase tracking-wider">Loading career roadmaps…</p>
-      </div>
-    );
-  }
-
-  if (roadmaps.length === 0 || !currentTrack) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-6 animate-fade-in">
-        <div className="w-16 h-16 rounded-3xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto shadow-inner">
-          <GitBranch className="w-8 h-8" />
-        </div>
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 text-xs font-bold font-mono">
-            CAREER ROADMAPS ENGINE
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white">
-            Curated Roadmaps Coming Soon
-          </h1>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-lg mx-auto leading-relaxed">
-            Our staff architects are curating step-by-step career progression tracks and interactive skill mindtrees. In the meantime, explore our live courses and engineering study notes.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <Button
-            variant="primary"
-            size="md"
-            icon={<BookOpen className="w-4 h-4" />}
-            onClick={() => setCurrentView('courses')}
-          >
-            Explore Live Courses
-          </Button>
-          <Button
-            variant="outline"
-            size="md"
-            icon={<FileText className="w-4 h-4" />}
-            onClick={() => setCurrentView('notes')}
-          >
-            Study Notes & Blueprints
-          </Button>
-        </div>
-      </div>
-    );
-  }
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
       
-      {/* ── Page Hero Header ────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-        <div className="space-y-2 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-bold font-mono tracking-wide">
-            <GitBranch className="w-3.5 h-3.5" />
-            TECH UPSKILL ROADMAP & MINDTREE ENGINE
+      {/* ── Top Header (Roadmap.sh signature style) ───────────────────────── */}
+      <div className="border-b border-neutral-200 dark:border-neutral-800 pb-8 space-y-6">
+        
+        {/* Track Switcher Navigation Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+            {ALL_ROADMAP_TRACKS.map(track => (
+              <button
+                key={track.id}
+                onClick={() => setSelectedTrackId(track.id)}
+                className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                  selectedTrackId === track.id
+                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
+                    : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                }`}
+              >
+                {track.id === 'full-stack' && <Sparkles className="w-3.5 h-3.5 text-yellow-400" />}
+                {track.id === 'frontend' && <Layout className="w-3.5 h-3.5 text-sky-400" />}
+                {track.id === 'backend' && <Server className="w-3.5 h-3.5 text-emerald-400" />}
+                {track.id === 'devops' && <Terminal className="w-3.5 h-3.5 text-purple-400" />}
+                {track.title}
+              </button>
+            ))}
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-neutral-950 dark:text-white tracking-tight leading-none">
-            Interactive Career Roadmaps
+
+          {/* Action Buttons: Download & Share */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handlePrint}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-neutral-950 font-bold text-xs transition-colors cursor-pointer shadow-xs"
+              title="Print or Save as PDF"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download</span>
+            </button>
+
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-200 dark:bg-neutral-800 hover:bg-neutral-300 dark:hover:bg-neutral-700 text-neutral-900 dark:text-white font-medium text-xs transition-colors cursor-pointer"
+              title="Share roadmap"
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Share2 className="w-3.5 h-3.5" />}
+              <span>{copiedLink ? 'Copied!' : 'Share'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Title & Tagline Banner */}
+        <div className="space-y-3 pt-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 dark:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 text-xs font-bold font-mono tracking-wide">
+            <Map className="w-3.5 h-3.5" />
+            {currentTrack.badge.toUpperCase()} • 2026 EDITION
+          </div>
+
+          <h1 className="text-3xl sm:text-5xl font-black text-neutral-950 dark:text-white tracking-tight">
+            {currentTrack.title}
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-            Step-by-step learning trees, knowledge node graphs, and milestone checkpoints for modern software engineering, cyber security, cloud native DevOps, and AI systems.
+
+          <p className="text-sm sm:text-base text-neutral-600 dark:text-neutral-400 max-w-3xl leading-relaxed">
+            {currentTrack.subtitle}. Follow the step-by-step flowchart below, click any topic to inspect core theoretical concepts and practice challenges, and track your progress to job readiness.
           </p>
         </div>
 
-        {/* Career Readiness Meter */}
-        <div className="shrink-0 p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex items-center gap-4 min-w-[240px]">
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-              <path
-                className="text-neutral-300 dark:text-neutral-800"
-                strokeWidth="3.5"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-              <path
-                className="text-indigo-600 dark:text-indigo-400 transition-all duration-500"
-                strokeDasharray={`${trackStats.percent}, 100`}
-                strokeWidth="3.5"
-                strokeLinecap="round"
-                stroke="currentColor"
-                fill="none"
-                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              />
-            </svg>
-            <span className="absolute text-xs font-bold font-mono text-neutral-900 dark:text-white">
-              {trackStats.percent}%
-            </span>
-          </div>
-          <div>
-            <div className="text-[10px] font-mono text-neutral-400 uppercase tracking-wider font-semibold">
-              Track Progress
-            </div>
-            <div className="text-sm font-bold text-neutral-900 dark:text-white">
-              {trackStats.completed} of {trackStats.total} Mastered
-            </div>
-            <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              {trackStats.percent >= 80 ? '🎯 Job & Interview Ready' : 'In Active Upskilling'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Category Filters & Search ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        {/* Category Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-          {[
-            { id: 'all', label: 'All Technologies' },
-            { id: 'web', label: 'Web Dev' },
-            { id: 'security', label: 'Cyber Security' },
-            { id: 'cloud', label: 'Cloud & DevOps' },
-            { id: 'automation', label: 'Automation & RPA' },
-            { id: 'ai', label: 'Generative AI' },
-          ].map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl font-semibold whitespace-nowrap transition-all cursor-pointer ${
-                selectedCategory === cat.id
-                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-sm'
-                  : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
-
-        {/* View Mode Toggle Switch */}
-        <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 p-1 rounded-2xl border border-neutral-200 dark:border-neutral-800 text-xs shrink-0 self-start sm:self-auto">
-          <button
-            onClick={() => setActiveViewMode('mindtree')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-              activeViewMode === 'mindtree'
-                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <GitBranch className="w-3.5 h-3.5 text-indigo-500" />
-            Mind Tree
-          </button>
-
-          <button
-            onClick={() => setActiveViewMode('roadmap')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-              activeViewMode === 'roadmap'
-                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 text-blue-500" />
-            Milestones
-          </button>
-
-          <button
-            onClick={() => setActiveViewMode('checklist')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
-              activeViewMode === 'checklist'
-                ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
-                : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-            Checklist
-          </button>
-        </div>
-      </div>
-
-      {/* ── Track Selector Cards Carousel ────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-        {visibleTracks.map((track) => {
-          const isSelected = track.id === selectedTrackId;
-          const completedCount = (track.mindtree || []).reduce((acc, b) => {
-            return acc + (b.nodes || []).filter(n => completedNodeIds.includes(n.id)).length;
-          }, 0);
-          const percent = track.totalTopics > 0 ? Math.round((completedCount / track.totalTopics) * 100) : 0;
-
-          return (
-            <div
-              key={track.id}
-              onClick={() => setSelectedTrackId(track.id)}
-              className={`group p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden flex flex-col justify-between ${
-                isSelected
-                  ? 'bg-neutral-900 text-white dark:bg-neutral-900 border-neutral-950 dark:border-white shadow-xl ring-1 ring-neutral-900 dark:ring-white'
-                  : 'bg-white dark:bg-neutral-900/60 border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 text-neutral-900 dark:text-neutral-100'
-              }`}
-            >
+        {/* ── Learning Progress Tracker Meter ─────────────────────────────── */}
+        <div className="p-5 rounded-2xl bg-neutral-100/90 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-400 text-neutral-950 font-black flex items-center justify-center text-sm shadow-sm">
+                {progressStats.percent}%
+              </div>
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
-                    isSelected ? 'bg-white/10 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                  }`}>
-                    {renderTrackIcon(track.iconName, "w-4 h-4")}
-                  </div>
-                  <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
-                  }`}>
-                    {track.duration}
+                <div className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+                  <span>Your Roadmap Progress</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold">
+                    {progressStats.completed} of {progressStats.total} Mastered
                   </span>
                 </div>
-
-                <h3 className="text-sm font-bold tracking-tight mb-1 line-clamp-1">
-                  {track.title}
-                </h3>
-                <p className={`text-[11px] line-clamp-2 leading-relaxed mb-3 ${
-                  isSelected ? 'text-neutral-300' : 'text-neutral-500 dark:text-neutral-400'
-                }`}>
-                  {track.tagline}
-                </p>
-              </div>
-
-              {/* Progress mini bar */}
-              <div className="pt-2 border-t border-neutral-200/50 dark:border-neutral-800/80">
-                <div className="flex items-center justify-between text-[10px] font-mono mb-1">
-                  <span className={isSelected ? 'text-neutral-300' : 'text-neutral-400'}>
-                    {completedCount}/{track.totalTopics} Skills
-                  </span>
-                  <span className={isSelected ? 'text-white font-bold' : 'text-neutral-600 dark:text-neutral-300 font-bold'}>
-                    {percent}%
-                  </span>
-                </div>
-                <div className="w-full h-1 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                  <div 
-                    className="h-full bg-indigo-500 rounded-full transition-all duration-300"
-                    style={{ width: `${percent}%` }}
-                  />
+                <div className="text-[11px] text-neutral-500 mt-0.5">
+                  {progressStats.inProgress} topic(s) currently in-progress • {progressStats.total - progressStats.completed - progressStats.inProgress} remaining
                 </div>
               </div>
             </div>
-          );
-        })}
-      </div>
 
-      {/* ── Active Track Hero Banner ─────────────────────────────────────── */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-neutral-900 via-neutral-950 to-neutral-900 text-white border border-neutral-800 shadow-2xl relative overflow-hidden space-y-6">
-        {/* Glow ambient background */}
-        <div className="absolute -top-32 -right-32 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-2 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="purple" size="sm">
-                {currentTrack.categoryLabel}
-              </Badge>
-              <Badge variant="neutral" size="sm">
-                {currentTrack.difficulty} Level
-              </Badge>
-              <span className="text-xs font-mono text-neutral-400">
-                • {currentTrack.weeklyCommitment}
-              </span>
-            </div>
-
-            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight flex items-center gap-3">
-              {renderTrackIcon(currentTrack.iconName, "w-8 h-8 text-indigo-400")}
-              {currentTrack.title}
-            </h2>
-
-            <p className="text-xs sm:text-sm text-neutral-300 leading-relaxed">
-              {currentTrack.description}
-            </p>
-
-            {/* Career Target Roles */}
-            <div className="pt-2 flex flex-wrap items-center gap-2 text-xs">
-              <span className="text-neutral-400 font-semibold flex items-center gap-1">
-                <Target className="w-3.5 h-3.5 text-indigo-400" /> Target Roles:
-              </span>
-              {currentTrack.careerRoles.map((role, idx) => (
-                <span key={idx} className="px-2 py-0.5 rounded-lg bg-neutral-800/80 border border-neutral-700/60 text-neutral-300 text-[11px] font-mono">
-                  {role}
-                </span>
-              ))}
-            </div>
+            <button
+              onClick={() => {
+                if (window.confirm("Reset your roadmap progress?")) {
+                  setCompletedTopicIds([]);
+                  setInProgressTopicIds([]);
+                  addToast("Progress Reset", "All roadmap topics reset to learn.", "info");
+                }
+              }}
+              className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 flex items-center gap-1 self-end sm:self-auto cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3" /> Reset
+            </button>
           </div>
 
-          {/* Quick Metrics & Actions */}
-          <div className="shrink-0 flex flex-col sm:flex-row lg:flex-col gap-3 justify-center">
-            <div className="p-3.5 rounded-2xl bg-neutral-800/70 border border-neutral-700/60 text-center sm:text-left">
-              <div className="text-[10px] font-mono text-neutral-400 uppercase font-bold">
-                Salary Benchmark
-              </div>
-              <div className="text-sm sm:text-base font-extrabold text-emerald-400 font-mono mt-0.5">
-                {currentTrack.salaryBenchmark}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                variant="primary"
-                size="md"
-                className="w-full justify-center bg-white text-neutral-950 hover:bg-neutral-100 font-bold"
-                onClick={() => {
-                  addToast("Track Enrolled", `You are now enrolled in the ${currentTrack.title} track!`, "success");
-                }}
-              >
-                Enroll in Track Free
-              </Button>
-            </div>
+          {/* Dual-color Progress Bar */}
+          <div className="w-full h-2.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex">
+            <div 
+              className="h-full bg-emerald-500 transition-all duration-500" 
+              style={{ width: `${(progressStats.completed / progressStats.total) * 100}%` }}
+              title={`${progressStats.completed} Completed`}
+            />
+            <div 
+              className="h-full bg-yellow-400 transition-all duration-500" 
+              style={{ width: `${(progressStats.inProgress / progressStats.total) * 100}%` }}
+              title={`${progressStats.inProgress} In Progress`}
+            />
           </div>
         </div>
-      </div>
 
-      {/* ── VIEW 1: INTERACTIVE MIND TREE VIEW ───────────────────────────── */}
-      {activeViewMode === 'mindtree' && (
-        <div className="space-y-8 animate-in fade-in duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-indigo-500" />
-                Branching Mind Tree Hierarchy
-              </h3>
-              <p className="text-xs text-neutral-500 mt-0.5">
-                Click on any node to view concepts, practical projects, essential CLI tools, and toggle mastery status.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 text-xs font-mono text-neutral-500 hidden sm:flex">
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" /> Mastered
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-neutral-300 dark:bg-neutral-700" /> To Learn
-              </span>
-            </div>
+        {/* ── Toolbar: Search & View Mode Switcher ─────────────────────────── */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+          {/* Search Box */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+            <input
+              type="text"
+              placeholder="Search topics (e.g. Docker, React, PostgreSQL)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-yellow-400/50"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 text-xs"
+              >
+                Clear
+              </button>
+            )}
           </div>
 
-          {/* Root to Branch Visual Tree */}
-          <div className="space-y-10">
-            {(currentTrack.mindtree || []).map((branch, branchIdx) => (
-              <div 
-                key={branch.id} 
-                className="p-5 sm:p-7 rounded-3xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 space-y-5 relative"
-              >
-                {/* Branch Header Pillar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-4 border-b border-neutral-200/80 dark:border-neutral-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-2xl bg-indigo-500 text-white font-black flex items-center justify-center shadow-md shadow-indigo-500/20 text-sm">
-                      P{branch.phaseNumber}
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs shrink-0 self-start sm:self-auto">
+            <button
+              onClick={() => setActiveViewMode('flowchart')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                activeViewMode === 'flowchart'
+                  ? 'bg-yellow-400 text-neutral-950 shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              <GitBranch className="w-3.5 h-3.5" />
+              Flowchart
+            </button>
+
+            <button
+              onClick={() => setActiveViewMode('milestones')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                activeViewMode === 'milestones'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              Stages List
+            </button>
+
+            <button
+              onClick={() => setActiveViewMode('checklist')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                activeViewMode === 'checklist'
+                  ? 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white shadow-xs'
+                  : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
+              }`}
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              Checklist
+            </button>
+          </div>
+        </div>
+
+        {/* ── Signature Roadmap.sh Legend ─────────────────────────────────── */}
+        <div className="flex flex-wrap items-center gap-3 pt-2 text-[11px] font-mono text-neutral-600 dark:text-neutral-400">
+          <span className="font-bold text-neutral-900 dark:text-white">Legend:</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-yellow-400/15 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-yellow-400" />
+            Personal Recommendation
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-sky-500" />
+            Alternative Option
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-semibold">
+            <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+            Mastered
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-semibold">
+            <Clock className="w-3 h-3 text-yellow-500" />
+            In Progress
+          </span>
+        </div>
+
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════════════════
+           VIEW 1: SIGNATURE FLOWCHART VIEW (Roadmap.sh Style)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {activeViewMode === 'flowchart' && (
+        <div className="space-y-6 animate-fade-in relative">
+          
+          {filteredStages.map((stage, stageIdx) => (
+            <React.Fragment key={stage.id}>
+              {/* Connector between stages */}
+              {stageIdx > 0 && (
+                <div className="flex flex-col items-center justify-center my-2">
+                  <div className="w-0.5 h-8 bg-neutral-300 dark:bg-neutral-750" />
+                  <div className="w-5 h-5 rounded-full bg-white dark:bg-neutral-900 border-2 border-yellow-400 flex items-center justify-center -my-2.5 z-10 shadow-xs">
+                    <ArrowDown className="w-3 h-3 text-yellow-500" />
+                  </div>
+                  <div className="w-0.5 h-8 bg-neutral-300 dark:bg-neutral-750" />
+                </div>
+              )}
+
+              {/* Stage Card Box */}
+              <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-800 shadow-sm hover:border-neutral-300 dark:hover:border-neutral-700 transition-all space-y-6 relative overflow-hidden">
+                
+                {/* Stage Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+                  <div className="flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-2xl bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-black flex items-center justify-center text-sm shadow-md">
+                      {stage.stepNumber < 10 ? `0${stage.stepNumber}` : stage.stepNumber}
                     </div>
                     <div>
-                      <h4 className="text-base font-extrabold text-neutral-900 dark:text-white">
-                        {branch.title}
-                      </h4>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                        {branch.tagline}
+                      <h2 className="text-lg sm:text-xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
+                        {stage.title}
+                      </h2>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                        {stage.tagline}
                       </p>
                     </div>
                   </div>
 
-                  <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-xl bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 self-start sm:self-auto">
-                    ~{branch.estimatedWeeks} Weeks
+                  <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 self-start sm:self-auto">
+                    {stage.topics.length} Key Topics
                   </span>
                 </div>
 
-                {/* Leaves / Topic Nodes in Branch */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(branch.nodes || []).map((node) => {
-                    const isDone = completedNodeIds.includes(node.id);
+                {/* Topics Flow Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                  {stage.topics.map((topic) => {
+                    const isDone = completedTopicIds.includes(topic.id);
+                    const isInProg = inProgressTopicIds.includes(topic.id) && !isDone;
 
                     return (
                       <div
-                        key={node.id}
-                        onClick={() => setInspectingNode({ node, branchTitle: branch.title })}
-                        className={`p-4 rounded-2xl border transition-all cursor-pointer relative group flex flex-col justify-between ${
+                        key={topic.id}
+                        onClick={() => setInspectingTopic({ topic, stageTitle: stage.title })}
+                        className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between group relative ${
                           isDone
-                            ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500'
-                            : 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-indigo-500 dark:hover:border-indigo-400 shadow-xs'
+                            ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500/40 hover:border-emerald-500 shadow-xs'
+                            : isInProg
+                            ? 'bg-yellow-400/5 dark:bg-yellow-400/10 border-yellow-400/50 hover:border-yellow-400 shadow-xs'
+                            : topic.type === 'recommended'
+                            ? 'bg-neutral-50/50 dark:bg-neutral-850/50 border-neutral-200 dark:border-neutral-750 hover:border-yellow-400 dark:hover:border-yellow-400 hover:shadow-md'
+                            : 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800 hover:border-sky-400 dark:hover:border-sky-400'
                         }`}
                       >
-                        <div>
-                          {/* Node Header */}
-                          <div className="flex items-center justify-between gap-2 mb-2">
-                            <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-                              {node.category}
+                        <div className="space-y-2">
+                          {/* Top Tag & Status */}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                              topic.type === 'recommended'
+                                ? 'bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30'
+                                : topic.type === 'alternative'
+                                ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/20'
+                                : 'bg-neutral-200 dark:bg-neutral-750 text-neutral-600 dark:text-neutral-300'
+                            }`}>
+                              {topic.type}
                             </span>
-                            <div className="flex items-center gap-1">
-                              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-                                node.level === 'Beginner'
-                                  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                                  : node.level === 'Intermediate'
-                                  ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                                  : 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
-                              }`}>
-                                {node.level}
-                              </span>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleNodeCompletion(node.id);
-                                }}
-                                className="p-1 text-neutral-400 hover:text-emerald-500 transition-colors"
-                                title={isDone ? "Mark as uncompleted" : "Mark as mastered"}
-                              >
-                                {isDone ? (
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
-                                ) : (
-                                  <Circle className="w-4 h-4" />
-                                )}
-                              </button>
-                            </div>
+
+                            {/* Quick status toggle button */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (isDone) setTopicStatus(topic.id, 'to-learn');
+                                else if (isInProg) setTopicStatus(topic.id, 'completed');
+                                else setTopicStatus(topic.id, 'in-progress');
+                              }}
+                              className="p-1 rounded-md text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                              title={isDone ? "Status: Completed (Click to reset)" : isInProg ? "Status: In Progress (Click to mark done)" : "Click to mark in-progress"}
+                            >
+                              {isDone ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
+                              ) : isInProg ? (
+                                <Clock className="w-4 h-4 text-yellow-500" />
+                              ) : (
+                                <Circle className="w-4 h-4 text-neutral-400" />
+                              )}
+                            </button>
                           </div>
 
-                          <h5 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                            {node.title}
-                          </h5>
+                          {/* Topic Title */}
+                          <h3 className="text-sm font-extrabold text-neutral-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
+                            {topic.title}
+                          </h3>
 
-                          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 line-clamp-2 leading-relaxed">
-                            {node.description}
+                          {/* Snippet Description */}
+                          <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 leading-relaxed">
+                            {topic.description}
                           </p>
                         </div>
 
-                        {/* Node Footer: Tools & Hours */}
-                        <div className="pt-3 mt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px] text-neutral-400">
-                          <span className="font-mono flex items-center gap-1">
-                            <Clock className="w-3 h-3" /> {node.estimatedHours} hrs
+                        {/* Footer: Learn items preview */}
+                        <div className="pt-3 mt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-[11px]">
+                          <span className="text-neutral-400 font-mono">
+                            ~{topic.estimatedHours}h
                           </span>
-                          <span className="text-indigo-600 dark:text-indigo-400 font-semibold group-hover:underline flex items-center gap-0.5">
-                            Inspect node <ChevronRight className="w-3 h-3" />
+                          <span className="text-neutral-600 dark:text-neutral-300 font-semibold group-hover:underline inline-flex items-center gap-0.5">
+                            Learn more <ChevronRight className="w-3 h-3" />
                           </span>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+
               </div>
-            ))}
-          </div>
+            </React.Fragment>
+          ))}
+
         </div>
       )}
 
-      {/* ── VIEW 2: STEP-BY-STEP ROADMAP TIMELINE ────────────────────────── */}
-      {activeViewMode === 'roadmap' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-              <Layers className="w-4 h-4 text-blue-500" />
-              Chronological Roadmap Milestones
-            </h3>
-            <p className="text-xs text-neutral-500 mt-0.5">
-              Structured milestone progression with clear learning objectives, checkpoint deliverables, and portfolio projects.
-            </p>
-          </div>
-
-          <div className="relative pl-6 sm:pl-8 space-y-8 before:content-[''] before:absolute before:left-2 sm:before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-neutral-200 dark:before:bg-neutral-800">
-            {(currentTrack.milestones || []).map((milestone, idx) => (
-              <div key={idx} className="relative group">
-                {/* Node indicator */}
-                <div className="absolute -left-6 sm:-left-8 top-1 w-6 h-6 rounded-full bg-white dark:bg-neutral-900 border-2 border-indigo-500 flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-sm">
-                  {milestone.phase}
-                </div>
-
-                <div className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 shadow-sm space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-100 dark:border-neutral-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="purple" size="sm">
-                        Phase {milestone.phase}
-                      </Badge>
-                      <Badge variant="neutral" size="sm">
-                        {milestone.level}
-                      </Badge>
-                      <span className="text-xs font-mono text-neutral-400">
-                        • {milestone.duration}
-                      </span>
-                    </div>
-
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                      Milestone Checkpoint
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-lg font-bold text-neutral-900 dark:text-white">
-                      {milestone.title}
-                    </h4>
-                    <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1 leading-relaxed">
-                      {milestone.description}
-                    </p>
-                  </div>
-
-                  {/* Checkpoint Deliverable Box */}
-                  <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-750 text-xs">
-                    <span className="font-bold text-neutral-700 dark:text-neutral-300 block mb-1">
-                      📦 Expected Phase Deliverable:
-                    </span>
-                    <span className="text-neutral-600 dark:text-neutral-400">
-                      {milestone.deliverable}
-                    </span>
-                  </div>
-
-                  {/* Skills & Checkpoint Projects */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                    <div>
-                      <span className="text-[11px] font-mono text-neutral-400 font-bold block mb-1.5 uppercase">
-                        Core Competencies
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {(milestone.keySkills || []).map((skill, sIdx) => (
-                          <span key={sIdx} className="text-[11px] px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono">
-                            {skill}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <span className="text-[11px] font-mono text-neutral-400 font-bold block mb-1.5 uppercase">
-                        Portfolio Checkpoints
-                      </span>
-                      <div className="space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-                        {(milestone.checkpointProjects || []).map((proj, pIdx) => (
-                          <div key={pIdx} className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                            <span>{proj}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── VIEW 3: UPSKILL CHECKLIST & READINESS SCORE ──────────────────── */}
-      {activeViewMode === 'checklist' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
-          <div className="p-6 rounded-3xl bg-neutral-900 text-white border border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="space-y-1 text-center sm:text-left">
-              <h3 className="text-lg font-bold">Interactive Skills Inventory</h3>
-              <p className="text-xs text-neutral-400">
-                Track and check off each specific technology node. Status is stored securely on your browser.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setCompletedNodeIds([]);
-                addToast("Checklist Reset", "All skills marked as to-learn.", "info");
-              }}
-              icon={<RefreshCw className="w-3.5 h-3.5" />}
-              className="border-neutral-700 text-neutral-300 hover:text-white"
+      {/* ══════════════════════════════════════════════════════════════════════
+           VIEW 2: STAGES & MILESTONES LIST VIEW
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {activeViewMode === 'milestones' && (
+        <div className="space-y-6 animate-fade-in">
+          {filteredStages.map((stage) => (
+            <div 
+              key={stage.id}
+              className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-4"
             >
-              Reset Track Progress
-            </Button>
-          </div>
-
-          <div className="space-y-4">
-            {(currentTrack.mindtree || []).map(branch => (
-              <div key={branch.id} className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-3">
-                <div className="text-xs font-bold font-mono text-neutral-400 uppercase">
-                  Phase {branch.phaseNumber}: {branch.title}
-                </div>
-
-                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                  {(branch.nodes || []).map(node => {
-                    const isDone = completedNodeIds.includes(node.id);
-
-                    return (
-                      <div 
-                        key={node.id} 
-                        className="py-3 flex items-start justify-between gap-3 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-850/50 px-2 rounded-xl transition-colors"
-                        onClick={() => toggleNodeCompletion(node.id)}
-                      >
-                        <div className="flex items-start gap-3">
-                          <button 
-                            className="mt-0.5 text-neutral-400 hover:text-emerald-500 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleNodeCompletion(node.id);
-                            }}
-                          >
-                            {isDone ? (
-                              <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
-                            ) : (
-                              <Circle className="w-5 h-5 text-neutral-400" />
-                            )}
-                          </button>
-                          <div>
-                            <div className={`text-sm font-bold ${isDone ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-white'}`}>
-                              {node.title}
-                            </div>
-                            <div className="text-xs text-neutral-500 mt-0.5 line-clamp-1">
-                              {node.description}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="shrink-0 flex items-center gap-2">
-                          <span className="text-[11px] font-mono text-neutral-400 hidden sm:inline">
-                            {node.estimatedHours} hrs
-                          </span>
-                          <Badge variant={isDone ? 'emerald' : 'neutral'} size="sm">
-                            {isDone ? 'Mastered' : 'To Learn'}
-                          </Badge>
-                        </div>
-                      </div>
-                    );
-                  })}
+              <div className="flex items-center gap-3">
+                <span className="w-8 h-8 rounded-xl bg-yellow-400 text-neutral-950 font-black flex items-center justify-center text-xs">
+                  {stage.stepNumber}
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-neutral-900 dark:text-white">
+                    {stage.title}
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    {stage.description}
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+
+              <div className="space-y-3 pt-2">
+                {stage.topics.map(topic => (
+                  <div 
+                    key={topic.id}
+                    onClick={() => setInspectingTopic({ topic, stageTitle: stage.title })}
+                    className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 hover:border-yellow-400 transition-all cursor-pointer flex items-start justify-between gap-4"
+                  >
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-neutral-900 dark:text-white">
+                          {topic.title}
+                        </span>
+                        <Badge variant={topic.type === 'recommended' ? 'purple' : 'neutral'} size="sm">
+                          {topic.type}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        {topic.description}
+                      </p>
+                    </div>
+                    <span className="text-xs text-neutral-400 font-mono shrink-0">
+                      {topic.estimatedHours} hrs
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* ── Related LMS Resources & Tools ─────────────────────────────────── */}
-      <div className="pt-8 border-t border-neutral-200 dark:border-neutral-800 space-y-6">
-        <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-          <Wrench className="w-4 h-4 text-indigo-500" />
-          Recommended Tools & Study Notes for this Roadmap
-        </h3>
+      {/* ══════════════════════════════════════════════════════════════════════
+           VIEW 3: CHECKLIST MODE (Fast Interactive Inventory)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {activeViewMode === 'checklist' && (
+        <div className="space-y-6 animate-fade-in">
+          {filteredStages.map((stage) => (
+            <div 
+              key={stage.id}
+              className="p-6 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-4"
+            >
+              <div className="text-xs font-bold font-mono text-neutral-400 uppercase tracking-wider">
+                Stage {stage.stepNumber}: {stage.title}
+              </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div 
-            onClick={() => setCurrentView('notes')}
-            className="p-5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
-              <FileText className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors">
-              Study Notes & Cheat Sheets
-            </h4>
-            <p className="text-xs text-neutral-500">
-              Direct access to comprehensive PDF guides, Google Drive notes, and architecture blueprints.
-            </p>
-          </div>
+              <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {stage.topics.map((topic) => {
+                  const isDone = completedTopicIds.includes(topic.id);
 
-          <div 
-            onClick={() => setCurrentView('tools')}
-            className="p-5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
-              <Wrench className="w-5 h-5" />
-            </div>
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-amber-500 transition-colors">
-              Developer Software Hub
-            </h4>
-            <p className="text-xs text-neutral-500">
-              Download Docker Desktop, Wireshark, Burp Suite, VS Code, and Postman with 1-click downloads.
-            </p>
-          </div>
+                  return (
+                    <div 
+                      key={topic.id}
+                      onClick={() => setTopicStatus(topic.id, isDone ? 'to-learn' : 'completed')}
+                      className="py-3 flex items-center justify-between gap-4 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-850/50 px-2 rounded-xl transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <button 
+                          className="text-neutral-400 hover:text-emerald-500 transition-colors"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTopicStatus(topic.id, isDone ? 'to-learn' : 'completed');
+                          }}
+                        >
+                          {isDone ? (
+                            <CheckCircle2 className="w-5 h-5 text-emerald-500 fill-emerald-500/20" />
+                          ) : (
+                            <Circle className="w-5 h-5 text-neutral-400" />
+                          )}
+                        </button>
+                        <div>
+                          <div className={`text-sm font-bold ${isDone ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-white'}`}>
+                            {topic.title}
+                          </div>
+                          <div className="text-xs text-neutral-500 line-clamp-1">
+                            {topic.description}
+                          </div>
+                        </div>
+                      </div>
 
-          <div 
-            onClick={() => setCurrentView('courses')}
-            className="p-5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 cursor-pointer transition-all space-y-2 group"
-          >
-            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-              <BookOpen className="w-5 h-5" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono text-neutral-400 hidden sm:inline">
+                          {topic.estimatedHours} hrs
+                        </span>
+                        <Badge variant={isDone ? 'emerald' : 'neutral'} size="sm">
+                          {isDone ? 'Mastered' : 'To Learn'}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <h4 className="text-sm font-bold text-neutral-900 dark:text-white group-hover:text-emerald-500 transition-colors">
-              Full Video Masterclasses
-            </h4>
-            <p className="text-xs text-neutral-500">
-              Explore in-depth interactive curriculum with live code editors and verifiable certificates.
-            </p>
-          </div>
+          ))}
         </div>
-      </div>
+      )}
 
-      {/* ── MODAL: NODE DEEP DIVE INSPECTOR ───────────────────────────────── */}
-      {inspectingNode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-5">
-            <div className="flex items-start justify-between gap-3 border-b border-neutral-100 dark:border-neutral-800 pb-4">
+      {/* ══════════════════════════════════════════════════════════════════════
+           MODAL: TOPIC INSPECTOR & LEARNING GUIDE (Roadmap.sh detail drawer)
+      ═══════════════════════════════════════════════════════════════════════ */}
+      {inspectingTopic && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-2xl max-w-xl w-full p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
+            
+            {/* Modal Header */}
+            <div className="flex items-start justify-between gap-4 border-b border-neutral-100 dark:border-neutral-800 pb-4">
               <div>
                 <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-neutral-400">
-                  {inspectingNode.branchTitle} • {inspectingNode.node.category}
+                  {inspectingTopic.stageTitle} • {inspectingTopic.topic.level}
                 </span>
-                <h3 className="text-lg font-bold text-neutral-900 dark:text-white mt-0.5">
-                  {inspectingNode.node.title}
+                <h3 className="text-xl font-extrabold text-neutral-950 dark:text-white mt-1">
+                  {inspectingTopic.topic.title}
                 </h3>
               </div>
               <button
-                onClick={() => setInspectingNode(null)}
+                onClick={() => setInspectingTopic(null)}
                 className="p-1 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
-              {inspectingNode.node.description}
-            </p>
-
-            {/* Key Concepts */}
-            <div>
-              <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 block mb-2">
-                Core Theoretical Concepts
+            {/* Description */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-wider font-mono">
+                Overview & Architecture
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {(inspectingNode.node.concepts || []).map((concept, cIdx) => (
-                  <span key={cIdx} className="text-xs px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono">
-                    {concept}
-                  </span>
+              <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                {inspectingTopic.topic.description}
+              </p>
+            </div>
+
+            {/* What you need to learn (Key checklist) */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-neutral-900 dark:text-white uppercase tracking-wider font-mono">
+                What You Must Learn
+              </span>
+              <div className="space-y-1.5">
+                {inspectingTopic.topic.whatToLearn.map((item, idx) => (
+                  <div key={idx} className="flex items-start gap-2 text-xs text-neutral-600 dark:text-neutral-300">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1.5 shrink-0" />
+                    <span>{item}</span>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Recommended Tools */}
-            <div>
-              <span className="text-xs font-bold text-neutral-800 dark:text-neutral-200 block mb-2">
-                Essential Tools & Ecosystem
+            {/* Practical Coding Challenge */}
+            <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-750 space-y-1.5">
+              <span className="text-xs font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
+                <Flame className="w-4 h-4 text-amber-500" />
+                Hands-On Practice Challenge:
               </span>
-              <div className="flex flex-wrap gap-1.5">
-                {(inspectingNode.node.tools || []).map((tool, tIdx) => (
-                  <span key={tIdx} className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono font-semibold">
-                    {tool}
-                  </span>
-                ))}
-              </div>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                {inspectingTopic.topic.practiceChallenge}
+              </p>
             </div>
 
-            {/* Practical Project Challenge */}
-            <div className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-750 text-xs">
-              <span className="font-bold text-neutral-800 dark:text-neutral-200 block mb-1">
-                🔨 Practical Hands-On Exercise:
-              </span>
-              <span className="text-neutral-600 dark:text-neutral-400">
-                {inspectingNode.node.projectIdea}
-              </span>
-            </div>
-
-            {/* Modal Action Buttons */}
-            <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800 text-xs">
-              <span className="font-mono text-neutral-400">
-                Estimated: ~{inspectingNode.node.estimatedHours} hours
-              </span>
-
-              <button
-                onClick={() => {
-                  toggleNodeCompletion(inspectingNode.node.id);
-                  setInspectingNode(null);
-                }}
-                className={`px-4 py-2 rounded-xl font-bold transition-all cursor-pointer ${
-                  completedNodeIds.includes(inspectingNode.node.id)
-                    ? 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300'
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20'
-                }`}
+            {/* Official Docs Link */}
+            {inspectingTopic.topic.officialDocs && (
+              <a
+                href={inspectingTopic.topic.officialDocs}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
               >
-                {completedNodeIds.includes(inspectingNode.node.id)
-                  ? 'Mark as To-Learn'
-                  : '✓ Mark as Mastered'}
-              </button>
+                Official Documentation & Specifications <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+
+            {/* Modal Actions */}
+            <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs font-mono text-neutral-400">
+                Estimated study time: ~{inspectingTopic.topic.estimatedHours} hours
+              </span>
+
+              <div className="flex items-center gap-2">
+                {completedTopicIds.includes(inspectingTopic.topic.id) ? (
+                  <button
+                    onClick={() => {
+                      setTopicStatus(inspectingTopic.topic.id, 'to-learn');
+                      setInspectingTopic(null);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-bold cursor-pointer hover:bg-neutral-300"
+                  >
+                    Mark as To-Learn
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => {
+                        setTopicStatus(inspectingTopic.topic.id, 'in-progress');
+                        setInspectingTopic(null);
+                      }}
+                      className="px-3.5 py-2 rounded-xl bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 text-xs font-bold cursor-pointer hover:bg-yellow-400/30"
+                    >
+                      In Progress
+                    </button>
+                    <button
+                      onClick={() => {
+                        setTopicStatus(inspectingTopic.topic.id, 'completed');
+                        setInspectingTopic(null);
+                      }}
+                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold cursor-pointer shadow-md shadow-emerald-600/20 flex items-center gap-1.5"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Mark Mastered
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
+
           </div>
         </div>
       )}
