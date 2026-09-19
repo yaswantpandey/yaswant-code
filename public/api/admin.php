@@ -382,6 +382,8 @@ if ($method === 'GET' && $action === 'users') {
     }
 
     $whereSql = implode(' AND ', $where);
+    $limit = isset($_GET['limit']) ? max(1, min(1000, (int)$_GET['limit'])) : 300;
+    $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
     $sql = "
         SELECT u.id, u.name, u.email, u.role, u.avatar, u.title, u.bio,
                u.rating, u.reviews_count, u.students_count, u.is_active, u.created_at,
@@ -389,6 +391,7 @@ if ($method === 'GET' && $action === 'users') {
         FROM users u
         WHERE {$whereSql}
         ORDER BY u.created_at DESC
+        LIMIT {$limit} OFFSET {$offset}
     ";
 
     $stmt = $pdo->prepare($sql);
@@ -984,11 +987,13 @@ if ($method === 'POST' && $action === 'delete_inquiry') {
 // 21. GET ?action=subscribers — Newsletter Audience
 // ─────────────────────────────────────────────────────────────────────────────
 if ($method === 'GET' && $action === 'subscribers') {
-    $stmt = $pdo->query('
+    $limit = isset($_GET['limit']) ? max(1, min(2000, (int)$_GET['limit'])) : 500;
+    $stmt = $pdo->query("
         SELECT id, email, name, is_active, subscribed_at
         FROM subscribers
         ORDER BY subscribed_at DESC
-    ');
+        LIMIT {$limit}
+    ");
     $subscribers = $stmt->fetchAll();
     ok($subscribers, 'Subscribers loaded');
 }
