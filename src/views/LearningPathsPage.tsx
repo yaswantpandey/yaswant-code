@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLms } from '../context/LmsContext';
 import { 
-  TECH_ROADMAPS, 
   TechRoadmap, 
   MindTreeNode, 
   MindTreeBranch,
   RoadmapMilestone 
-} from '../config/roadmaps';
+} from '../types/roadmap';
 import { 
   GitBranch, 
   Layers, 
@@ -48,7 +47,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
 // Icon mapper for tech tracks and branches
-const renderTrackIcon = (iconName: string, className = "w-5 h-5") => {
+const renderTrackIcon = (iconName?: string, className = "w-5 h-5") => {
   switch (iconName) {
     case 'Globe': return <Globe className={className} />;
     case 'Shield': return <Shield className={className} />;
@@ -69,8 +68,9 @@ const renderTrackIcon = (iconName: string, className = "w-5 h-5") => {
 export const LearningPathsPage: React.FC = () => {
   const { setCurrentView, setSelectedCourse, courses, addToast } = useLms();
 
-  // Active track selection
-  const [selectedTrackId, setSelectedTrackId] = useState<string>(TECH_ROADMAPS[0].id);
+  const [roadmaps, setRoadmaps] = useState<TechRoadmap[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedTrackId, setSelectedTrackId] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeViewMode, setActiveViewMode] = useState<'mindtree' | 'roadmap' | 'checklist'>('mindtree');
@@ -82,11 +82,34 @@ export const LearningPathsPage: React.FC = () => {
   const [completedNodeIds, setCompletedNodeIds] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem('yaswant_completed_skills');
-      return saved ? JSON.parse(saved) : ['web-ts-strict', 'sec-networking', 'auto-python-core'];
+      return saved ? JSON.parse(saved) : [];
     } catch {
-      return ['web-ts-strict'];
+      return [];
     }
   });
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRoadmaps() {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/roadmaps.php');
+        const json = await res.json();
+        if (isMounted && json.success && Array.isArray(json.data)) {
+          setRoadmaps(json.data);
+          if (json.data.length > 0) {
+            setSelectedTrackId(json.data[0].id);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load roadmaps:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+    loadRoadmaps();
+    return () => { isMounted = false; };
+  }, []);
 
   useEffect(() => {
     try {
@@ -108,16 +131,18 @@ export const LearningPathsPage: React.FC = () => {
   };
 
   // Find active track
-  const currentTrack: TechRoadmap = useMemo(() => {
-    return TECH_ROADMAPS.find(r => r.id === selectedTrackId) || TECH_ROADMAPS[0];
-  }, [selectedTrackId]);
+  const currentTrack: TechRoadmap | null = useMemo(() => {
+    if (roadmaps.length === 0) return null;
+    return roadmaps.find(r => r.id === selectedTrackId) || roadmaps[0];
+  }, [roadmaps, selectedTrackId]);
 
   // Calculate track progress
   const trackStats = useMemo(() => {
+    if (!currentTrack || !currentTrack.mindtree) return { total: 0, completed: 0, percent: 0 };
     let total = 0;
     let completed = 0;
     currentTrack.mindtree.forEach(branch => {
-      branch.nodes.forEach(node => {
+      branch.nodes?.forEach(node => {
         total++;
         if (completedNodeIds.includes(node.id)) completed++;
       });
@@ -128,9 +153,57 @@ export const LearningPathsPage: React.FC = () => {
 
   // Filtered tracks for category selector
   const visibleTracks = useMemo(() => {
-    if (selectedCategory === 'all') return TECH_ROADMAPS;
-    return TECH_ROADMAPS.filter(t => t.category === selectedCategory);
-  }, [selectedCategory]);
+    if (selectedCategory === 'all') return roadmaps;
+    return roadmaps.filter(t => t.category === selectedCategory);
+  }, [roadmaps, selectedCategory]);
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-4 animate-fade-in">
+        <div className="w-10 h-10 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
+        <p className="text-xs font-mono text-neutral-500 uppercase tracking-wider">Loading career roadmaps…</p>
+      </div>
+    );
+  }
+
+  if (roadmaps.length === 0 || !currentTrack) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center space-y-6 animate-fade-in">
+        <div className="w-16 h-16 rounded-3xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center mx-auto shadow-inner">
+          <GitBranch className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 text-xs font-bold font-mono">
+            CAREER ROADMAPS ENGINE
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white">
+            Curated Roadmaps Coming Soon
+          </h1>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-lg mx-auto leading-relaxed">
+            Our staff architects are curating step-by-step career progression tracks and interactive skill mindtrees. In the meantime, explore our live courses and engineering study notes.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <Button
+            variant="primary"
+            size="md"
+            icon={<BookOpen className="w-4 h-4" />}
+            onClick={() => setCurrentView('courses')}
+          >
+            Explore Live Courses
+          </Button>
+          <Button
+            variant="outline"
+            size="md"
+            icon={<FileText className="w-4 h-4" />}
+            onClick={() => setCurrentView('notes')}
+          >
+            Study Notes & Blueprints
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
@@ -259,10 +332,10 @@ export const LearningPathsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         {visibleTracks.map((track) => {
           const isSelected = track.id === selectedTrackId;
-          const completedCount = track.mindtree.reduce((acc, b) => {
-            return acc + b.nodes.filter(n => completedNodeIds.includes(n.id)).length;
+          const completedCount = (track.mindtree || []).reduce((acc, b) => {
+            return acc + (b.nodes || []).filter(n => completedNodeIds.includes(n.id)).length;
           }, 0);
-          const percent = Math.round((completedCount / track.totalTopics) * 100);
+          const percent = track.totalTopics > 0 ? Math.round((completedCount / track.totalTopics) * 100) : 0;
 
           return (
             <div
@@ -414,7 +487,7 @@ export const LearningPathsPage: React.FC = () => {
 
           {/* Root to Branch Visual Tree */}
           <div className="space-y-10">
-            {currentTrack.mindtree.map((branch, branchIdx) => (
+            {(currentTrack.mindtree || []).map((branch, branchIdx) => (
               <div 
                 key={branch.id} 
                 className="p-5 sm:p-7 rounded-3xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 space-y-5 relative"
@@ -442,7 +515,7 @@ export const LearningPathsPage: React.FC = () => {
 
                 {/* Leaves / Topic Nodes in Branch */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {branch.nodes.map((node) => {
+                  {(branch.nodes || []).map((node) => {
                     const isDone = completedNodeIds.includes(node.id);
 
                     return (
@@ -530,7 +603,7 @@ export const LearningPathsPage: React.FC = () => {
           </div>
 
           <div className="relative pl-6 sm:pl-8 space-y-8 before:content-[''] before:absolute before:left-2 sm:before:left-3 before:top-3 before:bottom-3 before:w-0.5 before:bg-neutral-200 dark:before:bg-neutral-800">
-            {currentTrack.milestones.map((milestone, idx) => (
+            {(currentTrack.milestones || []).map((milestone, idx) => (
               <div key={idx} className="relative group">
                 {/* Node indicator */}
                 <div className="absolute -left-6 sm:-left-8 top-1 w-6 h-6 rounded-full bg-white dark:bg-neutral-900 border-2 border-indigo-500 flex items-center justify-center text-xs font-bold text-indigo-600 dark:text-indigo-400 shadow-sm">
@@ -582,7 +655,7 @@ export const LearningPathsPage: React.FC = () => {
                         Core Competencies
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {milestone.keySkills.map((skill, sIdx) => (
+                        {(milestone.keySkills || []).map((skill, sIdx) => (
                           <span key={sIdx} className="text-[11px] px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono">
                             {skill}
                           </span>
@@ -595,7 +668,7 @@ export const LearningPathsPage: React.FC = () => {
                         Portfolio Checkpoints
                       </span>
                       <div className="space-y-1 text-xs text-neutral-600 dark:text-neutral-400">
-                        {milestone.checkpointProjects.map((proj, pIdx) => (
+                        {(milestone.checkpointProjects || []).map((proj, pIdx) => (
                           <div key={pIdx} className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
                             <span>{proj}</span>
@@ -636,14 +709,14 @@ export const LearningPathsPage: React.FC = () => {
           </div>
 
           <div className="space-y-4">
-            {currentTrack.mindtree.map(branch => (
+            {(currentTrack.mindtree || []).map(branch => (
               <div key={branch.id} className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-3">
                 <div className="text-xs font-bold font-mono text-neutral-400 uppercase">
                   Phase {branch.phaseNumber}: {branch.title}
                 </div>
 
                 <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                  {branch.nodes.map(node => {
+                  {(branch.nodes || []).map(node => {
                     const isDone = completedNodeIds.includes(node.id);
 
                     return (
@@ -780,7 +853,7 @@ export const LearningPathsPage: React.FC = () => {
                 Core Theoretical Concepts
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {inspectingNode.node.concepts.map((concept, cIdx) => (
+                {(inspectingNode.node.concepts || []).map((concept, cIdx) => (
                   <span key={cIdx} className="text-xs px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 font-mono">
                     {concept}
                   </span>
@@ -794,7 +867,7 @@ export const LearningPathsPage: React.FC = () => {
                 Essential Tools & Ecosystem
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {inspectingNode.node.tools.map((tool, tIdx) => (
+                {(inspectingNode.node.tools || []).map((tool, tIdx) => (
                   <span key={tIdx} className="text-xs px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-mono font-semibold">
                     {tool}
                   </span>

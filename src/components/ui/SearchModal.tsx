@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useLms } from '../../context/LmsContext';
 import { PRIMARY_INSTRUCTOR } from '../../config/brand';
-import { TECH_ROADMAPS } from '../../config/roadmaps';
 import { 
   Search, 
   X, 
@@ -58,11 +57,7 @@ export const SearchModal: React.FC = () => {
       (c.skills && c.skills.some(s => s.toLowerCase().includes(q)))
     );
 
-    const matchedPaths = TECH_ROADMAPS.filter(p => 
-      p.title.toLowerCase().includes(q) || 
-      p.description.toLowerCase().includes(q) ||
-      p.careerRoles.some(s => s.toLowerCase().includes(q))
-    );
+    const matchedPaths: any[] = [];
 
     const instructorsList = [PRIMARY_INSTRUCTOR];
     const matchedInstructors = instructorsList.filter(i => 
