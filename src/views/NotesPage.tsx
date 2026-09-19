@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLms } from '../context/LmsContext';
 import { StudyNote, NoteResourceType } from '../types/lms';
+import { tokenStorage } from '../services/api';
 import { 
   FileText, 
   Plus, 
@@ -17,60 +18,144 @@ import {
   ExternalLink,
   FileSpreadsheet,
   FileCode,
-  Layers,
-  Grid,
-  List,
-  ArrowUpRight,
-  Upload,
-  Info,
-  X,
-  Image as ImageIcon
+  Layers, 
+  Grid, 
+  List, 
+  ArrowUpRight, 
+  Upload, 
+  Info, 
+  X, 
+  Image as ImageIcon,
+  Sparkles,
+  Database,
+  Server,
+  Globe,
+  Cpu,
+  Terminal,
+  BookOpen,
+  Share2,
+  RefreshCw,
+  SlidersHorizontal,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
+import { Badge } from '../components/ui/Badge';
 
-const NOTES_STORAGE_KEY = 'yaswant_code_study_notes_v3';
+export const NOTE_CATEGORY_THUMBNAILS: Record<string, string> = {
+  'Data Structures & Algorithms': 'https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&auto=format&fit=crop&q=80',
+  'Languages & Programming': 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=800&auto=format&fit=crop&q=80',
+  'Core CS & B.Tech': 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&auto=format&fit=crop&q=80',
+  'System Design': 'https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?w=800&auto=format&fit=crop&q=80',
+  'React & Web': 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format&fit=crop&q=80',
+  'Distributed Systems': 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&auto=format&fit=crop&q=80',
+  'Databases & SQL': 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
+  'Machine Learning': 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&auto=format&fit=crop&q=80',
+  'DevOps & Cloud': 'https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?w=800&auto=format&fit=crop&q=80',
+  'General': 'https://images.unsplash.com/photo-1516116211227-bbc13c6b2452?w=800&auto=format&fit=crop&q=80'
+};
+
+export const NOTE_CATEGORIES = [
+  'All',
+  'Data Structures & Algorithms',
+  'Languages & Programming',
+  'Core CS & B.Tech',
+  'System Design',
+  'React & Web',
+  'Distributed Systems',
+  'Databases & SQL',
+  'Machine Learning',
+  'DevOps & Cloud',
+  'General',
+] as const;
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  'Data Structures & Algorithms': <Cpu className="w-3.5 h-3.5 text-rose-500" />,
+  'Languages & Programming': <Terminal className="w-3.5 h-3.5 text-amber-500" />,
+  'Core CS & B.Tech': <BookOpen className="w-3.5 h-3.5 text-blue-500" />,
+  'System Design': <Server className="w-3.5 h-3.5 text-purple-500" />,
+  'React & Web': <Globe className="w-3.5 h-3.5 text-sky-500" />,
+  'Distributed Systems': <Layers className="w-3.5 h-3.5 text-indigo-500" />,
+  'Databases & SQL': <Database className="w-3.5 h-3.5 text-emerald-500" />,
+  'Machine Learning': <Sparkles className="w-3.5 h-3.5 text-pink-500" />,
+  'DevOps & Cloud': <Terminal className="w-3.5 h-3.5 text-teal-500" />,
+  'General': <FileText className="w-3.5 h-3.5 text-neutral-500" />
+};
+
+const STARRED_NOTES_KEY = 'yaswant_user_starred_notes';
+const CACHED_NOTES_KEY = 'yaswant_code_study_notes_v3';
 
 export const NotesPage: React.FC = () => {
-  const { addToast } = useLms();
+  const { addToast, role } = useLms();
 
-  // Load from localStorage or initialize empty
+  // Check if current user is an authorized admin
+  const isAdmin = useMemo(() => {
+    if (role === 'admin') return true;
+    const user = tokenStorage.getUser<{ role?: string }>();
+    return user?.role === 'admin';
+  }, [role]);
+
+  // Notes state initialized from cache if present
   const [notes, setNotes] = useState<StudyNote[]>(() => {
     try {
-      const saved = localStorage.getItem(NOTES_STORAGE_KEY);
+      const saved = localStorage.getItem(CACHED_NOTES_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          return parsed;
-        }
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
     return [];
   });
 
-  // Fetch live notes from backend API
+  const [isLoading, setIsLoading] = useState<boolean>(notes.length === 0);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Student's personal starred/favorited note IDs
+  const [starredNoteIds, setStarredNoteIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STARRED_NOTES_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
   useEffect(() => {
-    const fetchNotes = async () => {
-      try {
-        const res = await fetch('/api/notes.php');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            setNotes(json.data);
-          }
+    try {
+      localStorage.setItem(STARRED_NOTES_KEY, JSON.stringify(starredNoteIds));
+    } catch {}
+  }, [starredNoteIds]);
+
+  // Fetch live study notes from MariaDB database
+  const fetchNotes = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+    try {
+      const res = await fetch('/api/notes.php');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setNotes(json.data);
+          try {
+            localStorage.setItem(CACHED_NOTES_KEY, JSON.stringify(json.data));
+          } catch {}
         }
-      } catch (err) {
-        console.warn('Could not fetch notes from API:', err);
       }
-    };
-    fetchNotes();
+    } catch (err) {
+      console.warn('Could not load notes from database:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   }, []);
 
-  // Filters & View State
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
+
+  // Filters & Sorting View State
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedResourceType, setSelectedResourceType] = useState<'all' | 'pdf' | 'google' | 'starred' | 'pinned'>('all');
+  const [selectedResourceType, setSelectedResourceType] = useState<'all' | 'pdf' | 'google' | 'starred'>('all');
+  const [sortBy, setSortBy] = useState<'recent' | 'title' | 'category'>('recent');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Modal States
@@ -78,62 +163,28 @@ export const NotesPage: React.FC = () => {
   const [editingNote, setEditingNote] = useState<StudyNote | null>(null);
   const [previewNote, setPreviewNote] = useState<StudyNote | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Form State for Add / Edit Modal
   const [formResourceType, setFormResourceType] = useState<NoteResourceType>('pdf');
   const [formTitle, setFormTitle] = useState<string>('');
   const [formUrl, setFormUrl] = useState<string>('');
   const [formCourse, setFormCourse] = useState<string>('');
-  const [formCategory, setFormCategory] = useState<StudyNote['category']>('System Design');
+  const [formCategory, setFormCategory] = useState<string>('Data Structures & Algorithms');
   const [formThumbnail, setFormThumbnail] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
   const [formFileSize, setFormFileSize] = useState<string>('');
   const [formAuthor, setFormAuthor] = useState<string>('Yaswant Pandey');
 
-  // Load live study notes from MariaDB database
-  useEffect(() => {
-    fetch('/api/notes.php')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.data)) {
-          setNotes(data.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Sync to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-    } catch {
-      // ignore
-    }
-  }, [notes]);
-
-  const categories = [
-    'All',
-    'Data Structures & Algorithms',
-    'Languages & Programming',
-    'Core CS & B.Tech',
-    'System Design',
-    'React & Web',
-    'Distributed Systems',
-    'Databases & SQL',
-    'Machine Learning',
-    'DevOps & Cloud',
-    'General',
-  ];
-
-  // Auto-fill thumbnail when category changes if thumbnail is empty or matched default
-  const handleCategoryChange = (newCat: StudyNote['category']) => {
+  // Category change thumbnail helper
+  const handleCategoryChange = (newCat: string) => {
     setFormCategory(newCat);
-    if (!formThumbnail || Object.values(CATEGORY_THUMBNAILS).includes(formThumbnail)) {
-      setFormThumbnail(CATEGORY_THUMBNAILS[newCat] || CATEGORY_THUMBNAILS['General']);
+    if (!formThumbnail || Object.values(NOTE_CATEGORY_THUMBNAILS).includes(formThumbnail)) {
+      setFormThumbnail(NOTE_CATEGORY_THUMBNAILS[newCat] || NOTE_CATEGORY_THUMBNAILS['General']);
     }
   };
 
-  // Filtered Notes
+  // Filtered & Sorted Notes
   const filteredNotes = useMemo(() => {
     return notes
       .filter((note) => {
@@ -145,35 +196,52 @@ export const NotesPage: React.FC = () => {
         } else if (selectedResourceType === 'google') {
           matchesType = ['google_drive', 'google_docs', 'google_sheets', 'google_slides'].includes(note.resourceType);
         } else if (selectedResourceType === 'starred') {
-          matchesType = !!note.starred;
-        } else if (selectedResourceType === 'pinned') {
-          matchesType = !!note.pinned;
+          matchesType = starredNoteIds.includes(note.id) || !!note.starred;
         }
 
         const q = searchQuery.toLowerCase().trim();
         const matchesSearch =
           !q ||
-          note.title.toLowerCase().includes(q) ||
+          (note.title && note.title.toLowerCase().includes(q)) ||
           (note.description && note.description.toLowerCase().includes(q)) ||
-          note.courseOrTopic.toLowerCase().includes(q) ||
-          (note.author && note.author.toLowerCase().includes(q));
+          (note.courseOrTopic && note.courseOrTopic.toLowerCase().includes(q)) ||
+          (note.category && note.category.toLowerCase().includes(q)) ||
+          (note.author && note.author.toLowerCase().includes(q)) ||
+          (Array.isArray(note.tags) && note.tags.some(t => t.toLowerCase().includes(q)));
 
         return matchesCategory && matchesType && matchesSearch;
       })
       .sort((a, b) => {
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
-        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+
+        if (sortBy === 'title') {
+          return (a.title || '').localeCompare(b.title || '');
+        }
+        if (sortBy === 'category') {
+          return (a.category || '').localeCompare(b.category || '');
+        }
+        return new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime();
       });
-  }, [notes, selectedCategory, selectedResourceType, searchQuery]);
+  }, [notes, selectedCategory, selectedResourceType, searchQuery, sortBy, starredNoteIds]);
 
   // Statistics
   const stats = useMemo(() => {
     const total = notes.length;
     const pdfCount = notes.filter((n) => n.resourceType === 'pdf').length;
     const googleCount = notes.filter((n) => ['google_drive', 'google_docs', 'google_sheets', 'google_slides'].includes(n.resourceType)).length;
-    const starredCount = notes.filter((n) => n.starred).length;
+    const starredCount = notes.filter((n) => starredNoteIds.includes(n.id) || n.starred).length;
     return { total, pdfCount, googleCount, starredCount };
+  }, [notes, starredNoteIds]);
+
+  // Category counts
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = { All: notes.length };
+    notes.forEach(n => {
+      const cat = n.category || 'General';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
   }, [notes]);
 
   // Handlers
@@ -183,10 +251,10 @@ export const NotesPage: React.FC = () => {
     setFormTitle('');
     setFormUrl('');
     setFormCourse('');
-    setFormCategory('System Design');
-    setFormThumbnail(CATEGORY_THUMBNAILS['System Design']);
+    setFormCategory('Data Structures & Algorithms');
+    setFormThumbnail(NOTE_CATEGORY_THUMBNAILS['Data Structures & Algorithms']);
     setFormDescription('');
-    setFormFileSize(type === 'pdf' ? '2.5 MB • 15p' : 'Google Drive');
+    setFormFileSize(type === 'pdf' ? '2.5 MB • 20p' : 'Google Drive');
     setFormAuthor('Yaswant Pandey');
     setIsAddModalOpen(true);
   };
@@ -196,16 +264,16 @@ export const NotesPage: React.FC = () => {
     setFormResourceType(note.resourceType);
     setFormTitle(note.title);
     setFormUrl(note.url);
-    setFormCourse(note.courseOrTopic);
-    setFormCategory(note.category);
-    setFormThumbnail(note.thumbnail || CATEGORY_THUMBNAILS[note.category] || CATEGORY_THUMBNAILS['General']);
+    setFormCourse(note.courseOrTopic || note.category);
+    setFormCategory(note.category || 'General');
+    setFormThumbnail(note.thumbnail || NOTE_CATEGORY_THUMBNAILS[note.category] || NOTE_CATEGORY_THUMBNAILS['General']);
     setFormDescription(note.description || '');
     setFormFileSize(note.fileSize || '');
     setFormAuthor(note.author || 'Yaswant Pandey');
     setIsAddModalOpen(true);
   };
 
-  const handleSaveNote = (e: React.FormEvent) => {
+  const handleSaveNote = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formTitle.trim()) {
@@ -223,83 +291,147 @@ export const NotesPage: React.FC = () => {
       cleanUrl = 'https://' + cleanUrl;
     }
 
-    const fallbackThumb = CATEGORY_THUMBNAILS[formCategory] || CATEGORY_THUMBNAILS['General'];
+    const fallbackThumb = NOTE_CATEGORY_THUMBNAILS[formCategory] || NOTE_CATEGORY_THUMBNAILS['General'];
     const now = new Date().toISOString().split('T')[0];
+    setIsSubmitting(true);
 
-    if (editingNote) {
-      setNotes((prev) =>
-        prev.map((n) =>
-          n.id === editingNote.id
-            ? {
-                ...n,
-                title: formTitle.trim(),
-                url: cleanUrl,
-                courseOrTopic: formCourse.trim() || formCategory,
-                category: formCategory,
-                thumbnail: formThumbnail.trim() || fallbackThumb,
-                description: formDescription.trim() || 'Study notes and reference material.',
-                fileSize: formFileSize.trim(),
-                author: formAuthor.trim(),
-                resourceType: formResourceType,
-                previewUrl: cleanUrl,
-                updatedAt: now,
-              }
-            : n
-        )
-      );
-      addToast('Note Updated', `"${formTitle}" changes saved.`, 'success');
-    } else {
-      const newNote: StudyNote = {
-        id: `note-${Date.now()}`,
+    try {
+      const isEditing = Boolean(editingNote);
+      const payload = {
+        ...(isEditing ? { id: editingNote?.id } : {}),
         title: formTitle.trim(),
-        url: cleanUrl,
-        courseOrTopic: formCourse.trim() || formCategory,
+        topic: formCourse.trim() || formCategory,
         category: formCategory,
-        thumbnail: formThumbnail.trim() || fallbackThumb,
-        description: formDescription.trim() || 'Study notes and reference material.',
-        fileSize: formFileSize.trim() || (formResourceType === 'pdf' ? 'PDF File' : 'Google Drive'),
-        tags: [formCategory],
-        author: formAuthor.trim() || 'Yaswant Pandey',
         resourceType: formResourceType,
-        previewUrl: cleanUrl,
-        pinned: false,
-        starred: false,
-        createdAt: now,
-        updatedAt: now,
+        url: cleanUrl,
+        fileSize: formFileSize.trim() || (formResourceType === 'pdf' ? 'PDF File' : 'Google Drive'),
+        thumbnail: formThumbnail.trim() || fallbackThumb,
+        description: formDescription.trim() || 'Verified revision guide and hand notes.',
+        author: formAuthor.trim() || 'Yaswant Pandey',
+        pinned: editingNote?.pinned || false,
+        starred: editingNote?.starred || false,
+        tags: [formCategory].join(', ')
       };
 
-      setNotes([newNote, ...notes]);
-      addToast('Resource Added!', `New ${formResourceType.toUpperCase()} card added.`, 'success');
-    }
+      const token = tokenStorage.get();
+      if (token && isAdmin) {
+        const action = isEditing ? 'update_note' : 'create_note';
+        const res = await fetch(`/api/admin.php?action=${action}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to save to database.');
+        }
+      }
 
-    setIsAddModalOpen(false);
+      // Live state update
+      if (editingNote) {
+        setNotes((prev) =>
+          prev.map((n) =>
+            n.id === editingNote.id
+              ? {
+                  ...n,
+                  title: formTitle.trim(),
+                  url: cleanUrl,
+                  courseOrTopic: formCourse.trim() || formCategory,
+                  category: formCategory as any,
+                  thumbnail: formThumbnail.trim() || fallbackThumb,
+                  description: formDescription.trim(),
+                  fileSize: formFileSize.trim(),
+                  author: formAuthor.trim(),
+                  resourceType: formResourceType,
+                  previewUrl: cleanUrl,
+                  updatedAt: now,
+                }
+              : n
+          )
+        );
+        addToast('Note Updated', `"${formTitle}" successfully saved to database.`, 'success');
+      } else {
+        const newNote: StudyNote = {
+          id: `note-${Date.now()}`,
+          title: formTitle.trim(),
+          url: cleanUrl,
+          courseOrTopic: formCourse.trim() || formCategory,
+          category: formCategory as any,
+          thumbnail: formThumbnail.trim() || fallbackThumb,
+          description: formDescription.trim() || 'Verified revision guide and hand notes.',
+          fileSize: formFileSize.trim() || (formResourceType === 'pdf' ? 'PDF File' : 'Google Drive'),
+          tags: [formCategory],
+          author: formAuthor.trim() || 'Yaswant Pandey',
+          resourceType: formResourceType,
+          previewUrl: cleanUrl,
+          pinned: false,
+          starred: false,
+          createdAt: now,
+          updatedAt: now,
+        };
+        setNotes((prev) => [newNote, ...prev]);
+        addToast('Resource Added!', `"${formTitle}" published successfully.`, 'success');
+      }
+
+      setIsAddModalOpen(false);
+      fetchNotes();
+    } catch (err: any) {
+      addToast('Error Saving Note', err.message || 'Could not save note to database.', 'warning');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDeleteNote = (noteId: string, title: string) => {
-    if (confirm(`Remove "${title}" from study notes?`)) {
+  const handleDeleteNote = async (noteId: string, title: string) => {
+    if (!window.confirm(`Permanently delete "${title}" from study notes?`)) return;
+
+    try {
+      const token = tokenStorage.get();
+      if (token && isAdmin) {
+        const res = await fetch('/api/admin.php?action=delete_note', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ id: noteId })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Failed to delete note.');
+        }
+      }
+
       setNotes((prev) => prev.filter((n) => n.id !== noteId));
-      addToast('Note removed', `"${title}" removed.`, 'info');
+      addToast('Note Removed', `"${title}" has been deleted.`, 'info');
+      fetchNotes();
+    } catch (err: any) {
+      addToast('Delete Failed', err.message || 'Could not delete note.', 'warning');
     }
-  };
-
-  const handleTogglePin = (noteId: string) => {
-    setNotes((prev) =>
-      prev.map((n) => (n.id === noteId ? { ...n, pinned: !n.pinned } : n))
-    );
   };
 
   const handleToggleStar = (noteId: string) => {
-    setNotes((prev) =>
-      prev.map((n) => (n.id === noteId ? { ...n, starred: !n.starred } : n))
-    );
+    setStarredNoteIds((prev) => {
+      const exists = prev.includes(noteId);
+      const next = exists ? prev.filter((id) => id !== noteId) : [...prev, noteId];
+      addToast(
+        exists ? 'Removed from Starred' : 'Saved to Starred',
+        exists ? 'Resource removed from favorites.' : 'Resource pinned to your starred list.',
+        'info'
+      );
+      return next;
+    });
   };
 
   const handleCopyLink = (note: StudyNote) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(note.url);
       setCopiedId(note.id);
-      addToast('Link copied!', 'Document link copied to clipboard.', 'success');
-      setTimeout(() => setCopiedId(null), 2000);
+      addToast('Direct Link Copied', `${note.title} URL copied to clipboard.`, 'success');
+      setTimeout(() => setCopiedId(null), 2500);
     }
   };
 
@@ -312,7 +444,7 @@ export const NotesPage: React.FC = () => {
       setFormFileSize(`${sizeMB} MB • PDF`);
       const objectUrl = URL.createObjectURL(file);
       setFormUrl(objectUrl);
-      addToast('File selected', `${file.name} ready to save.`, 'info');
+      addToast('File Selected', `${file.name} attached (${sizeMB} MB).`, 'info');
     }
   };
 
@@ -348,7 +480,7 @@ export const NotesPage: React.FC = () => {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-purple-600/90 text-white shadow-xs backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-indigo-600/90 text-white shadow-xs backdrop-blur-md">
             <ExternalLink className="w-3 h-3" />
             LINK
           </span>
@@ -357,57 +489,137 @@ export const NotesPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* ─── Header & Top Actions ────────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fade-in">
+      
+      {/* ─── Hero Header & Mission Bar ───────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-neutral-200 dark:border-neutral-800">
+        <div className="space-y-2 max-w-3xl">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-            Study Notes & Resources
+            <span className="text-[11px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">
+              Verified Engineering & B.Tech Handbooks
+            </span>
+            <span className="text-neutral-300 dark:text-neutral-700">•</span>
+            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">
+              Authored by Yaswant Pandey
+            </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-            Notes & PDF Cards
+
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-neutral-950 dark:text-white tracking-tight leading-tight">
+            Study Notes & Architecture Guides
           </h1>
-          <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-            Visual subject cards for downloadable PDF guides and Google Drive resources.
+
+          <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+            Downloadable hand-crafted engineering notes, B.Tech computer science curriculum, data structures, and enterprise architecture summaries — 100% free and open access for students.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/* Top Actions & Admin Controls */}
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => handleOpenAddModal('google_drive')}
-            className="border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs"
+            onClick={() => fetchNotes(true)}
+            disabled={isRefreshing}
+            className="text-xs"
+            icon={<RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />}
+            title="Reload live database notes"
           >
-            <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-sky-500" />
-            + Google Link
+            {isRefreshing ? 'Syncing...' : 'Refresh'}
           </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => handleOpenAddModal('pdf')}
-            className="bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/20 text-xs"
-          >
-            <FileText className="w-3.5 h-3.5 mr-1.5" />
-            + Add PDF
-          </Button>
+
+          {isAdmin && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleOpenAddModal('google_drive')}
+                className="border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs"
+                icon={<FolderOpen className="w-3.5 h-3.5 text-sky-500" />}
+              >
+                + Google Link
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => handleOpenAddModal('pdf')}
+                className="bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-600/20 text-xs"
+                icon={<Plus className="w-3.5 h-3.5" />}
+              >
+                + Add PDF Note
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
-      {/* ─── Filter & Search Bar ─────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
-        <div className="relative flex-1 max-w-sm">
+      {/* ─── Metric KPI Badges Strip ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400">
+            <FileText className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-neutral-900 dark:text-white text-sm">{stats.total} Master Notes</div>
+            <div className="text-[11px] text-neutral-500">{stats.pdfCount} PDFs Available</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+            <FolderOpen className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-neutral-900 dark:text-white text-sm">{stats.googleCount} Cloud Docs</div>
+            <div className="text-[11px] text-neutral-500">Google Drive & Sheets</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <Layers className="w-4 h-4" />
+          </div>
+          <div>
+            <div className="font-bold text-neutral-900 dark:text-white text-sm">{Object.keys(categoryCounts).length - 1} Domains</div>
+            <div className="text-[11px] text-neutral-500">B.Tech, DSA, DevOps</div>
+          </div>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+          </div>
+          <div>
+            <div className="font-bold text-neutral-900 dark:text-white text-sm">{stats.starredCount} Starred</div>
+            <div className="text-[11px] text-neutral-500">Saved in Your Library</div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Search & View Toolbar ───────────────────────────────────────────── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        {/* Search Input with Instant Clear */}
+        <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search notes..."
-            className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-neutral-950 dark:focus:border-white shadow-2xs"
+            placeholder="Search notes by title, topic, DSA, B.Tech, or technology..."
+            className="w-full pl-9 pr-9 py-2 text-xs rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-rose-500"
           />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 p-0.5"
+              title="Clear search"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
 
+        {/* Resource Filter Pills & Sorting */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Format pills */}
           <div className="flex items-center p-1 rounded-xl bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs">
@@ -416,7 +628,7 @@ export const NotesPage: React.FC = () => {
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 selectedResourceType === 'all'
                   ? 'bg-white dark:bg-neutral-900 text-neutral-950 dark:text-white shadow-2xs font-bold'
-                  : 'text-neutral-500 hover:text-neutral-950'
+                  : 'text-neutral-500 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               All ({stats.total})
@@ -426,7 +638,7 @@ export const NotesPage: React.FC = () => {
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 selectedResourceType === 'pdf'
                   ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 shadow-2xs font-bold'
-                  : 'text-neutral-500 hover:text-neutral-950'
+                  : 'text-neutral-500 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               PDFs ({stats.pdfCount})
@@ -436,35 +648,50 @@ export const NotesPage: React.FC = () => {
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 selectedResourceType === 'google'
                   ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 shadow-2xs font-bold'
-                  : 'text-neutral-500 hover:text-neutral-950'
+                  : 'text-neutral-500 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
               Google Links ({stats.googleCount})
             </button>
             <button
               onClick={() => setSelectedResourceType('starred')}
-              className={`px-2.5 py-1 rounded-lg font-medium transition-all ${
+              className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 selectedResourceType === 'starred'
                   ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 shadow-2xs font-bold'
-                  : 'text-neutral-500 hover:text-neutral-950'
+                  : 'text-neutral-500 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
-              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500 inline" />
+              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+              <span>Starred ({stats.starredCount})</span>
             </button>
           </div>
 
-          {/* Grid/List switch */}
+          {/* Sort Dropdown */}
+          <div className="flex items-center gap-1.5 bg-neutral-100 dark:bg-neutral-850 p-1 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 ml-1.5" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="bg-transparent text-xs text-neutral-700 dark:text-neutral-300 font-medium focus:outline-none pr-1 cursor-pointer"
+            >
+              <option value="recent">Newest First</option>
+              <option value="title">Title (A–Z)</option>
+              <option value="category">By Category</option>
+            </select>
+          </div>
+
+          {/* Grid / List View Toggle */}
           <div className="flex items-center p-1 rounded-xl bg-neutral-100 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-800 text-xs">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-white dark:bg-neutral-900 shadow-2xs font-bold' : 'text-neutral-400'}`}
+              className={`p-1.5 rounded-lg ${viewMode === 'grid' ? 'bg-white dark:bg-neutral-900 shadow-2xs font-bold text-neutral-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600'}`}
               title="Grid View"
             >
               <Grid className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'bg-white dark:bg-neutral-900 shadow-2xs font-bold' : 'text-neutral-400'}`}
+              className={`p-1.5 rounded-lg ${viewMode === 'list' ? 'bg-white dark:bg-neutral-900 shadow-2xs font-bold text-neutral-900 dark:text-white' : 'text-neutral-400 hover:text-neutral-600'}`}
               title="List View"
             >
               <List className="w-3.5 h-3.5" />
@@ -473,42 +700,85 @@ export const NotesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* ─── Category Pills ──────────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-6 scrollbar-none">
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
-              selectedCategory === cat
-                ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold shadow-xs'
-                : 'bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300'
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+      {/* ─── Category Horizontal Scroll Bar ──────────────────────────────────── */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar text-xs">
+        {NOTE_CATEGORIES.map((cat) => {
+          const isActive = selectedCategory === cat;
+          const count = categoryCounts[cat] || 0;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              className={`px-3 py-1.5 rounded-xl font-medium whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 ${
+                isActive
+                  ? 'bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 font-bold shadow-xs'
+                  : 'bg-neutral-50 dark:bg-neutral-850/90 text-neutral-600 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700'
+              }`}
+            >
+              {CATEGORY_ICONS[cat] || <FileText className="w-3.5 h-3.5" />}
+              <span>{cat}</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                isActive
+                  ? 'bg-white/20 text-white dark:bg-neutral-950/20 dark:text-neutral-950'
+                  : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
-      {/* ─── Note Cards Grid ─────────────────────────────────────────────────── */}
-      {filteredNotes.length === 0 ? (
-        <div className="p-10 text-center rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-xs max-w-sm mx-auto my-12">
-          <FileText className="w-10 h-10 text-neutral-300 dark:text-neutral-700 mx-auto mb-2" />
-          <h3 className="text-sm font-bold text-neutral-950 dark:text-white mb-1">
-            No notes found
+      {/* ─── Skeleton Loading State ──────────────────────────────────────────── */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-900 overflow-hidden animate-pulse h-80 flex flex-col justify-between p-4">
+              <div className="h-44 bg-neutral-200 dark:bg-neutral-800 rounded-2xl mb-4" />
+              <div className="space-y-2">
+                <div className="h-4 bg-neutral-200 dark:bg-neutral-800 rounded-md w-3/4" />
+                <div className="h-3 bg-neutral-200 dark:bg-neutral-800 rounded-md w-1/2" />
+              </div>
+              <div className="h-8 bg-neutral-200 dark:bg-neutral-800 rounded-xl mt-4" />
+            </div>
+          ))}
+        </div>
+      ) : filteredNotes.length === 0 ? (
+        /* ─── Clean Empty State ─── */
+        <div className="p-12 text-center rounded-3xl bg-neutral-50 dark:bg-neutral-900 border border-dashed border-neutral-200 dark:border-neutral-800 max-w-md mx-auto my-8 space-y-3">
+          <FileText className="w-12 h-12 text-neutral-300 dark:text-neutral-700 mx-auto" />
+          <h3 className="text-base font-bold text-neutral-950 dark:text-white">
+            No study notes found
           </h3>
-          <p className="text-xs text-neutral-500 mb-4">
-            Try resetting your filters or add a new PDF note.
+          <p className="text-xs text-neutral-500 leading-relaxed">
+            No resources match your current filter query. Try selecting another category or clear your search bar.
           </p>
-          <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('pdf')}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add PDF Note
-          </Button>
+          <div className="pt-2 flex items-center justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSelectedCategory('All');
+                setSelectedResourceType('all');
+                setSearchQuery('');
+              }}
+            >
+              Reset All Filters
+            </Button>
+            {isAdmin && (
+              <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('pdf')}>
+                <Plus className="w-3.5 h-3.5 mr-1" /> Add Note
+              </Button>
+            )}
+          </div>
         </div>
       ) : viewMode === 'grid' ? (
+        /* ─── Bento Grid View ─── */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredNotes.map((note) => {
             const isPdf = note.resourceType === 'pdf';
-            const thumbUrl = note.thumbnail || CATEGORY_THUMBNAILS[note.category] || CATEGORY_THUMBNAILS['General'];
+            const thumbUrl = note.thumbnail || NOTE_CATEGORY_THUMBNAILS[note.category] || NOTE_CATEGORY_THUMBNAILS['General'];
+            const isStarred = starredNoteIds.includes(note.id) || !!note.starred;
 
             return (
               <div
@@ -523,8 +793,7 @@ export const NotesPage: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
                   />
-                  {/* Subtle Gradient Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
                   {/* Top-Left: Resource Type Badge */}
                   <div className="absolute top-3 left-3 z-10">
@@ -533,39 +802,30 @@ export const NotesPage: React.FC = () => {
 
                   {/* Top-Right: Quick Pin & Star Icons */}
                   <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTogglePin(note.id);
-                      }}
-                      className={`p-1.5 rounded-lg backdrop-blur-md transition-colors ${
-                        note.pinned
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-black/50 text-white/80 hover:text-white hover:bg-black/70'
-                      }`}
-                      title={note.pinned ? 'Pinned' : 'Pin note'}
-                    >
-                      <Pin className={`w-3 h-3 ${note.pinned ? 'fill-white' : ''}`} />
-                    </button>
+                    {note.pinned && (
+                      <span className="p-1.5 rounded-lg backdrop-blur-md bg-indigo-600 text-white shadow-xs" title="Pinned by Instructor">
+                        <Pin className="w-3 h-3 fill-white" />
+                      </span>
+                    )}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleToggleStar(note.id);
                       }}
-                      className={`p-1.5 rounded-lg backdrop-blur-md transition-colors ${
-                        note.starred
-                          ? 'bg-amber-500 text-white'
+                      className={`p-1.5 rounded-lg backdrop-blur-md transition-colors cursor-pointer ${
+                        isStarred
+                          ? 'bg-amber-500 text-white shadow-xs'
                           : 'bg-black/50 text-white/80 hover:text-white hover:bg-black/70'
                       }`}
-                      title={note.starred ? 'Starred' : 'Star note'}
+                      title={isStarred ? 'Remove Star' : 'Save to Starred Library'}
                     >
-                      <Star className={`w-3 h-3 ${note.starred ? 'fill-white' : ''}`} />
+                      <Star className={`w-3 h-3 ${isStarred ? 'fill-white' : ''}`} />
                     </button>
                   </div>
 
                   {/* Bottom-Right: File Size / Pages Pill */}
-                  <div className="absolute bottom-2.5 right-3 z-10 px-2 py-0.5 rounded-md text-[10px] font-mono font-medium bg-black/60 backdrop-blur-md text-white/90">
-                    {note.fileSize || 'Online'}
+                  <div className="absolute bottom-2.5 right-3 z-10 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-medium bg-black/60 backdrop-blur-md text-white/90">
+                    {note.fileSize || 'Online Access'}
                   </div>
 
                   {/* Bottom-Left: Category Tag */}
@@ -574,12 +834,12 @@ export const NotesPage: React.FC = () => {
                   </div>
                 </div>
 
-                {/* ── Card Body: Simple Title & Small Description ── */}
+                {/* ── Card Body: Title & Meta ── */}
                 <div className="p-4 flex-1 flex flex-col justify-between">
                   <div>
                     {/* Course/Topic */}
-                    <div className="text-[10px] font-mono text-neutral-400 truncate mb-1">
-                      {note.courseOrTopic}
+                    <div className="text-[10px] font-mono font-semibold text-neutral-400 truncate mb-1">
+                      {note.courseOrTopic || note.category}
                     </div>
 
                     {/* Title */}
@@ -587,10 +847,16 @@ export const NotesPage: React.FC = () => {
                       {note.title}
                     </h3>
 
-                    {/* Simple & Small Description (1-2 lines max) */}
+                    {/* Description */}
                     <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed mb-3">
-                      {note.description || 'Essential revision notes and engineering guide.'}
+                      {note.description || 'Verified engineering notes and practical architecture takeaways.'}
                     </p>
+
+                    {/* Author Stamp */}
+                    <div className="flex items-center gap-1.5 text-[11px] text-neutral-500 font-medium mb-1">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                      <span>{note.author || 'Yaswant Pandey'}</span>
+                    </div>
                   </div>
 
                   {/* ── Action Buttons Footer ── */}
@@ -599,7 +865,7 @@ export const NotesPage: React.FC = () => {
                       <div className="flex items-center gap-1.5 flex-1">
                         <button
                           onClick={() => setPreviewNote(note)}
-                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center gap-1.5 transition-all"
+                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-900/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Eye className="w-3.5 h-3.5" />
                           View PDF
@@ -610,7 +876,7 @@ export const NotesPage: React.FC = () => {
                           rel="noopener noreferrer"
                           download
                           className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                          title="Download PDF"
+                          title="Download PDF file directly"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </a>
@@ -621,14 +887,14 @@ export const NotesPage: React.FC = () => {
                           href={note.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-900/40 flex items-center justify-center gap-1.5 transition-all"
+                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-900/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           Open Link
                         </a>
                         <button
                           onClick={() => setPreviewNote(note)}
-                          className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                          className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-500 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                           title="Preview"
                         >
                           <Eye className="w-3.5 h-3.5" />
@@ -640,8 +906,8 @@ export const NotesPage: React.FC = () => {
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={() => handleCopyLink(note)}
-                        className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title="Copy URL"
+                        className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                        title="Copy note URL"
                       >
                         {copiedId === note.id ? (
                           <Check className="w-3 h-3 text-emerald-500" />
@@ -650,21 +916,24 @@ export const NotesPage: React.FC = () => {
                         )}
                       </button>
 
-                      <button
-                        onClick={() => handleOpenEditModal(note)}
-                        className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
-                        title="Edit Note"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteNote(note.id, note.title)}
-                        className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        title="Delete Note"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button
+                            onClick={() => handleOpenEditModal(note)}
+                            className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
+                            title="Edit Note (Admin)"
+                          >
+                            <Edit3 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNote(note.id, note.title)}
+                            className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                            title="Delete Note (Admin)"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -673,35 +942,45 @@ export const NotesPage: React.FC = () => {
           })}
         </div>
       ) : (
-        /* ── Compact List Mode ── */
+        /* ─── Compact Table List Mode ─── */
         <div className="rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 overflow-hidden shadow-xs">
           <table className="w-full text-left text-xs border-collapse">
-            <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
+            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
               {filteredNotes.map((note) => {
-                const isPdf = note.resourceType === 'pdf';
-                const thumbUrl = note.thumbnail || CATEGORY_THUMBNAILS[note.category] || CATEGORY_THUMBNAILS['General'];
+                const thumbUrl = note.thumbnail || NOTE_CATEGORY_THUMBNAILS[note.category] || NOTE_CATEGORY_THUMBNAILS['General'];
+                const isStarred = starredNoteIds.includes(note.id) || !!note.starred;
 
                 return (
                   <tr key={note.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-850/30 transition-colors">
                     <td className="py-3 px-4 w-16">
-                      <img src={thumbUrl} alt="" className="w-12 h-10 object-cover rounded-xl" />
+                      <img src={thumbUrl} alt="" className="w-12 h-10 object-cover rounded-xl border border-neutral-200 dark:border-neutral-700" />
                     </td>
                     <td className="py-3 px-4 max-w-sm">
                       <div className="flex items-center gap-2 mb-0.5">
                         {renderBadge(note.resourceType)}
-                        <span className="text-[10px] font-mono text-neutral-400">{note.category}</span>
+                        <span className="text-[10px] font-mono text-neutral-400 font-semibold">{note.category}</span>
                       </div>
                       <div className="font-bold text-neutral-950 dark:text-white line-clamp-1">{note.title}</div>
                       <div className="text-[11px] text-neutral-500 line-clamp-1">{note.description}</div>
                     </td>
                     <td className="py-3 px-4 text-[11px] font-mono text-neutral-400 whitespace-nowrap">
-                      {note.fileSize}
+                      {note.fileSize || 'Online'}
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <button
+                          onClick={() => handleToggleStar(note.id)}
+                          className={`p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 cursor-pointer ${
+                            isStarred ? 'bg-amber-500 text-white' : 'text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
+                          }`}
+                          title="Star note"
+                        >
+                          <Star className={`w-3.5 h-3.5 ${isStarred ? 'fill-white' : ''}`} />
+                        </button>
+                        <button
                           onClick={() => setPreviewNote(note)}
-                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 text-neutral-500"
+                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300 cursor-pointer"
+                          title="Preview Document"
                         >
                           <Eye className="w-3.5 h-3.5" />
                         </button>
@@ -709,22 +988,37 @@ export const NotesPage: React.FC = () => {
                           href={note.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 text-neutral-500"
+                          download
+                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-600 dark:text-neutral-300"
+                          title="Direct Download"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
+                          <Download className="w-3.5 h-3.5" />
                         </a>
                         <button
                           onClick={() => handleCopyLink(note)}
-                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 text-neutral-500"
+                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                          title="Copy Link"
                         >
                           <Copy className="w-3.5 h-3.5" />
                         </button>
-                        <button
-                          onClick={() => handleDeleteNote(note.id, note.title)}
-                          className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-rose-50 text-neutral-400 hover:text-rose-600"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {isAdmin && (
+                          <>
+                            <button
+                              onClick={() => handleOpenEditModal(note)}
+                              className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-400 hover:text-neutral-900 cursor-pointer"
+                              title="Edit Note (Admin)"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteNote(note.id, note.title)}
+                              className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:bg-rose-50 text-neutral-400 hover:text-rose-600 cursor-pointer"
+                              title="Delete Note (Admin)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -735,31 +1029,32 @@ export const NotesPage: React.FC = () => {
         </div>
       )}
 
-      {/* ─── Add / Edit Modal ────────────────────────────────────────────────── */}
+      {/* ─── Add / Edit Modal (Admin Protected) ───────────────────────────────── */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/60 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-neutral-200 dark:border-neutral-800">
-              <h3 className="text-base font-bold text-neutral-950 dark:text-white">
-                {editingNote ? 'Edit Note Card' : 'Add Note Resource Card'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-neutral-950/70 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-6 max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-200 dark:border-neutral-800">
+              <h3 className="text-base font-bold text-neutral-950 dark:text-white flex items-center gap-2">
+                <FileText className="w-4 h-4 text-rose-500" />
+                {editingNote ? 'Edit Study Note' : 'Add Study Note to MariaDB'}
               </h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-950 dark:hover:text-white"
+                className="p-1.5 rounded-xl text-neutral-400 hover:text-neutral-950 dark:hover:text-white cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Type Pills */}
-            <div className="flex items-center gap-2 mb-4">
+            {/* Type Selector Pills */}
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setFormResourceType('pdf')}
-                className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   formResourceType === 'pdf'
                     ? 'bg-rose-50 dark:bg-rose-950/60 border-rose-500 text-rose-600 dark:text-rose-400 shadow-2xs'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50'
+                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 }`}
               >
                 <FileText className="w-3.5 h-3.5 text-rose-500" />
@@ -768,14 +1063,14 @@ export const NotesPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setFormResourceType('google_drive')}
-                className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   formResourceType === 'google_drive'
                     ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-600 dark:text-sky-400 shadow-2xs'
-                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50'
+                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 }`}
               >
                 <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
-                Google Link
+                Google Drive Link
               </button>
             </div>
 
@@ -783,15 +1078,15 @@ export const NotesPage: React.FC = () => {
               {/* Title */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Title *
+                  Document Title *
                 </label>
                 <input
                   type="text"
                   required
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="e.g. Raft Consensus Algorithm Specification"
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white focus:outline-none focus:border-neutral-950 dark:focus:border-white"
+                  placeholder="e.g. Complete Data Structures & Algorithms Hand Notes"
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                 />
               </div>
 
@@ -799,7 +1094,7 @@ export const NotesPage: React.FC = () => {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                    {formResourceType === 'pdf' ? 'PDF Link URL *' : 'Google Drive / Docs URL *'}
+                    {formResourceType === 'pdf' ? 'PDF URL or Endpoint *' : 'Google Drive Link *'}
                   </label>
                   {formResourceType === 'pdf' && (
                     <label className="text-[10px] text-rose-600 font-semibold cursor-pointer hover:underline flex items-center gap-1">
@@ -813,23 +1108,23 @@ export const NotesPage: React.FC = () => {
                   required
                   value={formUrl}
                   onChange={(e) => setFormUrl(e.target.value)}
-                  placeholder="https://..."
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono"
+                  placeholder="https://yaswant.co.in/notes/..."
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-rose-500"
                 />
               </div>
 
-              {/* Category & Course */}
+              {/* Category & Topic */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Subject Category
+                    Engineering Category
                   </label>
                   <select
                     value={formCategory}
-                    onChange={(e) => handleCategoryChange(e.target.value as any)}
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white"
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500 cursor-pointer"
                   >
-                    {categories.filter((c) => c !== 'All').map((cat) => (
+                    {NOTE_CATEGORIES.filter((c) => c !== 'All').map((cat) => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>
@@ -837,14 +1132,14 @@ export const NotesPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Topic / Course
+                    Course / Topic Tag
                   </label>
                   <input
                     type="text"
                     value={formCourse}
                     onChange={(e) => setFormCourse(e.target.value)}
-                    placeholder="e.g. Distributed Systems"
-                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white"
+                    placeholder="e.g. B.Tech CS 3rd Sem"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                 </div>
               </div>
@@ -854,12 +1149,12 @@ export const NotesPage: React.FC = () => {
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
                     <ImageIcon className="w-3.5 h-3.5 text-neutral-400" />
-                    Subject Photo URL
+                    Cover Image URL
                   </label>
                   <button
                     type="button"
-                    onClick={() => setFormThumbnail(CATEGORY_THUMBNAILS[formCategory] || CATEGORY_THUMBNAILS['General'])}
-                    className="text-[10px] text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+                    onClick={() => setFormThumbnail(NOTE_CATEGORY_THUMBNAILS[formCategory] || NOTE_CATEGORY_THUMBNAILS['General'])}
+                    className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer"
                   >
                     Auto-pick photo
                   </button>
@@ -870,40 +1165,55 @@ export const NotesPage: React.FC = () => {
                     value={formThumbnail}
                     onChange={(e) => setFormThumbnail(e.target.value)}
                     placeholder="https://images.unsplash.com/..."
-                    className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono truncate"
+                    className="flex-1 px-3 py-1.5 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white font-mono truncate focus:outline-none focus:ring-1 focus:ring-rose-500"
                   />
                   {formThumbnail && (
-                    <img src={formThumbnail} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 border" />
+                    <img src={formThumbnail} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0 border border-neutral-200 dark:border-neutral-700" />
                   )}
                 </div>
               </div>
 
-              {/* Simple & Small Description */}
+              {/* Description */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Short Description (1-2 sentences)
+                  Short Description
                 </label>
                 <textarea
                   rows={2}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Official whitepaper and key architectural takeaways."
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white resize-none"
+                  placeholder="Essential revision notes, algorithm complexities, and visual diagrams."
+                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-rose-500"
                 />
               </div>
 
-              {/* File Size */}
-              <div>
-                <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  File Size / Page Count
-                </label>
-                <input
-                  type="text"
-                  value={formFileSize}
-                  onChange={(e) => setFormFileSize(e.target.value)}
-                  placeholder="e.g. 1.4 MB • 18p"
-                  className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono"
-                />
+              {/* File Size & Author */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                    File Size / Page Count
+                  </label>
+                  <input
+                    type="text"
+                    value={formFileSize}
+                    onChange={(e) => setFormFileSize(e.target.value)}
+                    placeholder="e.g. 1.8 MB • 24p"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white font-mono focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+                    Author Credit
+                  </label>
+                  <input
+                    type="text"
+                    value={formAuthor}
+                    onChange={(e) => setFormAuthor(e.target.value)}
+                    placeholder="Yaswant Pandey"
+                    className="w-full px-3 py-2 text-xs rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-rose-500"
+                  />
+                </div>
               </div>
 
               {/* Submit Buttons */}
@@ -911,8 +1221,8 @@ export const NotesPage: React.FC = () => {
                 <Button type="button" variant="outline" size="sm" onClick={() => setIsAddModalOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit" variant="primary" size="sm" className="bg-rose-600 hover:bg-rose-700 text-white">
-                  {editingNote ? 'Save Changes' : 'Add Note Card'}
+                <Button type="submit" variant="primary" size="sm" isLoading={isSubmitting} className="bg-rose-600 hover:bg-rose-700 text-white">
+                  {editingNote ? 'Save Changes' : 'Publish Note to MariaDB'}
                 </Button>
               </div>
             </form>
@@ -922,9 +1232,9 @@ export const NotesPage: React.FC = () => {
 
       {/* ─── Document Previewer Modal ────────────────────────────────────────── */}
       {previewNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-950/80 backdrop-blur-md animate-in fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-neutral-950/85 backdrop-blur-md animate-fade-in">
           <div className="w-full max-w-5xl h-[88vh] rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col overflow-hidden">
-            <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3 bg-neutral-50/50 dark:bg-neutral-850/50">
+            <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-3 bg-neutral-50/70 dark:bg-neutral-850/70">
               <div className="flex items-center gap-2.5 truncate">
                 {renderBadge(previewNote.resourceType)}
                 <div className="truncate">
@@ -932,7 +1242,7 @@ export const NotesPage: React.FC = () => {
                     {previewNote.title}
                   </h3>
                   <span className="text-[10px] text-neutral-500 font-mono">
-                    {previewNote.fileSize || previewNote.courseOrTopic}
+                    {previewNote.fileSize || previewNote.courseOrTopic || previewNote.category}
                   </span>
                 </div>
               </div>
@@ -942,7 +1252,7 @@ export const NotesPage: React.FC = () => {
                   href={previewNote.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-xl text-xs font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 flex items-center gap-1.5 transition-colors"
                 >
                   <ArrowUpRight className="w-3.5 h-3.5" />
                   Open in New Window
@@ -952,8 +1262,8 @@ export const NotesPage: React.FC = () => {
                   <a
                     href={previewNote.url}
                     download
-                    className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:text-neutral-950 transition-colors"
-                    title="Download"
+                    className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+                    title="Direct Download"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </a>
@@ -961,7 +1271,7 @@ export const NotesPage: React.FC = () => {
 
                 <button
                   onClick={() => setPreviewNote(null)}
-                  className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950"
+                  className="p-1.5 rounded-xl border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-neutral-950 dark:hover:text-white cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -984,7 +1294,7 @@ export const NotesPage: React.FC = () => {
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-neutral-900/90 text-white text-xs backdrop-blur-md shadow-lg flex items-center gap-2 border border-white/10">
                 <Info className="w-4 h-4 text-sky-400 shrink-0" />
                 <span>
-                  If preview doesn't load:
+                  Having trouble viewing in browser?
                 </span>
                 <a
                   href={previewNote.url}
@@ -992,7 +1302,7 @@ export const NotesPage: React.FC = () => {
                   rel="noopener noreferrer"
                   className="font-bold underline text-sky-400 hover:text-sky-300"
                 >
-                  Click here to open directly
+                  Click to open PDF directly
                 </a>
               </div>
             </div>
