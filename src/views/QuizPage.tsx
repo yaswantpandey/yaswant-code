@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_QUIZ } from '../data/mockData';
+import { Quiz } from '../types/lms';
 import { 
   Clock, 
   HelpCircle, 
@@ -17,19 +17,45 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
 export const QuizPage: React.FC = () => {
-  const { setCurrentView, addToast } = useLms();
+  const { setCurrentView, addToast, selectedCourse } = useLms();
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
 
-  const questions = MOCK_QUIZ.questions;
+  useEffect(() => {
+    const fetchQuiz = async () => {
+      try {
+        setIsLoading(true);
+        const courseParam = selectedCourse?.id ? `?course_id=${encodeURIComponent(selectedCourse.id)}` : '';
+        const res = await fetch(`/api/quizzes.php${courseParam}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const q = Array.isArray(json.data) ? json.data[0] : json.data;
+            if (q && q.questions && q.questions.length > 0) {
+              setQuiz(q);
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch quiz:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchQuiz();
+  }, [selectedCourse]);
+
+  const questions = quiz?.questions || [];
   const currentQ = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
 
   const handleSelectOption = (optIndex: number) => {
-    if (quizSubmitted) return;
+    if (quizSubmitted || !currentQ) return;
     setSelectedOptionIndex(optIndex);
     setUserAnswers(prev => ({ ...prev, [currentQ.id]: optIndex }));
     setShowExplanation(true);
@@ -56,8 +82,8 @@ export const QuizPage: React.FC = () => {
     return {
       correct,
       total: totalQuestions,
-      percentage: Math.round((correct / totalQuestions) * 100),
-      passed: Math.round((correct / totalQuestions) * 100) >= MOCK_QUIZ.passingScore
+      percentage: totalQuestions > 0 ? Math.round((correct / totalQuestions) * 100) : 0,
+      passed: totalQuestions > 0 && Math.round((correct / totalQuestions) * 100) >= (quiz?.passingScore || 70)
     };
   };
 
@@ -73,6 +99,23 @@ export const QuizPage: React.FC = () => {
 
   const optionLetters = ['A', 'B', 'C', 'D', 'E'];
 
+  if (!quiz || questions.length === 0) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-16 text-center space-y-4">
+        <GlassCard className="p-12 text-center">
+          <HelpCircle className="w-12 h-12 text-neutral-400 mx-auto mb-4 opacity-40" />
+          <h2 className="text-lg font-bold text-neutral-900 dark:text-white mb-2">No Quiz Available Yet</h2>
+          <p className="text-sm text-neutral-500 max-w-md mx-auto mb-6">
+            There is no active technical quiz attached to this course at this moment. You can continue reading the course lessons or explore other technical topics.
+          </p>
+          <Button variant="primary" onClick={() => setCurrentView('courses')}>
+            Explore Courses
+          </Button>
+        </GlassCard>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-8">
       
@@ -81,13 +124,13 @@ export const QuizPage: React.FC = () => {
         <div>
           <Badge variant="purple" size="sm">Technical Assessment</Badge>
           <h1 className="text-xl sm:text-2xl font-extrabold text-neutral-950 dark:text-white mt-1">
-            {MOCK_QUIZ.title}
+            {quiz.title}
           </h1>
         </div>
 
         <div className="flex items-center gap-1.5 text-xs font-mono text-neutral-500 bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700">
           <Clock className="w-3.5 h-3.5 text-amber-500" />
-          <span>{MOCK_QUIZ.durationMinutes}:00 Duration</span>
+          <span>{quiz.durationMinutes || 15}:00 Duration</span>
         </div>
       </div>
 
@@ -172,7 +215,7 @@ export const QuizPage: React.FC = () => {
           {/* Action Footer */}
           <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
             <span className="text-xs text-neutral-400">
-              Passing threshold: {MOCK_QUIZ.passingScore}%
+              Passing threshold: {quiz.passingScore || 70}%
             </span>
 
             <Button

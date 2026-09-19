@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useLms } from '../../context/LmsContext';
-import { MOCK_COURSES, MOCK_LEARNING_PATHS, MOCK_INSTRUCTORS, MOCK_DISCUSSIONS } from '../../data/mockData';
-import { MOCK_BLOG_POSTS } from '../../data/blogData';
-import { MOCK_RESOURCES } from '../../data/resourcesData';
-import { MOCK_PROJECTS } from '../../data/projectsData';
+import { PRIMARY_INSTRUCTOR } from '../../config/brand';
+import { TECH_ROADMAPS } from '../../config/roadmaps';
 import { 
   Search, 
   X, 
@@ -12,12 +10,12 @@ import {
   User, 
   MessageSquare, 
   ArrowRight, 
-  Command,
-  Flame,
-  Clock,
-  FileText,
-  DownloadCloud,
-  FolderGit2
+  Command, 
+  Flame, 
+  Clock, 
+  FileText, 
+  DownloadCloud, 
+  FolderGit2 
 } from 'lucide-react';
 import { Badge } from './Badge';
 
@@ -34,78 +32,55 @@ export const SearchModal: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'courses' | 'paths' | 'projects' | 'articles' | 'resources'>('all');
 
   const popularSearches = [
-    'Google Drive & Workspace',
-    'React 19 Server Actions',
-    'PyTorch Transformers',
-    'Kubernetes GitOps',
-    'Rust eBPF',
-    'System Design',
-    'Design Tokens'
+    'System Design & APIs',
+    'React 19 & Next.js',
+    'Cloud Native & DevOps',
+    'Full-Stack Web Development',
+    'TypeScript Architecture',
+    'Database Workbench',
+    'Yaswant Pandey'
   ];
 
   const recentSearches = [
-    'Next.js 15 Caching',
-    'Distributed Raft Consensus',
-    'Dr. Elena Vance'
+    'Full-Stack Architecture',
+    'DevOps Tools',
+    'Yaswant Pandey'
   ];
 
   const results = useMemo(() => {
     if (!query.trim()) return null;
     const q = query.toLowerCase();
 
-    const currentCourses = courses && courses.length > 0 ? courses : MOCK_COURSES;
+    const currentCourses = courses || [];
     const matchedCourses = currentCourses.filter(c => 
       c.title.toLowerCase().includes(q) || 
       c.description.toLowerCase().includes(q) ||
-      c.skills.some(s => s.toLowerCase().includes(q))
+      (c.skills && c.skills.some(s => s.toLowerCase().includes(q)))
     );
 
-    const matchedPaths = MOCK_LEARNING_PATHS.filter(p => 
+    const matchedPaths = TECH_ROADMAPS.filter(p => 
       p.title.toLowerCase().includes(q) || 
       p.description.toLowerCase().includes(q) ||
-      p.skillsCovered.some(s => s.toLowerCase().includes(q))
+      p.careerRoles.some(s => s.toLowerCase().includes(q))
     );
 
-    const matchedInstructors = MOCK_INSTRUCTORS.filter(i => 
+    const instructorsList = [PRIMARY_INSTRUCTOR];
+    const matchedInstructors = instructorsList.filter(i => 
       i.name.toLowerCase().includes(q) || 
       i.expertise.some(e => e.toLowerCase().includes(q))
-    );
-
-    const matchedDiscussions = MOCK_DISCUSSIONS.filter(d => 
-      d.title.toLowerCase().includes(q) || 
-      d.tags.some(t => t.toLowerCase().includes(q))
-    );
-
-    const matchedArticles = MOCK_BLOG_POSTS.filter(b =>
-      b.title.toLowerCase().includes(q) ||
-      b.excerpt.toLowerCase().includes(q) ||
-      b.tags.some(t => t.toLowerCase().includes(q))
-    );
-
-    const matchedResources = MOCK_RESOURCES.filter(r =>
-      r.title.toLowerCase().includes(q) ||
-      r.description.toLowerCase().includes(q) ||
-      r.tags.some(t => t.toLowerCase().includes(q))
-    );
-
-    const matchedProjects = MOCK_PROJECTS.filter(p =>
-      p.title.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.techStack.some(t => t.toLowerCase().includes(q)) ||
-      p.category.toLowerCase().includes(q)
     );
 
     return {
       courses: matchedCourses,
       paths: matchedPaths,
       instructors: matchedInstructors,
-      discussions: matchedDiscussions,
-      articles: matchedArticles,
-      resources: matchedResources,
-      projects: matchedProjects,
-      totalCount: matchedCourses.length + matchedPaths.length + matchedInstructors.length + matchedDiscussions.length + matchedArticles.length + matchedResources.length + matchedProjects.length
+      discussions: [] as any[],
+      articles: [] as any[],
+      resources: [] as any[],
+      projects: [] as any[],
+      totalCount: matchedCourses.length + matchedPaths.length + matchedInstructors.length
     };
-  }, [query]);
+  }, [query, courses]);
 
   if (!searchModalOpen) return null;
 
@@ -268,7 +243,7 @@ export const SearchModal: React.FC = () => {
                       >
                         <div>
                           <div className="text-sm font-semibold text-neutral-900 dark:text-white">{path.title}</div>
-                          <div className="text-xs text-neutral-500">{path.estimatedDuration} • {path.coursesCount} Courses</div>
+                          <div className="text-xs text-neutral-500">{path.duration} • {path.overviewStats.phasesCount} Phases</div>
                         </div>
                         <Badge variant="purple" size="sm">{path.difficulty}</Badge>
                       </div>

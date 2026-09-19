@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_PROJECTS } from '../data/projectsData';
 import { ProjectItem } from '../types/lms';
 import { 
   FolderGit2, 
@@ -30,6 +29,7 @@ import { Button } from '../components/ui/Button';
 
 export const ProjectsPage: React.FC = () => {
   const { setCurrentView, addToast } = useLms();
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('All');
@@ -39,17 +39,36 @@ export const ProjectsPage: React.FC = () => {
   const [activeProject, setActiveProject] = useState<ProjectItem | null>(null);
   const [copiedCommand, setCopiedCommand] = useState(false);
   
-  // Local milestone states (allows user to toggle milestones!)
-  const [projectMilestones, setProjectMilestones] = useState<Record<string, Record<string, boolean>>>(() => {
-    const initial: Record<string, Record<string, boolean>> = {};
-    MOCK_PROJECTS.forEach(p => {
-      initial[p.id] = {};
-      p.milestones.forEach(m => {
-        initial[p.id][m.id] = m.completed;
-      });
-    });
-    return initial;
-  });
+  // Local milestone states
+  const [projectMilestones, setProjectMilestones] = useState<Record<string, Record<string, boolean>>>({});
+
+  // Fetch live projects
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/projects.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setProjects(json.data);
+            const initial: Record<string, Record<string, boolean>> = {};
+            json.data.forEach((p: ProjectItem) => {
+              if (p.milestones && Array.isArray(p.milestones)) {
+                initial[p.id] = {};
+                p.milestones.forEach(m => {
+                  initial[p.id][m.id] = m.completed;
+                });
+              }
+            });
+            setProjectMilestones(initial);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch projects:', err);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   // Submission modal state
   const [submitModalOpen, setSubmitModalOpen] = useState(false);
@@ -66,11 +85,11 @@ export const ProjectsPage: React.FC = () => {
   const statuses = ['All', 'In Progress', 'Available', 'Completed'];
 
   const filteredProjects = useMemo(() => {
-    return MOCK_PROJECTS.filter(project => {
+    return projects.filter(project => {
       const matchesSearch = 
         project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.techStack.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        (project.techStack && project.techStack.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
 
       const matchesCategory = selectedCategory === 'All' || project.category === selectedCategory;
       const matchesDifficulty = selectedDifficulty === 'All' || project.difficulty === selectedDifficulty;
@@ -78,7 +97,7 @@ export const ProjectsPage: React.FC = () => {
 
       return matchesSearch && matchesCategory && matchesDifficulty && matchesStatus;
     });
-  }, [searchQuery, selectedCategory, selectedDifficulty, selectedStatus]);
+  }, [projects, searchQuery, selectedCategory, selectedDifficulty, selectedStatus]);
 
   const toggleMilestone = (projectId: string, milestoneId: string) => {
     setProjectMilestones(prev => {
@@ -169,7 +188,7 @@ export const ProjectsPage: React.FC = () => {
 
           {/* Quick Stats */}
           <div className="flex items-center gap-3 text-xs text-neutral-500 dark:text-neutral-400 self-end sm:self-auto">
-            <span>Showing <strong className="text-neutral-900 dark:text-white">{filteredProjects.length}</strong> of {MOCK_PROJECTS.length} capstones</span>
+            <span>Showing <strong className="text-neutral-900 dark:text-white">{filteredProjects.length}</strong> of {projects.length} capstones</span>
           </div>
         </div>
 

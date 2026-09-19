@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_CERTIFICATES } from '../data/mockData';
+import { Certificate } from '../types/lms';
 import { 
   User, 
   MapPin, 
@@ -26,9 +26,27 @@ import { tokenStorage } from '../services/api';
 export const StudentProfilePage: React.FC = () => {
   const { setCertificateModal, addToast } = useLms();
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'certificates'>('overview');
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const currentUser = tokenStorage.getUser<{ name?: string; email?: string; avatar?: string }>();
-  const studentName = currentUser?.name || 'Alex Mercer';
+  const studentName = currentUser?.name || 'Student Engineer';
   const avatarUrl = currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=6366f1&color=fff`;
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const res = await fetch('/api/certificates.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setCertificates(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch certificates:', err);
+      }
+    };
+    fetchCertificates();
+  }, []);
 
   const skills = [
     { name: 'React 19 & Next.js 15', level: 'Advanced', verified: true },
@@ -194,24 +212,28 @@ export const StudentProfilePage: React.FC = () => {
           <div className="space-y-6">
             <GlassCard className="p-6 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                Verified Credentials ({MOCK_CERTIFICATES.length})
+                Verified Credentials ({certificates.length})
               </h3>
 
               <div className="space-y-3">
-                {MOCK_CERTIFICATES.map((cert) => (
-                  <div
-                    key={cert.id}
-                    onClick={() => setCertificateModal(cert)}
-                    className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 cursor-pointer hover:border-neutral-400 transition-colors"
-                  >
-                    <div className="text-xs font-bold text-neutral-900 dark:text-white line-clamp-1">
-                      {cert.courseTitle}
+                {certificates.length === 0 ? (
+                  <p className="text-xs text-neutral-400">No credentials yet.</p>
+                ) : (
+                  certificates.map((cert) => (
+                    <div
+                      key={cert.id}
+                      onClick={() => setCertificateModal(cert)}
+                      className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 cursor-pointer hover:border-neutral-400 transition-colors"
+                    >
+                      <div className="text-xs font-bold text-neutral-900 dark:text-white line-clamp-1">
+                        {cert.courseTitle}
+                      </div>
+                      <span className="text-[10px] font-mono text-neutral-400">
+                        ID: {cert.credentialId}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-mono text-neutral-400">
-                      ID: {cert.credentialId}
-                    </span>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </GlassCard>
           </div>
@@ -266,18 +288,28 @@ export const StudentProfilePage: React.FC = () => {
       {/* Tab: Certificates */}
       {activeTab === 'certificates' && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MOCK_CERTIFICATES.map((cert) => (
-            <GlassCard key={cert.id} className="p-6 flex items-center justify-between gap-4">
-              <div>
-                <Badge variant="success" size="sm" className="mb-2">Verified Honor</Badge>
-                <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">{cert.courseTitle}</h4>
-                <div className="text-xs text-neutral-400 font-mono">Issued {cert.issueDate} • {cert.credentialId}</div>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => setCertificateModal(cert)}>
-                Inspect
-              </Button>
-            </GlassCard>
-          ))}
+          {certificates.length === 0 ? (
+            <div className="col-span-2 p-12 text-center rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+              <Award className="w-10 h-10 text-neutral-400 mx-auto mb-3 opacity-50" />
+              <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">No Certificates Earned Yet</h4>
+              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                Complete all course modules to earn cryptographically verifiable credentials.
+              </p>
+            </div>
+          ) : (
+            certificates.map((cert) => (
+              <GlassCard key={cert.id} className="p-6 flex items-center justify-between gap-4">
+                <div>
+                  <Badge variant="success" size="sm" className="mb-2">Verified Honor</Badge>
+                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">{cert.courseTitle}</h4>
+                  <div className="text-xs text-neutral-400 font-mono">Issued {cert.issueDate} • {cert.credentialId}</div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setCertificateModal(cert)}>
+                  Inspect
+                </Button>
+              </GlassCard>
+            ))
+          )}
         </div>
       )}
 

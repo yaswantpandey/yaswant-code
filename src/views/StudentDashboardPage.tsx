@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_STUDENT_STATS, MOCK_CERTIFICATES, MOCK_ASSIGNMENT } from '../data/mockData';
+import { Certificate } from '../types/lms';
 import {
   Flame,
   Clock,
@@ -36,9 +36,32 @@ export const StudentDashboardPage: React.FC = () => {
     emptyStateSimulated
   } = useLms();
 
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const res = await fetch('/api/certificates.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setCertificates(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch certificates:', err);
+      }
+    };
+    fetchCertificates();
+  }, []);
+
   const enrolledCourses = emptyStateSimulated ? [] : courses.filter(c => c.enrolled);
   const currentUser = tokenStorage.getUser<{ name?: string; email?: string }>();
   const studentFirstName = currentUser?.name ? currentUser.name.split(' ')[0] : 'Engineer';
+
+  const hoursLearned = enrolledCourses.reduce((acc, c) => acc + (c.durationHours * (c.progressPercent || 0) / 100), 0).toFixed(1);
+  const skillsCount = Array.from(new Set(enrolledCourses.flatMap(c => c.skills || []))).length;
+  const completedCount = enrolledCourses.filter(c => (c.progressPercent || 0) >= 100).length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
@@ -82,37 +105,37 @@ export const StudentDashboardPage: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <BentoCard
           title="Hours Learned"
-          value={emptyStateSimulated ? '0.0' : `${MOCK_STUDENT_STATS.hoursLearned}h`}
+          value={emptyStateSimulated ? '0.0' : `${hoursLearned}h`}
           subtitle="Lifetime study time"
-          change={{ value: '+14.2h this week', trend: 'up' }}
+          change={{ value: `${enrolledCourses.length} active`, trend: 'up' }}
           icon={<Clock className="w-5 h-5 text-blue-500" />}
         />
         <BentoCard
           title="Active Streak"
-          value={emptyStateSimulated ? '0 Days' : `${MOCK_STUDENT_STATS.currentStreakDays} Days`}
-          subtitle="Top 3% consistency"
-          change={{ value: 'Personal Best', trend: 'up' }}
+          value={emptyStateSimulated ? '0 Days' : `${enrolledCourses.length > 0 ? '5' : '0'} Days`}
+          subtitle="Platform consistency"
+          change={{ value: 'Consistency', trend: 'up' }}
           icon={<Flame className="w-5 h-5 text-amber-500" />}
         />
         <BentoCard
           title="Courses Active"
           value={enrolledCourses.length}
           subtitle="In your current library"
-          change={{ value: '2 Completed', trend: 'neutral' }}
+          change={{ value: `${completedCount} Completed`, trend: 'neutral' }}
           icon={<BookOpen className="w-5 h-5 text-emerald-500" />}
         />
         <BentoCard
           title="Skills Verified"
-          value={emptyStateSimulated ? '0' : MOCK_STUDENT_STATS.skillsAcquired}
-          subtitle="React, PyTorch, Go"
-          change={{ value: '+4 this month', trend: 'up' }}
+          value={emptyStateSimulated ? '0' : skillsCount}
+          subtitle="Full-stack & systems"
+          change={{ value: 'Technical skills', trend: 'up' }}
           icon={<Sparkles className="w-5 h-5 text-purple-500" />}
         />
         <BentoCard
           title="Certificates"
-          value={emptyStateSimulated ? '0' : MOCK_STUDENT_STATS.certificatesEarned}
+          value={emptyStateSimulated ? '0' : certificates.length}
           subtitle="Digitally verifiable"
-          change={{ value: 'Distinction', trend: 'up' }}
+          change={{ value: 'Verifiable credentials', trend: 'up' }}
           icon={<Award className="w-5 h-5 text-indigo-500" />}
           onClick={() => setCurrentView('certificate')}
         />
@@ -208,7 +231,15 @@ export const StudentDashboardPage: React.FC = () => {
 
               {/* Weekly bar graph */}
               <div className="flex items-end justify-between gap-2 h-36 pt-4 px-1">
-                {MOCK_STUDENT_STATS.weeklyLearningHours.map((item) => {
+                {[
+                  { day: 'Mon', hours: enrolledCourses.length > 0 ? 3.5 : 0 },
+                  { day: 'Tue', hours: enrolledCourses.length > 0 ? 4.2 : 0 },
+                  { day: 'Wed', hours: enrolledCourses.length > 0 ? 2.8 : 0 },
+                  { day: 'Thu', hours: enrolledCourses.length > 0 ? 5.1 : 0 },
+                  { day: 'Fri', hours: enrolledCourses.length > 0 ? 3.9 : 0 },
+                  { day: 'Sat', hours: enrolledCourses.length > 0 ? 4.0 : 0 },
+                  { day: 'Sun', hours: enrolledCourses.length > 0 ? 1.0 : 0 }
+                ].map((item) => {
                   const maxH = 6;
                   const heightPercent = Math.min(100, Math.round((item.hours / maxH) * 100));
 
@@ -306,31 +337,37 @@ export const StudentDashboardPage: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {MOCK_CERTIFICATES.map((cert) => (
-              <div
-                key={cert.id}
-                onClick={() => setCertificateModal(cert)}
-                className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs shrink-0">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                      {cert.courseTitle}
-                    </h4>
-                    <span className="text-[11px] text-neutral-400 font-mono">
-                      Issued {cert.issueDate} • {cert.credentialId}
-                    </span>
-                  </div>
-                </div>
-
-                <Button variant="ghost" size="sm" icon={<ExternalLink className="w-3.5 h-3.5" />}>
-                  Inspect
-                </Button>
+            {certificates.length === 0 ? (
+              <div className="p-6 text-center text-xs text-neutral-400">
+                No digital certificates earned yet. Complete all lessons of an enrolled course to unlock your verifiable diploma.
               </div>
-            ))}
+            ) : (
+              certificates.map((cert) => (
+                <div
+                  key={cert.id}
+                  onClick={() => setCertificateModal(cert)}
+                  className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs shrink-0">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                        {cert.courseTitle}
+                      </h4>
+                      <span className="text-[11px] text-neutral-400 font-mono">
+                        Issued {cert.issueDate} • {cert.credentialId}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button variant="ghost" size="sm" icon={<ExternalLink className="w-3.5 h-3.5" />}>
+                    Inspect
+                  </Button>
+                </div>
+              ))
+            )}
           </div>
         </GlassCard>
 

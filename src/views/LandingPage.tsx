@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
+import { PRIMARY_INSTRUCTOR } from '../config/brand';
+import { TECH_ROADMAPS } from '../config/roadmaps';
 import { 
   ArrowRight, 
   Sparkles, 
@@ -409,7 +411,7 @@ export const LandingPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
-            {MOCK_LEARNING_PATHS.map((path) => (
+            {TECH_ROADMAPS.slice(0, 3).map((path) => (
               <div
                 key={path.id}
                 onClick={() => setCurrentView('learning-paths')}
@@ -418,7 +420,7 @@ export const LandingPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <Badge variant="purple" size="sm">{path.difficulty}</Badge>
-                    <span className="text-xs text-neutral-400 font-mono">{path.estimatedDuration}</span>
+                    <span className="text-xs text-neutral-400 font-mono">{path.duration}</span>
                   </div>
                   <h3 className="text-base font-bold mb-2 group-hover:text-neutral-300 transition-colors">
                     {path.title}
@@ -429,17 +431,17 @@ export const LandingPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <div className="text-[11px] text-neutral-400 font-medium mb-2">Key Skills:</div>
+                  <div className="text-[11px] text-neutral-400 font-medium mb-2">Target Roles:</div>
                   <div className="flex flex-wrap gap-1 mb-4">
-                    {path.skillsCovered.slice(0, 4).map((skill) => (
-                      <span key={skill} className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
-                        {skill}
+                    {path.careerRoles.slice(0, 3).map((role) => (
+                      <span key={role} className="text-[10px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300">
+                        {role}
                       </span>
                     ))}
                   </div>
 
                   <div className="pt-4 border-t border-neutral-800 flex items-center justify-between text-xs">
-                    <span className="text-neutral-400">{path.coursesCount} Specialized Courses</span>
+                    <span className="text-neutral-400">{path.overviewStats.phasesCount} Curriculum Phases</span>
                     <span className="font-semibold text-white group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
                       View Roadmap <ChevronRight className="w-3.5 h-3.5" />
                     </span>
@@ -506,39 +508,37 @@ export const LandingPage: React.FC = () => {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">World-Class Mentors</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">Lead Instructor</div>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-950 dark:text-white">
-              Learn From Principal Engineers & Researchers
+              Learn Directly From Yaswant Pandey
             </h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {MOCK_INSTRUCTORS.map((inst) => (
-            <GlassCard
-              key={inst.id}
-              hoverEffect
-              className="p-6 text-center cursor-pointer group"
-              onClick={() => setCurrentView('courses')}
-            >
-              <img
-                src={inst.avatar}
-                alt={inst.name}
-                className="w-20 h-20 rounded-2xl object-cover mx-auto mb-4 ring-2 ring-neutral-200 dark:ring-neutral-800 group-hover:scale-105 transition-transform"
-              />
-              <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">
-                {inst.name}
-              </h3>
-              <p className="text-[11px] text-neutral-500 line-clamp-2 mb-3 leading-relaxed">
-                {inst.role}
-              </p>
-              <div className="flex items-center justify-center gap-3 text-xs text-neutral-400 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-                <span className="font-semibold text-amber-500">★ {inst.rating}</span>
-                <span>•</span>
-                <span>{inst.studentsCount.toLocaleString()} Students</span>
-              </div>
-            </GlassCard>
-          ))}
+        <div className="max-w-xl mx-auto">
+          <GlassCard
+            hoverEffect
+            className="p-8 text-center cursor-pointer group"
+            onClick={() => setCurrentView('courses')}
+          >
+            <div className="w-24 h-24 rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center font-extrabold text-2xl mx-auto mb-4 ring-2 ring-neutral-200 dark:ring-neutral-800 shadow-md">
+              YP
+            </div>
+            <h3 className="text-lg font-bold text-neutral-900 dark:text-white mb-1">
+              {PRIMARY_INSTRUCTOR.name}
+            </h3>
+            <p className="text-xs text-neutral-500 font-medium mb-3 leading-relaxed">
+              {PRIMARY_INSTRUCTOR.role}
+            </p>
+            <p className="text-xs text-neutral-600 dark:text-neutral-300 max-w-md mx-auto mb-4 leading-relaxed">
+              {PRIMARY_INSTRUCTOR.bio}
+            </p>
+            <div className="flex items-center justify-center gap-4 text-xs text-neutral-400 pt-4 border-t border-neutral-100 dark:border-neutral-800">
+              <span className="font-semibold text-amber-500">★ {PRIMARY_INSTRUCTOR.rating}</span>
+              <span>•</span>
+              <span>{PRIMARY_INSTRUCTOR.studentsCount.toLocaleString()}+ Engineers Mentored</span>
+            </div>
+          </GlassCard>
         </div>
       </section>
 

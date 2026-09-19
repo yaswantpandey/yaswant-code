@@ -46,5 +46,3 @@ export const PRIMARY_INSTRUCTOR: Instructor = {
     "Production cloud infrastructure and open-source tooling specialist"
   ]
 };
-
-export const MOCK_INSTRUCTORS: Instructor[] = [PRIMARY_INSTRUCTOR];

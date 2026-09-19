@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_CERTIFICATES } from '../data/mockData';
 import { Certificate } from '../types/lms';
 import { 
   Award, 
@@ -20,14 +19,32 @@ import { Button } from '../components/ui/Button';
 
 export const CertificatePage: React.FC = () => {
   const { setCertificateModal, addToast, brandName } = useLms();
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
   const [verifyIdInput, setVerifyIdInput] = useState('');
   const [verificationResult, setVerificationResult] = useState<Certificate | null>(null);
   const [searchAttempted, setSearchAttempted] = useState(false);
 
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      try {
+        const res = await fetch('/api/certificates.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setCertificates(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch certificates:', err);
+      }
+    };
+    fetchCertificates();
+  }, []);
+
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     setSearchAttempted(true);
-    const found = MOCK_CERTIFICATES.find(
+    const found = certificates.find(
       c => c.credentialId.toLowerCase() === verifyIdInput.trim().toLowerCase()
     );
     setVerificationResult(found || null);
@@ -109,16 +126,25 @@ export const CertificatePage: React.FC = () => {
       {/* User's Certificate Gallery */}
       <div className="space-y-6">
         <h2 className="text-lg font-bold text-neutral-950 dark:text-white">
-          My Earned Credentials ({MOCK_CERTIFICATES.length})
+          My Earned Credentials ({certificates.length})
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {MOCK_CERTIFICATES.map((cert) => (
-            <GlassCard
-              key={cert.id}
-              hoverEffect
-              className="p-6 flex flex-col justify-between space-y-6"
-            >
+        {certificates.length === 0 ? (
+          <GlassCard className="p-12 text-center">
+            <Award className="w-12 h-12 text-neutral-400 mx-auto mb-3 opacity-40" />
+            <h3 className="text-base font-bold text-neutral-900 dark:text-white mb-1">No Credentials Earned Yet</h3>
+            <p className="text-xs text-neutral-500 max-w-md mx-auto">
+              Complete any enrolled course's curriculum and assignments to earn a cryptographically verifiable certificate.
+            </p>
+          </GlassCard>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {certificates.map((cert) => (
+              <GlassCard
+                key={cert.id}
+                hoverEffect
+                className="p-6 flex flex-col justify-between space-y-6"
+              >
               <div>
                 <div className="flex items-start justify-between gap-3 mb-4">
                   <div className="w-12 h-12 rounded-2xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 flex items-center justify-center font-bold text-sm shadow-md">
@@ -182,6 +208,7 @@ export const CertificatePage: React.FC = () => {
             </GlassCard>
           ))}
         </div>
+      )}
       </div>
 
     </div>

@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_RESOURCES } from '../data/resourcesData';
 import { ResourceItem } from '../types/lms';
 import { 
   Download, 
@@ -26,10 +25,28 @@ import { Button } from '../components/ui/Button';
 
 export const FreeResourcesPage: React.FC = () => {
   const { addToast } = useLms();
+  const [resources, setResources] = useState<ResourceItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [previewResource, setPreviewResource] = useState<ResourceItem | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchResources = async () => {
+      try {
+        const res = await fetch('/api/resources.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setResources(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch resources:', err);
+      }
+    };
+    fetchResources();
+  }, []);
 
   const categories = [
     'All',
@@ -55,15 +72,15 @@ export const FreeResourcesPage: React.FC = () => {
   };
 
   const filteredResources = useMemo(() => {
-    return MOCK_RESOURCES.filter((res) => {
+    return resources.filter((res) => {
       const matchesCategory = selectedCategory === 'All' || res.category === selectedCategory;
       const matchesSearch = 
         res.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         res.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        res.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+        (res.tags && res.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase())));
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [resources, selectedCategory, searchQuery]);
 
   // Direct real file download generator using Blob
   const handleDownload = (resource: ResourceItem, e?: React.MouseEvent) => {

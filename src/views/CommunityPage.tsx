@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { MOCK_DISCUSSIONS } from '../data/mockData';
 import { DiscussionThread } from '../types/lms';
 import { 
   MessageSquare, 
@@ -21,13 +20,30 @@ import { Button } from '../components/ui/Button';
 
 export const CommunityPage: React.FC = () => {
   const { addToast } = useLms();
-  const [threads, setThreads] = useState<DiscussionThread[]>(MOCK_DISCUSSIONS);
+  const [threads, setThreads] = useState<DiscussionThread[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [askModalOpen, setAskModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newCategory, setNewCategory] = useState<DiscussionThread['category']>('Frontend');
+
+  useEffect(() => {
+    const fetchThreads = async () => {
+      try {
+        const res = await fetch('/api/discussions.php');
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && Array.isArray(json.data)) {
+            setThreads(json.data);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch discussions:', err);
+      }
+    };
+    fetchThreads();
+  }, []);
 
   const categories = ['All', 'Frontend', 'Backend', 'AI & ML', 'Architecture', 'Career', 'General'];
 
@@ -37,7 +53,7 @@ export const CommunityPage: React.FC = () => {
       const q = searchQuery.toLowerCase();
       const matchTitle = t.title.toLowerCase().includes(q);
       const matchContent = t.content.toLowerCase().includes(q);
-      const matchAuthor = t.author.name.toLowerCase().includes(q);
+      const matchAuthor = t.author?.name?.toLowerCase()?.includes(q);
       if (!matchTitle && !matchContent && !matchAuthor) return false;
     }
     return true;
@@ -144,7 +160,19 @@ export const CommunityPage: React.FC = () => {
 
       {/* Discussions Feed */}
       <div className="space-y-4">
-        {filteredThreads.map((thread) => (
+        {filteredThreads.length === 0 ? (
+          <GlassCard className="p-12 text-center">
+            <MessageSquare className="w-10 h-10 text-neutral-400 mx-auto mb-3 opacity-50" />
+            <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">No discussions found</h4>
+            <p className="text-xs text-neutral-500 max-w-sm mx-auto mb-4">
+              Be the first to start a conversation or ask an engineering question in this category.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => setAskModalOpen(true)}>
+              Ask a Question
+            </Button>
+          </GlassCard>
+        ) : (
+          filteredThreads.map((thread) => (
           <GlassCard
             key={thread.id}
             hoverEffect
@@ -201,7 +229,7 @@ export const CommunityPage: React.FC = () => {
               </div>
             </div>
           </GlassCard>
-        ))}
+        )))}
       </div>
 
       {/* Ask Question Modal */}
