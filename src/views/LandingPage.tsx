@@ -2,23 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
 import { PRIMARY_INSTRUCTOR } from '../config/brand';
 import { ALL_ROADMAP_TRACKS } from '../data/fullstackRoadmap';
-import { 
-  ArrowRight, 
-  Sparkles, 
-  Play, 
-  CheckCircle2, 
-  ShieldCheck, 
-  Flame, 
-  Terminal, 
-  Code2, 
-  Cpu, 
-  Globe, 
-  ChevronRight, 
-  Star, 
-  Users, 
-  Clock, 
-  Layers, 
-  HelpCircle, 
+import {
+  ArrowRight,
+  Sparkles,
+  Play,
+  CheckCircle2,
+  ShieldCheck,
+  Flame,
+  Terminal,
+  Code2,
+  Cpu,
+  Globe,
+  ChevronRight,
+  Star,
+  Users,
+  Clock,
+  Layers,
+  HelpCircle,
   ChevronDown,
   BookOpen,
   Award
@@ -39,7 +39,7 @@ export const LandingPage: React.FC = () => {
       .then(json => {
         if (json.success && Array.isArray(json.data)) setRoadmaps(json.data);
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const categories = [
@@ -78,7 +78,7 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="space-y-24 sm:space-y-32">
-      
+
       {/* 1. Hero Section */}
       <section className="relative pt-6 sm:pt-16 pb-10 sm:pb-12 overflow-hidden">
         {/* Subtle Ambient Glows */}
@@ -171,7 +171,7 @@ export const LandingPage: React.FC = () => {
 
             {/* Bento Grid Preview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              
+
               {/* Active Lesson Preview */}
               <div className="md:col-span-2 rounded-2xl bg-neutral-900 text-white p-4 sm:p-6 relative overflow-hidden flex flex-col justify-between">
                 <div>
@@ -239,7 +239,7 @@ export const LandingPage: React.FC = () => {
                   </div>
                   <div className="text-2xl font-bold text-neutral-900 dark:text-white">2 Certificates</div>
                   <div className="text-xs text-neutral-500 mt-1">Design Systems & TypeScript Generics</div>
-                  <button 
+                  <button
                     onClick={() => setCurrentView('certificate')}
                     className="text-xs font-semibold text-neutral-900 dark:text-white hover:underline mt-2 inline-flex items-center gap-1"
                   >

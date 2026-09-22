@@ -17,8 +17,10 @@ require_once __DIR__ . '/config.php';
 $startTime = microtime(true);
 
 // ─── Auth Guard ──────────────────────────────────────────────────────────────
+// Only accepts the INSTALL_SECRET (set in .env) — static hardcoded secrets removed
 $secret = trim($_GET['secret'] ?? $_POST['secret'] ?? '');
-$authorized = ($secret === 'yaswant_student_seed_2026' || $secret === INSTALL_SECRET);
+$installSecret = INSTALL_SECRET;
+$authorized = ($installSecret !== '' && $secret === $installSecret);
 
 if (!$authorized) {
     // Check if admin is logged in with Bearer token
@@ -39,7 +41,7 @@ if (!$authorized) {
 
 if (!$authorized) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Unauthorized. Provide valid secret parameter or admin bearer token.'], JSON_PRETTY_PRINT);
+    echo json_encode(['success' => false, 'error' => 'Unauthorized. Provide a valid INSTALL_SECRET or admin bearer token.'], JSON_PRETTY_PRINT);
     exit;
 }
 
@@ -323,7 +325,7 @@ echo json_encode([
     'new_subscribers_inserted'   => $subscribersSeeded,
     'total_database_users'       => $finalUsersCount,
     'total_database_subscribers' => $finalSubscribersCount,
-    'default_student_password'   => 'Student@2026',
+    // default_student_password intentionally omitted from response for security
     'database'                   => DB_NAME,
     'elapsed_seconds'            => $elapsed
 ], JSON_PRETTY_PRINT);

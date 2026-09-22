@@ -14,7 +14,21 @@ ini_set('log_errors', '1');
 date_default_timezone_set('UTC');
 
 // ─── CORS Headers ──────────────────────────────────────────────────────────
-header('Access-Control-Allow-Origin: *');
+// Only allow requests from the production domain and localhost for dev
+$_allowedOrigins = [
+    'https://yaswant.co.in',
+    'https://www.yaswant.co.in',
+    'http://localhost:5173',
+    'http://localhost:3000',
+];
+$_requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (in_array($_requestOrigin, $_allowedOrigins, true)) {
+    header('Access-Control-Allow-Origin: ' . $_requestOrigin);
+    header('Vary: Origin');
+} elseif (empty($_requestOrigin)) {
+    // Server-to-server or direct API call — allow
+    header('Access-Control-Allow-Origin: https://yaswant.co.in');
+}
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 header('Content-Type: application/json; charset=UTF-8');
@@ -71,18 +85,19 @@ if (!function_exists('load_env_file')) {
 load_env_file();
 
 // ─── Database Configuration ────────────────────────────────────────────────
-// Reads from .env / Hostinger environment variables, with active Hostinger fallbacks
+// Reads ONLY from .env / Hostinger environment variables — no hardcoded credentials
+// If DB env vars are missing, the system falls back safely to SQLite.
 define('DB_HOST', getenv('DB_HOST') ?: 'localhost');
 define('DB_PORT', (int) (getenv('DB_PORT') ?: 3306));
-define('DB_NAME', getenv('DB_NAME') ?: 'u865909543_freefund');
-define('DB_USER', getenv('DB_USER') ?: 'u865909543_iamlucifer');
-define('DB_PASS', getenv('DB_PASS') ?: 'Yaswant73983011#');
+define('DB_NAME', getenv('DB_NAME') ?: '');
+define('DB_USER', getenv('DB_USER') ?: '');
+define('DB_PASS', getenv('DB_PASS') ?: '');
 
 // ─── Platform Configuration ────────────────────────────────────────────────
 define('PLATFORM_NAME', 'Yaswant Code');
-define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'ecotech.internship@gmail.com');
+define('ADMIN_EMAIL', getenv('ADMIN_EMAIL') ?: 'contact@yaswant.co.in');
 define('PLATFORM_URL', getenv('PLATFORM_URL') ?: 'https://' . ($_SERVER['HTTP_HOST'] ?? 'yaswant.co.in'));
-define('INSTALL_SECRET', getenv('INSTALL_SECRET') ?: 'yaswant_install_2026');
+define('INSTALL_SECRET', getenv('INSTALL_SECRET') ?: '');
 
 // Session token TTL in seconds (7 days)
 define('TOKEN_TTL', 7 * 24 * 3600);
@@ -185,10 +200,9 @@ function fail(string $error, int $code = 400, mixed $details = null): never
 }
 
 set_exception_handler(function (Throwable $e): never {
-    fail($e->getMessage(), 500, [
-        'file' => basename($e->getFile()),
-        'line' => $e->getLine(),
-    ]);
+    // Log full details server-side, return only a safe message to the client
+    error_log('[LMS] Unhandled exception: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    fail('An internal server error occurred. Please try again later.', 500);
 });
 
 // ─── Input Helpers ─────────────────────────────────────────────────────────
@@ -253,11 +267,9 @@ function get_bearer_token(): ?string
         return trim($m[1]);
     }
 
-    // Fallback: check query parameter or POST param
-    $fallback = $_GET['token'] ?? $_POST['token'] ?? null;
-    if ($fallback && is_string($fallback)) {
-        return trim($fallback);
-    }
+    // Note: URL/POST token fallback intentionally removed.
+    // Tokens in URLs appear in server logs, browser history, and referrer headers.
+    // Always use the Authorization: Bearer <token> header.
 
     return null;
 }
@@ -333,10 +345,15 @@ function check_rate_limit(string $action, int $max = 10, int $window = 3600): vo
     if (!$pdo)
         return; // Skip rate limiting if DB not available
 
+    // Security: HTTP_X_FORWARDED_FOR is attacker-controlled and must NOT be trusted.
+    // HTTP_CF_CONNECTING_IP is set by Cloudflare and cannot be forged through CF.
+    // REMOTE_ADDR is the socket-level IP (either Cloudflare edge or direct client).
+    // We trust CF-Connecting-IP only when it exists; fall back to REMOTE_ADDR.
     $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
-        ?? $_SERVER['HTTP_X_FORWARDED_FOR']
         ?? $_SERVER['REMOTE_ADDR']
         ?? '0.0.0.0';
+    // Take only the first IP in case of unexpected comma-separated values
+    $ip = trim(explode(',', $ip)[0]);
 
     // Clean old entries
     $pdo->prepare('DELETE FROM rate_limits WHERE expires_at < NOW()')->execute();

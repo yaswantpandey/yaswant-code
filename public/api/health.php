@@ -15,6 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     json_response(['success' => false, 'error' => 'Method not allowed.'], 405);
 }
 
+// Require admin authentication — health data is internal-only
+require_role('admin');
+
 // ─── PHP Info ──────────────────────────────────────────────────────────────
 $phpVersion     = PHP_VERSION;
 $phpVersionOk   = version_compare(PHP_VERSION, '8.1.0', '>=');

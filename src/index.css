@@ -5,6 +5,10 @@
 @theme {
   --color-neutral-750: #2c2c31;
   --color-neutral-850: #1b1b20;
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --radius-4xl: 2rem;
+  --radius-6xl: 3rem;
 }
 
 @layer base {
@@ -79,6 +83,8 @@
    ========================================================================== */
 
 :root {
+  --foreground: #09090b;
+  --muted-foreground: #71717a;
   --color-contrast-surface: #ffffff;
   --color-contrast-surface-elevated: #fafafa;
   --color-contrast-surface-subtle: #f4f4f5;
@@ -92,6 +98,8 @@
 }
 
 .dark {
+  --foreground: #fafafa;
+  --muted-foreground: #a1a1aa;
   --color-contrast-surface: #18181b;
   --color-contrast-surface-elevated: #1b1b20;
   --color-contrast-surface-subtle: #27272a;

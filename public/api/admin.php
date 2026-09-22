@@ -234,7 +234,14 @@ ensure_extended_tables($pdo);
 try {
     $adminCount = (int)$pdo->query("SELECT COUNT(*) FROM users WHERE role = 'admin'")->fetchColumn();
     if ($adminCount === 0) {
-        $hash = password_hash('Password123!', PASSWORD_BCRYPT, ['cost' => 12]);
+        // Use ADMIN_BOOTSTRAP_PASSWORD env var, or generate a random one and log it
+        $bootstrapPass = getenv('ADMIN_BOOTSTRAP_PASSWORD') ?: null;
+        if (!$bootstrapPass) {
+            // Generate a secure random password — admin MUST check server error logs
+            $bootstrapPass = bin2hex(random_bytes(12)); // 24-char hex
+            error_log('[LMS] *** ADMIN BOOTSTRAP: No ADMIN_BOOTSTRAP_PASSWORD env var set. Auto-generated admin password: ' . $bootstrapPass . ' for admin@yaswantcode.edu — CHANGE THIS IMMEDIATELY ***');
+        }
+        $hash = password_hash($bootstrapPass, PASSWORD_BCRYPT, ['cost' => 12]);
         $pdo->prepare('
             INSERT INTO users (id, name, email, password_hash, role, title, avatar)
             VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -245,7 +252,7 @@ try {
             $hash,
             'admin',
             'Chief Systems Administrator',
-            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'
+            'https://ui-avatars.com/api/?name=Admin&background=ef4444&color=fff&size=200'
         ]);
     }
 } catch (Throwable $e) {}
@@ -1037,17 +1044,32 @@ if ($method === 'POST' && $action === 'update_settings') {
     $input = get_json_input();
     if (!is_array($input) || empty($input)) fail('Invalid settings payload.', 422);
 
+    // Allowlist of permitted setting keys — prevents arbitrary key injection
+    $allowedKeys = [
+        'announcement_enabled', 'announcement_badge', 'announcement_text',
+        'announcement_link', 'announcement_btn_text',
+        'platform_title', 'platform_tagline',
+        'contact_email', 'support_phone', 'office_location',
+        'github_url', 'youtube_url', 'linkedin_url', 'telegram_url',
+        'maintenance_mode', 'allow_registration',
+    ];
+
     $stmt = $pdo->prepare('
         INSERT INTO site_settings (setting_key, setting_value)
         VALUES (?, ?)
         ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)
     ');
 
+    $saved = 0;
     foreach ($input as $key => $val) {
+        if (!in_array((string)$key, $allowedKeys, true)) {
+            continue; // silently skip unknown keys
+        }
         $stmt->execute([trim((string)$key), is_bool($val) ? ($val ? '1' : '0') : (string)$val]);
+        $saved++;
     }
 
-    ok(true, 'Platform settings saved successfully');
+    ok(true, "Platform settings saved successfully ({$saved} keys updated)");
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

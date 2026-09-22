@@ -10,3 +10,8 @@ coverage/
 sync_config.jsonc
 ftp_*.mjs
 scratch_*.mjs
+
+# Security: never commit PII data files or one-time scripts
+*.csv
+public/api/student_emails.txt
+public/api/seed_students.php
