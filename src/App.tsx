@@ -134,6 +134,7 @@ const AppShell: React.FC = () => {
   };
 
   const isLearningInterface = currentView === 'learning-interface';
+  const isLanding = currentView === 'landing';
 
   return (
     <div className="min-h-screen flex flex-col bg-neutral-50/50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-200 selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-neutral-950">
@@ -145,8 +146,8 @@ const AppShell: React.FC = () => {
         {renderStudentView()}
       </main>
 
-      {/* Global Footer (hidden on learning player for immersion) */}
-      {!isLearningInterface && <Footer />}
+      {/* Global Footer (hidden on learning player for immersion and on the landing/home page) */}
+      {!isLearningInterface && !isLanding && <Footer />}
 
       {/* Mobile-Friendly Thumb Navigation */}
       {!isLearningInterface && <MobileNav />}

@@ -4,18 +4,28 @@ import type { ComponentProps, ReactNode } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { FacebookIcon, FrameIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from 'lucide-react';
 
-interface FooterLink {
+export interface FooterLink {
 	title: string;
 	href: string;
 	icon?: React.ComponentType<{ className?: string }>;
+	onClick?: (e: React.MouseEvent) => void;
 }
 
-interface FooterSection {
+export interface FooterSection {
 	label: string;
 	links: FooterLink[];
 }
 
-const footerLinks: FooterSection[] = [
+export interface FooterProps {
+	brandLogo?: ReactNode;
+	brandName?: string;
+	brandDescription?: string;
+	sections?: FooterSection[];
+	className?: string;
+	bottomContent?: ReactNode;
+}
+
+export const defaultFooterLinks: FooterSection[] = [
 	{
 		label: 'Product',
 		links: [
@@ -54,29 +64,48 @@ const footerLinks: FooterSection[] = [
 	},
 ];
 
-export function Footer() {
+export function Footer({
+	brandLogo,
+	brandName = 'Asme',
+	brandDescription,
+	sections = defaultFooterLinks,
+	className = '',
+	bottomContent,
+}: FooterProps = {}) {
 	return (
-		<footer className="md:rounded-t-6xl relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t bg-[radial-gradient(35%_128px_at_50%_0%,theme(backgroundColor.white/8%),transparent)] px-6 py-12 lg:py-16">
+		<footer className={`md:rounded-t-6xl relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t border-neutral-200 dark:border-neutral-800/80 bg-[radial-gradient(35%_128px_at_50%_0%,theme(backgroundColor.white/8%),transparent)] px-6 py-12 lg:py-16 ${className}`}>
 			<div className="bg-foreground/20 absolute top-0 right-1/2 left-1/2 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur" />
 
 			<div className="grid w-full gap-8 xl:grid-cols-3 xl:gap-8">
 				<AnimatedContainer className="space-y-4">
-					<FrameIcon className="size-8" />
-					<p className="text-muted-foreground mt-8 text-sm md:mt-0">
-						© {new Date().getFullYear()} Asme. All rights reserved.
+					{brandLogo ? (
+						brandLogo
+					) : (
+						<FrameIcon className="size-8 text-neutral-900 dark:text-white" />
+					)}
+					{brandDescription && (
+						<p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm leading-relaxed">
+							{brandDescription}
+						</p>
+					)}
+					<p className="text-muted-foreground text-sm">
+						© {new Date().getFullYear()} {brandName}. All rights reserved.
 					</p>
 				</AnimatedContainer>
 
 				<div className="mt-10 grid grid-cols-2 gap-8 md:grid-cols-4 xl:col-span-2 xl:mt-0">
-					{footerLinks.map((section, index) => (
+					{sections.map((section, index) => (
 						<AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
 							<div className="mb-10 md:mb-0">
-								<h3 className="text-xs">{section.label}</h3>
+								<h3 className="text-xs font-semibold uppercase tracking-wider text-neutral-900 dark:text-white">
+									{section.label}
+								</h3>
 								<ul className="text-muted-foreground mt-4 space-y-2 text-sm">
 									{section.links.map((link) => (
 										<li key={link.title}>
 											<a
 												href={link.href}
+												onClick={link.onClick}
 												className="hover:text-foreground inline-flex items-center transition-all duration-300"
 											>
 												{link.icon && <link.icon className="me-1 size-4" />}
@@ -90,9 +119,15 @@ export function Footer() {
 					))}
 				</div>
 			</div>
+
+			{bottomContent && (
+				<div className="w-full mt-10 pt-6 border-t border-neutral-200/80 dark:border-neutral-800/80">
+					{bottomContent}
+				</div>
+			)}
 		</footer>
 	);
-};
+}
 
 type ViewAnimationProps = {
 	delay?: number;
@@ -118,4 +153,4 @@ function AnimatedContainer({ className, delay = 0.1, children }: ViewAnimationPr
 			{children}
 		</motion.div>
 	);
-};
+}
