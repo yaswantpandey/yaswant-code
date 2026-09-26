@@ -130,8 +130,8 @@ DefaultLanguage en-US
 # 8. Prevent Directory Browsing
 Options -Indexes
 
-# 9. Block Direct Access to Sensitive Files
-<FilesMatch "(\.env|\.git|\.bak|\.sql|\.sh|\.lock|composer\.json|package\.json|package-lock\.json|bun\.lock|tsconfig\.json|vite\.config\.(ts|js))$">
+# 9. Block Direct Access to Sensitive Files and Directories
+<FilesMatch "(\.env.*|\.git.*|\.bak|\.sql|\.sh|\.bat|\.lock|composer\.json|package\.json|package-lock\.json|bun\.lock|tsconfig.*\.json|vite\.config\.(ts|js)|\.sqlite.*|\.db|\.jsonc|\.mjs|\.log|\.csv|firebase.*\.json|firestore\.rules|firestore\.indexes\.json|metadata\.json)$">
   <IfModule mod_authz_core.c>
     Require all denied
   </IfModule>
@@ -140,6 +140,13 @@ Options -Indexes
     Deny from all
   </IfModule>
 </FilesMatch>
+
+# 9b. Block direct access to database directory
+<IfModule mod_rewrite.c>
+  RewriteRule ^database(/.*)?$ - [F,L]
+  RewriteRule ^\.data(/.*)?$ - [F,L]
+  RewriteRule ^\.temp(/.*)?$ - [F,L]
+</IfModule>
 
 # 10. PHP Error Handling (Production — hide errors from output)
 <IfModule mod_php.c>

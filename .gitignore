@@ -7,13 +7,22 @@ coverage/
 .env*
 !.env.example
 .agents/
+
+# Deployment & FTP scripts with sensitive credentials
 sync_config.jsonc
 ftp_*.mjs
+deploy_*.mjs
 scratch_*.mjs
+*.zip
+*.tar.gz
 
-# Security: never commit PII data files or one-time scripts
+# Local databases and runtime stores
+database/
+*.sqlite*
+.data/
+.temp/
+
+# Security: never commit PII data files or one-time seeding scripts
 *.csv
 public/api/student_emails.txt
 public/api/seed_students.php
-database/
-*.sqlite*

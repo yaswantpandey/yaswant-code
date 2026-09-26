@@ -13,8 +13,9 @@ if (!$pdo) {
 }
 
 // Check authorization via secret key query parameter or admin token
-$secret = $_GET['secret'] ?? '';
-if ($secret !== INSTALL_SECRET && $secret !== 'yaswant_engineering_2026') {
+$secret = trim($_GET['secret'] ?? '');
+$authorizedBySecret = (INSTALL_SECRET !== '' && INSTALL_SECRET !== 'change_this_install_secret' && $secret === INSTALL_SECRET);
+if (!$authorizedBySecret) {
     // If not matching secret, check if admin is logged in
     $token = get_bearer_token();
     $isAdmin = false;
