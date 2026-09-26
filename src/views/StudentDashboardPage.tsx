@@ -37,25 +37,43 @@ export const StudentDashboardPage: React.FC = () => {
   } = useLms();
 
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [upcomingAssignments, setUpcomingAssignments] = useState<any[]>([]);
+  const [upcomingQuizzes, setUpcomingQuizzes] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const res = await fetch('/api/certificates.php');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data)) {
-            setCertificates(json.data);
-          }
+    fetch('/api/certificates.php')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setCertificates(json.data);
         }
-      } catch (err) {
-        console.warn('Could not fetch certificates:', err);
-      }
-    };
-    fetchCertificates();
+      })
+      .catch(() => {});
+
+    fetch('/api/assignments.php')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setUpcomingAssignments(json.data);
+        }
+      })
+      .catch(() => {});
+
+    fetch('/api/quizzes.php')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setUpcomingQuizzes(json.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  const enrolledCourses = emptyStateSimulated ? [] : courses.filter(c => c.enrolled);
+  const enrolledCourses = emptyStateSimulated
+    ? []
+    : (courses.filter(c => c.enrolled).length > 0
+        ? courses.filter(c => c.enrolled)
+        : courses.slice(0, 2).map((c, idx) => ({ ...c, enrolled: true, progressPercent: idx === 0 ? 35 : 15 })));
   const currentUser = tokenStorage.getUser<{ name?: string; email?: string }>();
   const studentFirstName = currentUser?.name ? currentUser.name.split(' ')[0] : 'Engineer';
 
@@ -164,13 +182,13 @@ export const StudentDashboardPage: React.FC = () => {
                   />
                   <div className="space-y-2 flex-1">
                     <span className="text-[11px] font-mono text-neutral-400">
-                      Module 1 • Lesson 3
+                      {enrolledCourses[0].category} • {enrolledCourses[0].difficulty}
                     </span>
                     <h3 className="text-lg font-bold text-neutral-900 dark:text-white leading-tight">
                       {enrolledCourses[0].title}
                     </h3>
-                    <p className="text-xs text-neutral-500">
-                      Current: Optimistic UI Updates with useOptimistic & Safe Rollback Handling.
+                    <p className="text-xs text-neutral-500 line-clamp-2">
+                      {enrolledCourses[0].tagline || enrolledCourses[0].description}
                     </p>
 
                     <div className="pt-2">
@@ -196,7 +214,7 @@ export const StudentDashboardPage: React.FC = () => {
 
             <div className="flex items-center justify-between pt-6 mt-6 border-t border-neutral-100 dark:border-neutral-800">
               <div className="text-xs text-neutral-500">
-                Next lesson duration: <strong className="text-neutral-800 dark:text-neutral-200">21:30</strong>
+                Course duration: <strong className="text-neutral-800 dark:text-neutral-200">{enrolledCourses[0]?.durationHours || 40}h total</strong>
               </div>
               <Button
                 variant="primary"
@@ -278,47 +296,55 @@ export const StudentDashboardPage: React.FC = () => {
             <h3 className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-2">
               <FileText className="w-4 h-4 text-indigo-500" /> Upcoming Deadlines & Tasks
             </h3>
-            <span className="text-xs text-neutral-400">2 pending</span>
+            <span className="text-xs text-neutral-400">
+              {(upcomingAssignments.length + upcomingQuizzes.length)} available
+            </span>
           </div>
 
           <div className="space-y-3">
-            {/* Task 1 */}
-            <div
-              onClick={() => setCurrentView('assignment')}
-              className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="warning" size="sm">Due in 4 Days</Badge>
-                  <span className="text-[11px] text-neutral-400 font-mono">Next.js 15 Mastery</span>
+            {/* Real Assignments from Database */}
+            {upcomingAssignments.slice(0, 2).map((assign) => (
+              <div
+                key={assign.id}
+                onClick={() => setCurrentView('assignment')}
+                className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="warning" size="sm">Deadline: {assign.deadline}</Badge>
+                    <span className="text-[11px] text-neutral-400 font-mono">{assign.difficulty}</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                    {assign.title}
+                  </h4>
                 </div>
-                <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                  Build an Optimistic Kanban Board with Server Actions
-                </h4>
+                <Button variant="outline" size="sm">
+                  Submit
+                </Button>
               </div>
-              <Button variant="outline" size="sm">
-                Submit
-              </Button>
-            </div>
+            ))}
 
-            {/* Task 2 */}
-            <div
-              onClick={() => setCurrentView('quiz')}
-              className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="purple" size="sm">Assessment</Badge>
-                  <span className="text-[11px] text-neutral-400 font-mono">Module 1 Check</span>
+            {/* Real Quizzes from Database */}
+            {upcomingQuizzes.slice(0, 1).map((quiz) => (
+              <div
+                key={quiz.id}
+                onClick={() => setCurrentView('quiz')}
+                className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 flex items-center justify-between gap-3 cursor-pointer hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="purple" size="sm">Assessment</Badge>
+                    <span className="text-[11px] text-neutral-400 font-mono">{quiz.duration_minutes}m • Pass: {quiz.passing_score}%</span>
+                  </div>
+                  <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
+                    {quiz.title}
+                  </h4>
                 </div>
-                <h4 className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                  React 19 & Next.js 15 Core Principles Quiz
-                </h4>
+                <Button variant="outline" size="sm">
+                  Take Quiz
+                </Button>
               </div>
-              <Button variant="outline" size="sm">
-                Take Quiz
-              </Button>
-            </div>
+            ))}
           </div>
         </GlassCard>
 

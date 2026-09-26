@@ -15,3 +15,5 @@ scratch_*.mjs
 *.csv
 public/api/student_emails.txt
 public/api/seed_students.php
+database/
+*.sqlite*

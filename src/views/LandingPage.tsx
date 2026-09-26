@@ -5,10 +5,8 @@ import { ALL_ROADMAP_TRACKS } from '../data/fullstackRoadmap';
 import {
   ArrowRight,
   Sparkles,
-  Play,
   CheckCircle2,
   ShieldCheck,
-  Flame,
   Terminal,
   Code2,
   Cpu,
@@ -21,7 +19,8 @@ import {
   HelpCircle,
   ChevronDown,
   BookOpen,
-  Award
+  Award,
+  Play
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -29,7 +28,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { injectSchema, buildFAQSchema } from '../services/seo';
 
 export const LandingPage: React.FC = () => {
-  const { setCurrentView, setSelectedCourse, brandName, openAuthModal, courses } = useLms();
+  const { setCurrentView, brandName, openAuthModal, courses, setSelectedCourse } = useLms();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [roadmaps, setRoadmaps] = useState<any[]>([]);
 
@@ -153,103 +152,6 @@ export const LandingPage: React.FC = () => {
             Founded by <strong className="text-neutral-500 dark:text-neutral-500">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
             Every course is designed around real-world systems used by top technology companies.
           </p>
-        </div>
-
-        {/* Hero Interactive Bento Showcase Preview */}
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 mt-12 sm:mt-16">
-          <GlassCard className="p-3.5 sm:p-6 shadow-2xl border border-neutral-300/80 dark:border-neutral-750">
-            {/* Top Bar of Preview Window */}
-            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-3 sm:mb-4 border-b border-neutral-200 dark:border-neutral-800 gap-2">
-              <div className="flex items-center gap-1.5 sm:gap-2 truncate">
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-rose-500/80 shrink-0" />
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-amber-500/80 shrink-0" />
-                <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500/80 shrink-0" />
-                <span className="text-[11px] sm:text-xs font-mono text-neutral-400 ml-1 truncate">apex-lms.studio/workbench</span>
-              </div>
-              <Badge variant="success" size="sm" className="shrink-0 text-[10px] sm:text-xs">Live Environment</Badge>
-            </div>
-
-            {/* Bento Grid Preview */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-              {/* Active Lesson Preview */}
-              <div className="md:col-span-2 rounded-2xl bg-neutral-900 text-white p-4 sm:p-6 relative overflow-hidden flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
-                    <Badge variant="purple" size="sm">Course In Progress</Badge>
-                    <span className="text-[11px] sm:text-xs text-neutral-400 font-mono truncate">Module 1 • Lesson 3 of 64</span>
-                  </div>
-                  <h3 className="text-base sm:text-xl font-bold mb-2">Next.js 15 & React 19: Full-Stack Architecture</h3>
-                  <p className="text-xs text-neutral-400 max-w-lg mb-4 leading-relaxed">
-                    Optimistic UI Updates with useOptimistic & Server Action rollback boundaries.
-                  </p>
-                  <div className="bg-neutral-950/80 p-3 rounded-xl border border-neutral-800 font-mono text-[11px] sm:text-xs text-neutral-300 overflow-x-auto max-w-full">
-                    <code className="whitespace-nowrap sm:whitespace-normal">const [optimisticState, setOptimistic] = useOptimistic(state, updateFn);</code>
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-5 sm:pt-6 mt-4 border-t border-neutral-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                      <Play className="w-4 h-4 fill-white text-white ml-0.5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-semibold">21:30 Video Lecture</div>
-                      <div className="text-[11px] text-neutral-400">Sarah Chen • Lead Frontend</div>
-                    </div>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    className="w-full sm:w-auto"
-                    onClick={() => {
-                      if (courses.length > 0) {
-                        setSelectedCourse(courses[0]);
-                        setCurrentView('learning-interface');
-                      } else {
-                        setCurrentView('courses');
-                      }
-                    }}
-                  >
-                    Resume Lesson
-                  </Button>
-                </div>
-              </div>
-
-              {/* Learning Stats Preview */}
-              <div className="space-y-4">
-                <GlassCard intensity="subtle" className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-neutral-500 uppercase">Learning Streak</span>
-                    <Flame className="w-4 h-4 text-amber-500" />
-                  </div>
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-white">19 Days Active</div>
-                  <div className="text-xs text-neutral-500 mt-1">Top 3% consistency this month</div>
-                  <div className="flex gap-1 mt-3">
-                    {[1, 2, 3, 4, 5, 6, 7].map((d) => (
-                      <div key={d} className="flex-1 h-2 rounded-full bg-emerald-500" />
-                    ))}
-                  </div>
-                </GlassCard>
-
-                <GlassCard intensity="subtle" className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-neutral-500 uppercase">Verified Credentials</span>
-                    <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-white">2 Certificates</div>
-                  <div className="text-xs text-neutral-500 mt-1">Design Systems & TypeScript Generics</div>
-                  <button
-                    onClick={() => setCurrentView('certificate')}
-                    className="text-xs font-semibold text-neutral-900 dark:text-white hover:underline mt-2 inline-flex items-center gap-1"
-                  >
-                    View Credential Wallet <ChevronRight className="w-3 h-3" />
-                  </button>
-                </GlassCard>
-              </div>
-
-            </div>
-          </GlassCard>
         </div>
       </section>
 

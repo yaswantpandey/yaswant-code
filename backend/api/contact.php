@@ -12,9 +12,9 @@ require_once __DIR__ . '/../config/cors.php';
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method === 'POST') {
-    $input   = getJsonInput();
-    $name    = trim($input['name']    ?? '');
-    $email   = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
+    $input = getJsonInput();
+    $name = trim($input['name'] ?? '');
+    $email = filter_var(trim($input['email'] ?? ''), FILTER_VALIDATE_EMAIL);
     $message = trim($input['message'] ?? '');
     $subject = trim($input['subject'] ?? 'General Inquiry');
 
@@ -37,8 +37,8 @@ if ($method === 'POST') {
     }
 
     // Optional: send email to admin using PHP mail() or a transactional service
-    $adminEmail = getenv('ADMIN_EMAIL') ?: 'admin@yaswantcode.com';
-    $emailBody  = "Name: {$name}\nEmail: {$email}\nSubject: {$subject}\n\n{$message}";
+    $adminEmail = getenv('ADMIN_EMAIL') ?: 'contact@yaswant.co.in';
+    $emailBody = "Name: {$name}\nEmail: {$email}\nSubject: {$subject}\n\n{$message}";
 
     @mail(
         $adminEmail,

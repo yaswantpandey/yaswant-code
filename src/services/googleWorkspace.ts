@@ -424,8 +424,4 @@ export class GoogleWorkspaceService {
 
 export const googleWorkspace = new GoogleWorkspaceService();
 export default googleWorkspace;
-  }
-}
 
-export const googleWorkspace = new GoogleWorkspaceService();
-export default googleWorkspace;

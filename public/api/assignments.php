@@ -86,7 +86,14 @@ if ($method === 'GET') {
         ok($stmt->fetchAll());
     }
 
-    fail('Provide ?course_id=, ?user_id=, or ?assignment_id=', 400);
+    // Return all assignments if no filter specified
+    $stmt = $pdo->query('
+        SELECT a.*, c.title AS course_title
+        FROM assignments a
+        JOIN courses c ON a.course_id = c.id
+        ORDER BY a.deadline ASC
+    ');
+    ok($stmt->fetchAll());
 }
 
 // ─── POST — Submit Assignment ───────────────────────────────────────────────

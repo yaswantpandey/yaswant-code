@@ -56,22 +56,24 @@ export const StudentProfilePage: React.FC = () => {
     { name: 'Docker & CI/CD Pipelines', level: 'Proficient', verified: false }
   ];
 
-  const projects = [
-    {
-      title: "Real-Time Collaborative Kanban Board",
-      desc: "Full-stack project featuring optimistic mutations, distributed WebSockets, and Postgres rollback triggers.",
-      tags: ["Next.js 15", "TailwindCSS", "PostgreSQL", "Socket.io"],
-      github: "https://github.com/example/kanban",
-      demo: "https://kanban-board.demo"
-    },
-    {
-      title: "Agentic AI Code Refactoring Engine",
-      desc: "CLI tool leveraging local LLMs to detect code smells and generate automated AST migration transforms.",
-      tags: ["TypeScript", "LangChain", "Tree-sitter", "Node.js"],
-      github: "https://github.com/example/agent-runner",
-      demo: "https://agent-runner.demo"
-    }
-  ];
+  const [projects, setProjects] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch('/api/projects.php')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setProjects(json.data.map((p: any) => ({
+            title: p.title,
+            desc: p.description || p.tagline,
+            tags: Array.isArray(p.techStack) ? p.techStack : (p.techStack ? p.techStack.split(', ') : ['Full-Stack']),
+            github: p.starterRepoCommand || 'https://github.com/yaswantpandey',
+            demo: p.liveDemoUrl || ''
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">

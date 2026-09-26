@@ -69,7 +69,24 @@ if ($method === 'GET') {
         ok($stmt->fetchAll());
     }
 
-    fail('Provide ?user_id=, ?code=, or ?credential_id=', 400);
+    // Return verified public certificates registry
+    $stmt = $pdo->query('
+        SELECT cert.*,
+               c.title      AS course_title,
+               c.category   AS course_category,
+               c.thumbnail  AS course_thumbnail,
+               c.difficulty AS course_difficulty,
+               u.name       AS student_name,
+               inst.name    AS instructor_name,
+               inst.title   AS instructor_title
+        FROM certificates cert
+        JOIN courses c   ON cert.course_id  = c.id
+        JOIN users u     ON cert.user_id    = u.id
+        JOIN users inst  ON c.instructor_id = inst.id
+        ORDER BY cert.issue_date DESC
+        LIMIT 50
+    ');
+    ok($stmt->fetchAll());
 }
 
 // ─── POST — Issue Certificate ───────────────────────────────────────────────

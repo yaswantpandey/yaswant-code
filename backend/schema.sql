@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE INDEX idx_users_email ON `users` (`email`);
+-- email is already UNIQUE indexed
 CREATE INDEX idx_users_role ON `users` (`role`);
 
 -- ----------------------------------------------------------------------------

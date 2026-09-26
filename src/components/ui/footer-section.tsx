@@ -133,6 +133,7 @@ type ViewAnimationProps = {
 	delay?: number;
 	className?: ComponentProps<typeof motion.div>['className'];
 	children: ReactNode;
+	key?: React.Key;
 };
 
 function AnimatedContainer({ className, delay = 0.1, children }: ViewAnimationProps) {

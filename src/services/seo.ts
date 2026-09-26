@@ -194,6 +194,7 @@ export interface ArticleSchemaData {
   category?: string;
   thumbnail?: string;
   tags?: string[];
+  keywords?: string[] | string;
 }
 
 /** Build Article schema for blog post pages */
@@ -329,7 +330,7 @@ export const ORGANIZATION_SCHEMA = {
   },
   contactPoint: {
     '@type': 'ContactPoint',
-    email: 'admin@yaswantcode.com',
+    email: 'contact@yaswant.co.in',
     contactType: 'customer support',
     availableLanguage: 'English',
   },

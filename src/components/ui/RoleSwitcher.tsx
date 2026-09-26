@@ -52,11 +52,8 @@ export const RoleSwitcher: React.FC = () => {
     { id: 'assignment', label: '7. Assignment & Project', icon: Sliders, category: 'Learner' },
     { id: 'certificate', label: '8. Certificate Verification', icon: ShieldCheck, category: 'Learner' },
     { id: 'learning-paths', label: '9. Learning Paths', icon: Sparkles, category: 'Learner' },
-    { id: 'instructor-profile', label: '10. Instructor Profile', icon: GraduationCap, category: 'Community' },
     { id: 'community', label: '11. Community Discussions', icon: Sparkles, category: 'Community' },
     { id: 'student-profile', label: '12. Public Student Profile', icon: GraduationCap, category: 'Community' },
-    { id: 'instructor-dashboard', label: '15. Instructor Dashboard', icon: Sliders, category: 'Instructor' },
-    { id: 'course-creation', label: '16. Course Creation Wizard', icon: BookOpen, category: 'Instructor' },
     { id: 'admin-dashboard', label: '17. Admin SaaS Dashboard', icon: ShieldCheck, category: 'Admin' },
     { id: 'settings', label: '19. Settings & Preferences', icon: SettingsIcon, category: 'Account' },
   ];
@@ -88,15 +85,13 @@ export const RoleSwitcher: React.FC = () => {
 
         {/* Quick Persona Pills */}
         <div className="hidden sm:flex items-center gap-1 bg-neutral-900/80 p-1 rounded-xl border border-neutral-800 text-[11px]">
-          {(['student', 'instructor', 'admin', 'guest'] as RoleType[]).map((r) => (
+          {(['student', 'admin'] as RoleType[]).map((r) => (
             <button
               key={r}
               onClick={() => {
                 setRole(r);
                 if (r === 'student') setCurrentView('student-dashboard');
-                if (r === 'instructor') setCurrentView('instructor-dashboard');
                 if (r === 'admin') setCurrentView('admin-dashboard');
-                if (r === 'guest') setCurrentView('landing');
               }}
               className={`px-2.5 py-1 rounded-lg capitalize transition-all ${
                 role === r 

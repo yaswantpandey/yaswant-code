@@ -90,7 +90,20 @@ if ($method === 'GET') {
         ]);
     }
 
-    fail('Provide ?quiz_id= or ?course_id=', 400);
+    // Return all quizzes if no filter specified
+    $stmt = $pdo->query('
+        SELECT q.id, q.course_id, q.title, q.duration_minutes, q.passing_score, c.title AS course_title
+        FROM quizzes q
+        JOIN courses c ON q.course_id = c.id
+        ORDER BY q.id ASC
+    ');
+    $rows = $stmt->fetchAll();
+    foreach ($rows as &$r) {
+        $r['duration_minutes'] = (int)$r['duration_minutes'];
+        $r['passing_score']    = (int)$r['passing_score'];
+    }
+    unset($r);
+    ok($rows);
 }
 
 // ─── POST — Submit Quiz ─────────────────────────────────────────────────────

@@ -321,43 +321,40 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
               </div>
             </div>
 
-            {/* Architectural Explanation */}
+            {/* Real Lesson Explanation from Database */}
             <div className="text-xs sm:text-sm text-neutral-300 leading-relaxed space-y-4">
               <p>
-                In this masterclass lesson, we explore how React Server Actions interact with client-side cache revalidation in Next.js 15. When invoking <code className="text-amber-400 font-mono bg-neutral-900 px-1 py-0.5 rounded">revalidatePath()</code>, the server computes a minimal diff of the RSC payload without triggering a full page remount.
+                {selectedLesson.content || (selectedLesson as any).description || 'In this masterclass lesson, explore the core concepts and architectural best practices demonstrated in the curriculum.'}
               </p>
-
-              <div className="p-4 rounded-2xl bg-neutral-900/90 border border-neutral-800">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2 flex items-center gap-2">
-                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Key Architectural Rules
-                </h4>
-                <ul className="space-y-1.5 text-xs text-neutral-300 list-disc list-inside">
-                  <li>Keep all Server Actions in dedicated <code className="text-neutral-200 font-mono">/actions</code> directories.</li>
-                  <li>Always parse input arguments using Zod schemas to reject invalid payloads.</li>
-                  <li>Use <code className="text-neutral-200 font-mono">useOptimistic</code> for instantaneous zero-latency list updates.</li>
-                </ul>
-              </div>
             </div>
 
-            {/* Code Snippet Box */}
-            <div className="rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
-              <div className="px-4 py-2.5 bg-neutral-850/60 border-b border-neutral-800 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-mono text-neutral-300">
-                  <Code2 className="w-4 h-4 text-neutral-400" />
-                  <span>app/actions/board.ts</span>
+            {/* Real Code Snippet Box (if available from database) */}
+            {(selectedLesson.codeSnippet || (selectedLesson as any).code_snippet) && (
+              <div className="rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
+                <div className="px-4 py-2.5 bg-neutral-850/60 border-b border-neutral-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-mono text-neutral-300">
+                    <Code2 className="w-4 h-4 text-neutral-400" />
+                    <span>Reference Implementation</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const code = selectedLesson.codeSnippet || (selectedLesson as any).code_snippet || '';
+                      navigator.clipboard.writeText(code);
+                      setCopiedCode(true);
+                      setTimeout(() => setCopiedCode(false), 2000);
+                      addToast("Code Copied", "Snippet copied to clipboard.", "success");
+                    }}
+                    className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
+                  </button>
                 </div>
-                <button
-                  onClick={copySnippet}
-                  className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors"
-                >
-                  {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedCode ? 'Copied' : 'Copy Code'}</span>
-                </button>
+                <pre className="p-4 text-xs font-mono text-emerald-400 overflow-x-auto bg-neutral-950">
+                  <code>{selectedLesson.codeSnippet || (selectedLesson as any).code_snippet}</code>
+                </pre>
               </div>
-              <pre className="p-4 text-xs font-mono text-emerald-400 overflow-x-auto bg-neutral-950">
-                <code>{sampleSnippet}</code>
-              </pre>
-            </div>
+            )}
 
             {/* Navigation Footer */}
             <div className="pt-6 border-t border-neutral-800 flex items-center justify-between">

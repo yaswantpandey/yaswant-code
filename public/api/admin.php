@@ -296,6 +296,21 @@ if ($method === 'GET' && $action === 'overview') {
             'total'  => 0,
             'active' => 0,
         ],
+        'quizzes' => [
+            'total'    => 0,
+            'attempts' => 0,
+        ],
+        'assignments' => [
+            'total'       => 0,
+            'submissions' => 0,
+        ],
+        'certificates' => [
+            'total' => 0,
+        ],
+        'discussions' => [
+            'total'      => 0,
+            'unresolved' => 0,
+        ],
         'database' => [
             'status'     => 'connected',
             'driver'     => get_db_driver($pdo),
@@ -349,8 +364,29 @@ if ($method === 'GET' && $action === 'overview') {
     } catch (Throwable $e) {}
 
     try {
+        $stats['quizzes']['total']    = (int)$pdo->query("SELECT COUNT(*) FROM quizzes")->fetchColumn();
+        $stats['quizzes']['attempts'] = (int)$pdo->query("SELECT COUNT(*) FROM quiz_attempts")->fetchColumn();
+    } catch (Throwable $e) {}
+
+    try {
+        $stats['assignments']['total']       = (int)$pdo->query("SELECT COUNT(*) FROM assignments")->fetchColumn();
+        $stats['assignments']['submissions'] = (int)$pdo->query("SELECT COUNT(*) FROM assignment_submissions")->fetchColumn();
+    } catch (Throwable $e) {}
+
+    try {
+        $stats['certificates']['total'] = (int)$pdo->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
+    } catch (Throwable $e) {}
+
+    try {
+        $stats['discussions']['total']      = (int)$pdo->query("SELECT COUNT(*) FROM discussions")->fetchColumn();
+        $stats['discussions']['unresolved'] = (int)$pdo->query("SELECT COUNT(*) FROM discussions WHERE has_accepted_answer = 0")->fetchColumn();
+    } catch (Throwable $e) {}
+
+    try {
         $uStmt = $pdo->query("SELECT id, name, email, role, avatar, title, is_active, created_at FROM users ORDER BY created_at DESC LIMIT 5");
         $stats['recent_users'] = $uStmt->fetchAll();
+    } catch (Throwable $e) {
+        $stats['recent_users'] = [];
     } catch (Throwable $e) {
         $stats['recent_users'] = [];
     }
@@ -1664,6 +1700,626 @@ if ($method === 'POST' && $action === 'delete_workspace_link') {
     if (empty($b['id'])) fail('Link ID required.', 400);
     $pdo->prepare("DELETE FROM workspace_links WHERE id=?")->execute([$b['id']]);
     ok([], 'Workspace link deleted');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QUIZZES & QUESTIONS — Quiz Engine Admin CRUD
+// ─────────────────────────────────────────────────────────────────────────────
+if ($action === 'quizzes') {
+    $stmt = $pdo->query("
+        SELECT q.*, c.title AS course_title,
+               (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS questions_count,
+               (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.quiz_id = q.id) AS attempts_count,
+               (SELECT ROUND(AVG(score), 1) FROM quiz_attempts qa WHERE qa.quiz_id = q.id) AS avg_score
+        FROM quizzes q
+        LEFT JOIN courses c ON q.course_id = c.id
+        ORDER BY q.title ASC
+    ");
+    $quizzes = array_map(function($q) {
+        return [
+            'id'              => $q['id'],
+            'courseId'        => $q['course_id'],
+            'courseTitle'     => $q['course_title'] ?? 'General',
+            'lessonId'        => $q['lesson_id'] ?? '',
+            'title'           => $q['title'],
+            'durationMinutes' => (int)($q['duration_minutes'] ?? 20),
+            'passingScore'    => (int)($q['passing_score'] ?? 80),
+            'questionsCount'  => (int)($q['questions_count'] ?? 0),
+            'attemptsCount'   => (int)($q['attempts_count'] ?? 0),
+            'avgScore'        => $q['avg_score'] !== null ? (float)$q['avg_score'] : null,
+        ];
+    }, $stmt->fetchAll());
+    ok($quizzes, 'Quizzes loaded');
+}
+
+if ($method === 'POST' && $action === 'create_quiz') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['title'])) fail('Quiz title is required.', 400);
+    if (empty($b['courseId'])) fail('Course ID is required.', 400);
+
+    $id = 'quiz-' . uniqid();
+    $lessonId = !empty($b['lessonId']) ? $b['lessonId'] : ('lesson-' . uniqid());
+    $duration = (int)($b['durationMinutes'] ?? 20);
+    $passingScore = (int)($b['passingScore'] ?? 80);
+
+    $stmt = $pdo->prepare("INSERT INTO quizzes (id, course_id, lesson_id, title, duration_minutes, passing_score) VALUES (?,?,?,?,?,?)");
+    $stmt->execute([$id, $b['courseId'], $lessonId, $b['title'], $duration, $passingScore]);
+
+    ok(['id' => $id], 'Quiz created successfully');
+}
+
+if ($method === 'POST' && $action === 'update_quiz') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Quiz ID is required.', 400);
+
+    $stmt = $pdo->prepare("UPDATE quizzes SET course_id=?, title=?, duration_minutes=?, passing_score=? WHERE id=?");
+    $stmt->execute([
+        $b['courseId'],
+        $b['title'],
+        (int)($b['durationMinutes'] ?? 20),
+        (int)($b['passingScore'] ?? 80),
+        $b['id']
+    ]);
+
+    ok(['id' => $b['id']], 'Quiz updated successfully');
+}
+
+if ($method === 'POST' && $action === 'delete_quiz') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Quiz ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM quizzes WHERE id=?")->execute([$b['id']]);
+    ok([], 'Quiz deleted successfully');
+}
+
+if ($action === 'quiz_questions') {
+    $quizId = trim($_GET['quiz_id'] ?? '');
+    if (!$quizId) fail('Quiz ID is required.', 400);
+
+    $stmt = $pdo->prepare("SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY order_index ASC");
+    $stmt->execute([$quizId]);
+    $questions = array_map(function($qq) {
+        $options = json_decode($qq['options_json'] ?? '[]', true) ?: [];
+        return [
+            'id'                 => $qq['id'],
+            'quizId'             => $qq['quiz_id'],
+            'question'           => $qq['question'],
+            'options'            => $options,
+            'correctOptionIndex' => (int)$qq['correct_option_index'],
+            'explanation'        => $qq['explanation'] ?? '',
+            'orderIndex'         => (int)($qq['order_index'] ?? 0),
+        ];
+    }, $stmt->fetchAll());
+
+    ok($questions, 'Questions loaded');
+}
+
+if ($method === 'POST' && $action === 'create_quiz_question') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['quizId'])) fail('Quiz ID is required.', 400);
+    if (empty($b['question'])) fail('Question text is required.', 400);
+
+    $id = 'qq-' . uniqid();
+    $optionsJson = json_encode($b['options'] ?? [], JSON_UNESCAPED_UNICODE);
+    $correctIndex = (int)($b['correctOptionIndex'] ?? 0);
+    $explanation = $b['explanation'] ?? '';
+    $orderIndex = (int)($b['orderIndex'] ?? 0);
+
+    $stmt = $pdo->prepare("INSERT INTO quiz_questions (id, quiz_id, question, options_json, correct_option_index, explanation, order_index) VALUES (?,?,?,?,?,?,?)");
+    $stmt->execute([$id, $b['quizId'], $b['question'], $optionsJson, $correctIndex, $explanation, $orderIndex]);
+
+    ok(['id' => $id], 'Question created successfully');
+}
+
+if ($method === 'POST' && $action === 'update_quiz_question') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Question ID is required.', 400);
+
+    $optionsJson = json_encode($b['options'] ?? [], JSON_UNESCAPED_UNICODE);
+    $stmt = $pdo->prepare("UPDATE quiz_questions SET question=?, options_json=?, correct_option_index=?, explanation=?, order_index=? WHERE id=?");
+    $stmt->execute([
+        $b['question'] ?? '',
+        $optionsJson,
+        (int)($b['correctOptionIndex'] ?? 0),
+        $b['explanation'] ?? '',
+        (int)($b['orderIndex'] ?? 0),
+        $b['id']
+    ]);
+
+    ok(['id' => $b['id']], 'Question updated successfully');
+}
+
+if ($method === 'POST' && $action === 'delete_quiz_question') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Question ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM quiz_questions WHERE id=?")->execute([$b['id']]);
+    ok([], 'Question deleted successfully');
+}
+
+if ($action === 'quiz_attempts') {
+    $quizId = trim($_GET['quiz_id'] ?? '');
+    $sql = "
+        SELECT qa.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, q.title AS quiz_title
+        FROM quiz_attempts qa
+        LEFT JOIN users u ON qa.user_id = u.id
+        LEFT JOIN quizzes q ON qa.quiz_id = q.id
+    ";
+    $params = [];
+    if ($quizId) {
+        $sql .= " WHERE qa.quiz_id = ?";
+        $params[] = $quizId;
+    }
+    $sql .= " ORDER BY qa.attempted_at DESC LIMIT 100";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $attempts = array_map(function($a) {
+        return [
+            'id'          => $a['id'],
+            'userName'    => $a['user_name'] ?? 'Student',
+            'userEmail'   => $a['user_email'] ?? '',
+            'userAvatar'  => $a['user_avatar'] ?? '',
+            'quizTitle'   => $a['quiz_title'] ?? '',
+            'score'       => (int)$a['score'],
+            'passed'      => (bool)$a['passed'],
+            'attemptedAt' => $a['attempted_at']
+        ];
+    }, $stmt->fetchAll());
+
+    ok($attempts, 'Quiz attempts loaded');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ASSIGNMENTS & SUBMISSIONS — Project Evaluator CRUD
+// ─────────────────────────────────────────────────────────────────────────────
+if ($action === 'assignments') {
+    $stmt = $pdo->query("
+        SELECT a.*, c.title AS course_title,
+               (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id) AS submissions_count,
+               (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id AND s.grade IS NOT NULL) AS graded_count
+        FROM assignments a
+        LEFT JOIN courses c ON a.course_id = c.id
+        ORDER BY a.title ASC
+    ");
+    $assignments = array_map(function($a) {
+        return [
+            'id'               => $a['id'],
+            'courseId'         => $a['course_id'],
+            'courseTitle'      => $a['course_title'] ?? 'General',
+            'title'            => $a['title'],
+            'description'      => $a['description'] ?? '',
+            'deadline'         => $a['deadline'] ?? '',
+            'difficulty'       => $a['difficulty'] ?? 'Intermediate',
+            'submissionsCount' => (int)($a['submissions_count'] ?? 0),
+            'gradedCount'      => (int)($a['graded_count'] ?? 0),
+        ];
+    }, $stmt->fetchAll());
+    ok($assignments, 'Assignments loaded');
+}
+
+if ($method === 'POST' && $action === 'create_assignment') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['title'])) fail('Assignment title is required.', 400);
+    if (empty($b['courseId'])) fail('Course ID is required.', 400);
+
+    $id = 'asg-' . uniqid();
+    $stmt = $pdo->prepare("INSERT INTO assignments (id, course_id, title, description, deadline, difficulty) VALUES (?,?,?,?,?,?)");
+    $stmt->execute([
+        $id,
+        $b['courseId'],
+        $b['title'],
+        $b['description'] ?? '',
+        $b['deadline'] ?? '14 Days from Enrollment',
+        $b['difficulty'] ?? 'Intermediate'
+    ]);
+
+    ok(['id' => $id], 'Assignment created successfully');
+}
+
+if ($method === 'POST' && $action === 'update_assignment') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Assignment ID is required.', 400);
+
+    $stmt = $pdo->prepare("UPDATE assignments SET course_id=?, title=?, description=?, deadline=?, difficulty=? WHERE id=?");
+    $stmt->execute([
+        $b['courseId'],
+        $b['title'],
+        $b['description'] ?? '',
+        $b['deadline'] ?? '14 Days from Enrollment',
+        $b['difficulty'] ?? 'Intermediate',
+        $b['id']
+    ]);
+
+    ok(['id' => $b['id']], 'Assignment updated successfully');
+}
+
+if ($method === 'POST' && $action === 'delete_assignment') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Assignment ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM assignments WHERE id=?")->execute([$b['id']]);
+    ok([], 'Assignment deleted successfully');
+}
+
+if ($action === 'assignment_submissions') {
+    $assignmentId = trim($_GET['assignment_id'] ?? '');
+    $sql = "
+        SELECT sub.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, a.title AS assignment_title, c.title AS course_title
+        FROM assignment_submissions sub
+        LEFT JOIN users u ON sub.user_id = u.id
+        LEFT JOIN assignments a ON sub.assignment_id = a.id
+        LEFT JOIN courses c ON a.course_id = c.id
+    ";
+    $params = [];
+    if ($assignmentId) {
+        $sql .= " WHERE sub.assignment_id = ?";
+        $params[] = $assignmentId;
+    }
+    $sql .= " ORDER BY sub.submitted_at DESC LIMIT 100";
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    $subs = array_map(function($s) {
+        return [
+            'id'              => (int)$s['id'],
+            'assignmentId'    => $s['assignment_id'],
+            'assignmentTitle' => $s['assignment_title'] ?? '',
+            'courseTitle'     => $s['course_title'] ?? '',
+            'userName'        => $s['user_name'] ?? 'Student',
+            'userEmail'       => $s['user_email'] ?? '',
+            'userAvatar'      => $s['user_avatar'] ?? '',
+            'status'          => $s['status'] ?? 'Submitted',
+            'githubUrl'       => $s['github_url'] ?? '',
+            'submittedFile'   => $s['submitted_file'] ?? '',
+            'grade'           => $s['grade'] ?? '',
+            'feedback'        => $s['feedback'] ?? '',
+            'submittedAt'     => $s['submitted_at'],
+            'reviewedAt'      => $s['reviewed_at'],
+        ];
+    }, $stmt->fetchAll());
+
+    ok($subs, 'Submissions loaded');
+}
+
+if ($method === 'POST' && $action === 'grade_submission') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Submission ID is required.', 400);
+
+    $grade = $b['grade'] ?? 'A';
+    $status = !empty($b['status']) ? $b['status'] : 'Completed';
+    $feedback = $b['feedback'] ?? 'Great implementation!';
+
+    $stmt = $pdo->prepare("UPDATE assignment_submissions SET grade=?, status=?, feedback=?, reviewed_at=NOW() WHERE id=?");
+    $stmt->execute([$grade, $status, $feedback, (int)$b['id']]);
+
+    ok(['id' => $b['id']], 'Submission graded successfully');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CERTIFICATES & CREDENTIALS — Registry & Verification Issuance
+// ─────────────────────────────────────────────────────────────────────────────
+if ($action === 'certificates') {
+    $stmt = $pdo->query("
+        SELECT cert.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, c.title AS course_title
+        FROM certificates cert
+        LEFT JOIN users u ON cert.user_id = u.id
+        LEFT JOIN courses c ON cert.course_id = c.id
+        ORDER BY cert.created_at DESC
+    ");
+    $certs = array_map(function($c) {
+        return [
+            'id'               => $c['id'],
+            'courseId'         => $c['course_id'],
+            'courseTitle'      => $c['course_title'] ?? 'Course Credential',
+            'userId'           => $c['user_id'],
+            'userName'         => $c['user_name'] ?? 'Student',
+            'userEmail'        => $c['user_email'] ?? '',
+            'userAvatar'       => $c['user_avatar'] ?? '',
+            'credentialId'     => $c['credential_id'],
+            'verificationCode' => $c['verification_code'],
+            'grade'            => $c['grade'] ?? 'A+',
+            'issueDate'        => $c['issue_date'],
+            'thumbnailUrl'     => $c['thumbnail_url'] ?? '',
+            'createdAt'        => $c['created_at'],
+        ];
+    }, $stmt->fetchAll());
+
+    ok($certs, 'Certificates loaded');
+}
+
+if ($method === 'POST' && $action === 'issue_certificate') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['userId'])) fail('Student User ID is required.', 400);
+    if (empty($b['courseId'])) fail('Course ID is required.', 400);
+
+    $id = 'cert-' . uniqid();
+    $year = date('Y');
+    $credentialId = 'CRED-' . strtoupper(substr(uniqid(), -8));
+    $verificationCode = !empty($b['verificationCode']) 
+        ? trim($b['verificationCode']) 
+        : ('CERT-YASWANT-' . $year . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)));
+    $grade = $b['grade'] ?? 'Distinction';
+    $issueDate = !empty($b['issueDate']) ? $b['issueDate'] : date('Y-m-d');
+    $thumbnail = !empty($b['thumbnailUrl']) 
+        ? $b['thumbnailUrl'] 
+        : 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800&auto=format&fit=crop&q=80';
+
+    $stmt = $pdo->prepare("INSERT INTO certificates (id, course_id, user_id, credential_id, grade, issue_date, thumbnail_url, verification_code) VALUES (?,?,?,?,?,?,?,?)");
+    $stmt->execute([$id, $b['courseId'], $b['userId'], $credentialId, $grade, $issueDate, $thumbnail, $verificationCode]);
+
+    ok([
+        'id'               => $id,
+        'credentialId'     => $credentialId,
+        'verificationCode' => $verificationCode
+    ], 'Certificate issued successfully');
+}
+
+if ($method === 'POST' && $action === 'revoke_certificate') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Certificate ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM certificates WHERE id=?")->execute([$b['id']]);
+    ok([], 'Certificate revoked successfully');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DISCUSSIONS & COMMUNITY FORUM MODERATION
+// ─────────────────────────────────────────────────────────────────────────────
+if ($action === 'discussions') {
+    $stmt = $pdo->query("
+        SELECT d.*, u.name AS author_name, u.email AS author_email, u.avatar AS author_avatar, c.title AS course_title,
+               (SELECT COUNT(*) FROM discussion_replies dr WHERE dr.discussion_id = d.id) AS replies_count
+        FROM discussions d
+        LEFT JOIN users u ON d.user_id = u.id
+        LEFT JOIN courses c ON d.course_id = c.id
+        ORDER BY d.created_at DESC
+    ");
+    $discussions = array_map(function($d) {
+        $tags = json_decode($d['tags_json'] ?? '[]', true) ?: [];
+        return [
+            'id'                => $d['id'],
+            'courseId'          => $d['course_id'],
+            'courseTitle'       => $d['course_title'] ?? 'Global Community',
+            'userId'            => $d['user_id'],
+            'authorName'        => $d['author_name'] ?? 'Community Member',
+            'authorEmail'       => $d['author_email'] ?? '',
+            'authorAvatar'      => $d['author_avatar'] ?? '',
+            'title'             => $d['title'],
+            'content'           => $d['content'] ?? '',
+            'category'          => $d['category'] ?? 'General',
+            'tags'              => $tags,
+            'upvotes'           => (int)($d['upvotes'] ?? 0),
+            'hasAcceptedAnswer' => (bool)($d['has_accepted_answer'] ?? 0),
+            'repliesCount'      => (int)($d['replies_count'] ?? 0),
+            'createdAt'         => $d['created_at'],
+        ];
+    }, $stmt->fetchAll());
+
+    ok($discussions, 'Discussions loaded');
+}
+
+if ($method === 'POST' && $action === 'toggle_discussion_solution') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Discussion ID required.', 400);
+
+    $pdo->prepare("UPDATE discussions SET has_accepted_answer = IF(has_accepted_answer=1, 0, 1) WHERE id=?")->execute([$b['id']]);
+    ok([], 'Discussion status toggled');
+}
+
+if ($method === 'POST' && $action === 'delete_discussion') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Discussion ID required.', 400);
+
+    $pdo->prepare("DELETE FROM discussions WHERE id=?")->execute([$b['id']]);
+    ok([], 'Discussion deleted');
+}
+
+if ($action === 'discussion_replies') {
+    $discId = trim($_GET['discussion_id'] ?? '');
+    if (!$discId) fail('Discussion ID is required.', 400);
+
+    $stmt = $pdo->prepare("
+        SELECT dr.*, u.name AS author_name, u.email AS author_email, u.avatar AS author_avatar
+        FROM discussion_replies dr
+        LEFT JOIN users u ON dr.user_id = u.id
+        WHERE dr.discussion_id = ?
+        ORDER BY dr.created_at ASC
+    ");
+    $stmt->execute([$discId]);
+    $replies = array_map(function($r) {
+        return [
+            'id'           => $r['id'],
+            'discussionId' => $r['discussion_id'],
+            'userId'       => $r['user_id'],
+            'authorName'   => $r['author_name'] ?? 'Member',
+            'authorEmail'  => $r['author_email'] ?? '',
+            'authorAvatar' => $r['author_avatar'] ?? '',
+            'content'      => $r['content'],
+            'isAccepted'   => (bool)($r['is_accepted'] ?? 0),
+            'upvotes'      => (int)($r['upvotes'] ?? 0),
+            'createdAt'    => $r['created_at'],
+        ];
+    }, $stmt->fetchAll());
+
+    ok($replies, 'Replies loaded');
+}
+
+if ($method === 'POST' && $action === 'delete_discussion_reply') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Reply ID required.', 400);
+
+    $pdo->prepare("DELETE FROM discussion_replies WHERE id=?")->execute([$b['id']]);
+    ok([], 'Reply deleted');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COURSE CURRICULUM BUILDER — Modules & Lessons Management
+// ─────────────────────────────────────────────────────────────────────────────
+if ($action === 'course_curriculum') {
+    $courseId = trim($_GET['course_id'] ?? '');
+    if (!$courseId) fail('Course ID is required.', 400);
+
+    // Fetch modules
+    $mStmt = $pdo->prepare("SELECT * FROM modules WHERE course_id = ? ORDER BY order_index ASC");
+    $mStmt->execute([$courseId]);
+    $modules = $mStmt->fetchAll();
+
+    $curriculum = [];
+    foreach ($modules as $m) {
+        $cStmt = $pdo->prepare("SELECT * FROM chapters WHERE module_id = ? ORDER BY order_index ASC");
+        $cStmt->execute([$m['id']]);
+        $chapters = $cStmt->fetchAll();
+
+        $chaptersWithLessons = [];
+        foreach ($chapters as $ch) {
+            $lStmt = $pdo->prepare("SELECT * FROM lessons WHERE chapter_id = ? ORDER BY order_index ASC");
+            $lStmt->execute([$ch['id']]);
+            $lessons = $lStmt->fetchAll();
+
+            $chaptersWithLessons[] = [
+                'id'         => $ch['id'],
+                'moduleId'   => $ch['module_id'],
+                'title'      => $ch['title'],
+                'duration'   => $ch['duration'],
+                'orderIndex' => (int)$ch['order_index'],
+                'lessons'    => array_map(function($l) {
+                    return [
+                        'id'               => $l['id'],
+                        'chapterId'        => $l['chapter_id'],
+                        'title'            => $l['title'],
+                        'duration'         => $l['duration'],
+                        'type'             => $l['type'] ?? 'video',
+                        'videoUrl'         => $l['video_url'] ?? '',
+                        'previewAvailable' => (bool)($l['preview_available'] ?? 0),
+                        'description'      => $l['description'] ?? '',
+                        'codeSnippet'      => $l['code_snippet'] ?? '',
+                        'codeLanguage'     => $l['code_language'] ?? 'typescript',
+                        'orderIndex'       => (int)$l['order_index'],
+                    ];
+                }, $lessons)
+            ];
+        }
+
+        $curriculum[] = [
+            'id'         => $m['id'],
+            'courseId'   => $m['course_id'],
+            'title'      => $m['title'],
+            'duration'   => $m['duration'],
+            'orderIndex' => (int)$m['order_index'],
+            'chapters'   => $chaptersWithLessons,
+        ];
+    }
+
+    ok($curriculum, 'Curriculum loaded');
+}
+
+if ($method === 'POST' && $action === 'create_module') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['courseId']) || empty($b['title'])) fail('Course ID and Module title required.', 400);
+
+    $id = 'mod-' . uniqid();
+    $duration = $b['duration'] ?? '2h 30m';
+    $orderIndex = (int)($b['orderIndex'] ?? 0);
+
+    $stmt = $pdo->prepare("INSERT INTO modules (id, course_id, title, duration, order_index) VALUES (?,?,?,?,?)");
+    $stmt->execute([$id, $b['courseId'], $b['title'], $duration, $orderIndex]);
+
+    // Also auto-create a default chapter inside the module
+    $chId = 'ch-' . uniqid();
+    $pdo->prepare("INSERT INTO chapters (id, module_id, title, duration, order_index) VALUES (?,?,?,?,0)")
+        ->execute([$chId, $id, 'Core Concepts', $duration]);
+
+    ok(['id' => $id, 'chapterId' => $chId], 'Module created successfully');
+}
+
+if ($method === 'POST' && $action === 'delete_module') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Module ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM modules WHERE id=?")->execute([$b['id']]);
+    ok([], 'Module deleted successfully');
+}
+
+if ($method === 'POST' && $action === 'create_lesson') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['chapterId']) || empty($b['title'])) fail('Chapter ID and Lesson title required.', 400);
+
+    $id = 'les-' . uniqid();
+    $duration = $b['duration'] ?? '15:00';
+    $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
+    $videoUrl = $b['videoUrl'] ?? 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ';
+    $previewAvailable = !empty($b['previewAvailable']) ? 1 : 0;
+    $description = $b['description'] ?? '';
+    $codeSnippet = $b['codeSnippet'] ?? '';
+    $codeLanguage = $b['codeLanguage'] ?? 'typescript';
+    $orderIndex = (int)($b['orderIndex'] ?? 0);
+
+    $stmt = $pdo->prepare("INSERT INTO lessons (id, chapter_id, title, duration, type, video_url, preview_available, description, code_snippet, code_language, order_index) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([$id, $b['chapterId'], $b['title'], $duration, $type, $videoUrl, $previewAvailable, $description, $codeSnippet, $codeLanguage, $orderIndex]);
+
+    ok(['id' => $id], 'Lesson created successfully');
+}
+
+if ($method === 'POST' && $action === 'update_lesson') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Lesson ID is required.', 400);
+
+    $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
+    $stmt = $pdo->prepare("UPDATE lessons SET title=?, duration=?, type=?, video_url=?, preview_available=?, description=?, code_snippet=?, code_language=?, order_index=? WHERE id=?");
+    $stmt->execute([
+        $b['title'] ?? '',
+        $b['duration'] ?? '15:00',
+        $type,
+        $b['videoUrl'] ?? '',
+        !empty($b['previewAvailable']) ? 1 : 0,
+        $b['description'] ?? '',
+        $b['codeSnippet'] ?? '',
+        $b['codeLanguage'] ?? 'typescript',
+        (int)($b['orderIndex'] ?? 0),
+        $b['id']
+    ]);
+
+    ok(['id' => $b['id']], 'Lesson updated successfully');
+}
+
+if ($method === 'POST' && $action === 'delete_lesson') {
+    $b = json_decode(file_get_contents('php://input'), true) ?? [];
+    if (empty($b['id'])) fail('Lesson ID is required.', 400);
+
+    $pdo->prepare("DELETE FROM lessons WHERE id=?")->execute([$b['id']]);
+    ok([], 'Lesson deleted successfully');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATABASE MAINTENANCE TOOLS
+// ─────────────────────────────────────────────────────────────────────────────
+if ($method === 'POST' && $action === 'optimize_tables') {
+    $driver = get_db_driver($pdo);
+    $results = [];
+    if ($driver === 'mysql') {
+        $tables = [
+            'users', 'user_sessions', 'courses', 'modules', 'chapters', 'lessons',
+            'quizzes', 'quiz_questions', 'quiz_attempts',
+            'assignments', 'assignment_submissions',
+            'certificates', 'discussions', 'discussion_replies',
+            'study_notes', 'developer_tools', 'projects', 'roadmaps',
+            'inquiries', 'subscribers', 'site_settings'
+        ];
+        foreach ($tables as $t) {
+            try {
+                $check = $pdo->query("CHECK TABLE `{$t}`")->fetch();
+                $results[$t] = $check['Msg_text'] ?? 'OK';
+            } catch (Throwable $e) {
+                $results[$t] = 'Skipped or Table Missing';
+            }
+        }
+    } else {
+        $pdo->query("VACUUM");
+        $results['sqlite'] = 'VACUUM complete';
+    }
+
+    ok(['results' => $results], 'Tables checked and optimized successfully');
 }
 
 fail('Invalid admin action requested.', 404);

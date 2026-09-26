@@ -2,18 +2,18 @@ import React from 'react';
 import { useLms } from '../../context/LmsContext';
 import { Footer as FooterSectionComponent, type FooterSection } from '../ui/footer-section';
 import { BrandLogo } from '../ui/BrandLogo';
-import { 
-  Github, 
-  Twitter, 
-  Linkedin, 
-  BookOpen, 
-  FolderGit2, 
-  Map, 
-  Award, 
-  Users, 
-  FileText, 
-  Wrench, 
-  LayoutDashboard, 
+import {
+  Github,
+  Twitter,
+  Linkedin,
+  BookOpen,
+  FolderGit2,
+  Map,
+  Award,
+  Users,
+  FileText,
+  Wrench,
+  LayoutDashboard,
   ShieldCheck,
   Mail
 } from 'lucide-react';
@@ -25,110 +25,110 @@ export const Footer: React.FC = () => {
     {
       label: 'Platform & Learning',
       links: [
-        { 
-          title: 'All Courses', 
-          href: '/courses', 
+        {
+          title: 'All Courses',
+          href: '/courses',
           icon: BookOpen,
-          onClick: (e) => { e.preventDefault(); setCurrentView('courses'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('courses'); }
         },
-        { 
-          title: 'Capstone Projects', 
-          href: '/projects', 
+        {
+          title: 'Capstone Projects',
+          href: '/projects',
           icon: FolderGit2,
-          onClick: (e) => { e.preventDefault(); setCurrentView('projects'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('projects'); }
         },
-        { 
-          title: 'Tech Roadmaps', 
-          href: '/roadmaps', 
+        {
+          title: 'Tech Roadmaps',
+          href: '/roadmaps',
           icon: Map,
-          onClick: (e) => { e.preventDefault(); setCurrentView('learning-paths'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('learning-paths'); }
         },
-        { 
-          title: 'Digital Credentials', 
-          href: '/certificate', 
+        {
+          title: 'Digital Credentials',
+          href: '/certificate',
           icon: Award,
-          onClick: (e) => { e.preventDefault(); setCurrentView('certificate'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('certificate'); }
         },
-        { 
-          title: 'Community Forums', 
-          href: '/community', 
+        {
+          title: 'Community Forums',
+          href: '/community',
           icon: Users,
-          onClick: (e) => { e.preventDefault(); setCurrentView('community'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('community'); }
         },
       ],
     },
     {
       label: 'Resources & Tools',
       links: [
-        { 
-          title: 'Engineering Blog', 
-          href: '/blog', 
+        {
+          title: 'Engineering Blog',
+          href: '/blog',
           icon: FileText,
-          onClick: (e) => { e.preventDefault(); setCurrentView('blog'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('blog'); }
         },
-        { 
-          title: 'Architecture Kits', 
-          href: '/resources', 
+        {
+          title: 'Architecture Kits',
+          href: '/resources',
           icon: BookOpen,
-          onClick: (e) => { e.preventDefault(); setCurrentView('resources'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('resources'); }
         },
-        { 
-          title: 'Personal Study Notes', 
-          href: '/notes', 
+        {
+          title: 'Personal Study Notes',
+          href: '/notes',
           icon: FileText,
-          onClick: (e) => { e.preventDefault(); setCurrentView('notes'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('notes'); }
         },
-        { 
-          title: 'Developer Utilities', 
-          href: '/tools', 
+        {
+          title: 'Developer Utilities',
+          href: '/tools',
           icon: Wrench,
-          onClick: (e) => { e.preventDefault(); setCurrentView('tools'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('tools'); }
         },
       ],
     },
     {
       label: 'Dashboards',
       links: [
-        { 
-          title: 'Student Dashboard', 
-          href: '/dashboard', 
+        {
+          title: 'Student Dashboard',
+          href: '/dashboard',
           icon: LayoutDashboard,
-          onClick: (e) => { e.preventDefault(); setCurrentView('student-dashboard'); } 
+          onClick: (e) => { e.preventDefault(); setCurrentView('student-dashboard'); }
         },
-        { 
-          title: 'Admin Operations', 
-          href: '/admin', 
+        {
+          title: 'Admin Operations',
+          href: '/admin',
           icon: ShieldCheck,
-          onClick: (e) => { 
-            e.preventDefault(); 
-            window.location.hash = '#admin'; 
-            setCurrentView('admin-dashboard'); 
-          } 
+          onClick: (e) => {
+            e.preventDefault();
+            window.location.hash = '#admin';
+            setCurrentView('admin-dashboard');
+          }
         },
       ],
     },
     {
       label: 'Social & Connect',
       links: [
-        { 
-          title: 'GitHub', 
-          href: 'https://github.com/yaswant-pandey', 
-          icon: Github 
+        {
+          title: 'GitHub',
+          href: 'https://github.com/yaswantpandey',
+          icon: Github
         },
-        { 
-          title: 'Twitter / X', 
-          href: 'https://twitter.com/yaswantcode', 
-          icon: Twitter 
+        {
+          title: 'Twitter / X',
+          href: 'https://x.com/YaswantP86897',
+          icon: Twitter
         },
-        { 
-          title: 'LinkedIn', 
-          href: 'https://linkedin.com/in/yaswant-pandey', 
-          icon: Linkedin 
+        {
+          title: 'LinkedIn',
+          href: 'https://linkedin.com/in/yaswant-pandey',
+          icon: Linkedin
         },
-        { 
-          title: 'Email Support', 
-          href: 'mailto:admin@yaswantcode.com', 
-          icon: Mail 
+        {
+          title: 'Email Support',
+          href: 'mailto:contact@yaswant.co.in',
+          icon: Mail
         },
       ],
     },
@@ -142,10 +142,10 @@ export const Footer: React.FC = () => {
         <span className="text-neutral-300 dark:text-neutral-700">·</span>
         {' '}
         <a
-          href="mailto:admin@yaswantcode.com"
+          href="mailto:contact@yaswant.co.in"
           className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
         >
-          admin@yaswantcode.com
+          contact@yaswant.co.in
         </a>
       </div>
       <div className="flex items-center gap-1">

@@ -203,12 +203,50 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     refreshCourses();
   }, [refreshCourses]);
 
+  // Load full curriculum when a course is selected if modules are missing
+  useEffect(() => {
+    if (selectedCourse?.id && (!selectedCourse.modules || selectedCourse.modules.length === 0)) {
+      fetch(`/api/courses.php?id=${encodeURIComponent(selectedCourse.id)}`)
+        .then(res => res.json())
+        .then(json => {
+          if (json.success && json.data) {
+            const full = mapApiCourseToLmsCourse(json.data);
+            setSelectedCourseState(prev => prev.id === full.id ? full : prev);
+            if (full.modules?.[0]?.chapters?.[0]?.lessons?.[0]) {
+              setSelectedLesson(full.modules[0].chapters[0].lessons[0]);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedCourse?.id]);
+
   // Selected lesson updates when course changes
   useEffect(() => {
     if (selectedCourse?.modules?.[0]?.chapters?.[0]?.lessons?.[0]) {
       setSelectedLesson(selectedCourse.modules[0].chapters[0].lessons[0]);
     }
   }, [selectedCourse]);
+
+  // Fetch real notifications from database
+  useEffect(() => {
+    fetch('/api/notifications.php')
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && json.data?.notifications && Array.isArray(json.data.notifications)) {
+          setNotifications(json.data.notifications.map((n: any) => ({
+            id: String(n.id),
+            title: n.title,
+            message: n.message,
+            timeAgo: n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Just now',
+            type: n.type || 'course',
+            read: Boolean(n.is_read),
+            link: n.link || undefined
+          })));
+        }
+      })
+      .catch(() => {});
+  }, []);
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot' | 'verify'>('login');

@@ -19,8 +19,16 @@ $action = strtolower(trim($_GET['action'] ?? ''));
 
 // ─── GET — List Notifications ───────────────────────────────────────────────
 if ($method === 'GET') {
-    $user = require_auth();
+    $user = auth_user();
     $pdo  = require_db();
+
+    if (!$user) {
+        ok([
+            'notifications'   => [],
+            'unread_count'    => 0,
+            'total'           => 0,
+        ]);
+    }
 
     $limit  = max(1, min(100, (int)($_GET['limit'] ?? 50)));
     $unread = isset($_GET['unread']) && $_GET['unread'] === '1';
