@@ -54,6 +54,26 @@ This compiles your application into the `dist/` directory. The build process aut
 4. Upload all files and folders directly from your local `dist/` directory into `/public_html/`.
 5. Ensure hidden files are shown in FileZilla (`Server -> Force showing hidden files`) so that `.htaccess` is uploaded.
 
+### Method C: Automated GitHub Actions CI/CD (Recommended)
+
+Every push to branch `main` automatically runs type checking, builds the production bundle, and securely deploys changed files to Hostinger via FTP!
+
+1. Go to your GitHub repository: [`https://github.com/yaswantpandey/yaswant-code`](https://github.com/yaswantpandey/yaswant-code).
+2. Click **Settings** -> **Secrets and variables** -> **Actions**.
+3. Under **Repository secrets**, click **New repository secret**:
+   - **Name**: `FTP_PASSWORD`
+   - **Secret**: *(Your Hostinger FTP account password)*
+4. *(Optional)* If your FTP details ever change, you can also set:
+   - `FTP_SERVER` (Default: `82.25.125.43`)
+   - `FTP_USERNAME` (Default: `u865909543.yaswant.co.in`)
+   - `FTP_PORT` (Default: `21`)
+   - `FTP_REMOTE_DIR` (Default: `public_html/`)
+5. Once `FTP_PASSWORD` is configured in GitHub Secrets, simply run:
+   ```bash
+   git push origin main
+   ```
+   Or click **Actions** -> **Deploy to Hostinger** -> **Run workflow** in GitHub!
+
 ---
 
 ## Step 3: Verify PHP Configuration in Hostinger

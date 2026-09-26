@@ -1,0 +1,67 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy via FTP
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: 🟢 Set Up Node.js (v20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔍 TypeScript Compile Check
+        run: npx tsc --noEmit
+
+      - name: 🏗️ Build Production Bundle (Vite)
+        run: npm run build
+
+      - name: 🛡️ Verify Build Artifacts
+        run: |
+          test -f dist/index.html || { echo "❌ Error: dist/index.html is missing!"; exit 1; }
+          test -f dist/.htaccess || { echo "❌ Error: dist/.htaccess is missing!"; exit 1; }
+          test -d dist/api || { echo "❌ Error: dist/api/ directory is missing!"; exit 1; }
+          test -f dist/api/config.php || { echo "❌ Error: dist/api/config.php is missing!"; exit 1; }
+          echo "✅ Build verified successfully: all frontend and PHP API files are present."
+
+      - name: ⚠️ Validate FTP Secrets
+        run: |
+          if [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
+            echo "::error::GitHub secret 'FTP_PASSWORD' is missing!"
+            echo "To enable automated deployment, add your Hostinger FTP password in:"
+            echo "GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret -> Name: FTP_PASSWORD"
+            exit 1
+          fi
+
+      - name: 🚀 Deploy to Hostinger via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER || '82.25.125.43' }}
+          username: ${{ secrets.FTP_USERNAME || 'u865909543.yaswant.co.in' }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: ${{ secrets.FTP_PORT || 21 }}
+          protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_REMOTE_DIR || 'public_html/' }}
+          dangerous-clean-slate: false

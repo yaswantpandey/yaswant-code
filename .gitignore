@@ -26,3 +26,7 @@ database/
 *.csv
 public/api/student_emails.txt
 public/api/seed_students.php
+
+# Local editor SFTP configurations (prevents credential leaks)
+.vscode/sftp.json
+!.vscode/sftp.json.example

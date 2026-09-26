@@ -1,0 +1,26 @@
+{
+    "name": "Yaswant Code LMS (Hostinger FTP)",
+    "host": "82.25.125.43",
+    "protocol": "ftp",
+    "port": 21,
+    "username": "u865909543.yaswant.co.in",
+    "password": "YOUR_FTP_PASSWORD_HERE",
+    "remotePath": "/public_html/",
+    "uploadOnSave": false,
+    "useTempFile": false,
+    "openSsh": false,
+    "concurrency": 4,
+    "ignore": [
+        "node_modules/**",
+        ".vscode/**",
+        ".git/**",
+        ".github/**",
+        ".DS_Store",
+        "Thumbs.db",
+        "src/**",
+        ".env*",
+        "*.log",
+        "*.tmp",
+        "*.bak"
+    ]
+}
