@@ -67,7 +67,7 @@ Every push to branch `main` automatically runs type checking, builds the product
    - `FTP_SERVER` (Default: `82.25.125.43`)
    - `FTP_USERNAME` (Default: `u865909543.yaswant.co.in`)
    - `FTP_PORT` (Default: `21`)
-   - `FTP_REMOTE_DIR` (Default: `public_html/`)
+   - `FTP_REMOTE_DIR` (Default: `./` — Hostinger domain FTP accounts already open directly into `public_html`)
 5. Once `FTP_PASSWORD` is configured in GitHub Secrets, simply run:
    ```bash
    git push origin main

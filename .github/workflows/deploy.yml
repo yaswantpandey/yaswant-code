@@ -63,5 +63,6 @@ jobs:
           port: ${{ secrets.FTP_PORT || 21 }}
           protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
           local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_REMOTE_DIR || 'public_html/' }}
+          server-dir: ${{ secrets.FTP_REMOTE_DIR || './' }}
           dangerous-clean-slate: false
+
