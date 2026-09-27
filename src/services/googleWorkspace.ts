@@ -98,6 +98,25 @@ export interface GmailMessageItem {
   unread?: boolean;
 }
 
+function ensureGsiScript(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return new Promise((resolve) => {
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => resolve();
+    document.head.appendChild(script);
+  });
+}
+
 export class GoogleWorkspaceService {
   private token: string | null = null;
 
@@ -141,25 +160,6 @@ export class GoogleWorkspaceService {
       console.error('Failed to clear token', e);
     }
   }
-
-function ensureGsiScript(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  if (window.google?.accounts?.oauth2) return Promise.resolve();
-  return new Promise((resolve) => {
-    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-    if (existing) {
-      existing.addEventListener('load', () => resolve());
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => resolve();
-    document.head.appendChild(script);
-  });
-}
 
   public async requestOAuthToken(): Promise<string> {
     await ensureGsiScript();
