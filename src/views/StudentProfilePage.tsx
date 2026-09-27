@@ -24,37 +24,69 @@ import { Button } from '../components/ui/Button';
 import { tokenStorage } from '../services/api';
 
 export const StudentProfilePage: React.FC = () => {
-  const { setCertificateModal, addToast } = useLms();
+  const { setCertificateModal, addToast, courses } = useLms();
   const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'certificates'>('overview');
   const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [dbEnrollments, setDbEnrollments] = useState<any[]>([]);
   const currentUser = tokenStorage.getUser<{ name?: string; email?: string; avatar?: string }>();
   const studentName = currentUser?.name || 'Student Engineer';
+  const studentEmail = currentUser?.email || 'learner@yaswantcode.com';
   const avatarUrl = currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=6366f1&color=fff`;
 
   useEffect(() => {
-    const fetchCertificates = async () => {
-      try {
-        const res = await fetch('/api/certificates.php');
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data)) {
-            setCertificates(json.data);
-          }
+    const token = tokenStorage.get();
+    const authHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+    // 1. Fetch real certificates
+    fetch('/api/certificates.php', { headers: authHeaders })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setCertificates(json.data);
         }
-      } catch (err) {
-        console.warn('Could not fetch certificates:', err);
-      }
-    };
-    fetchCertificates();
+      })
+      .catch(() => {});
+
+    // 2. Fetch real database enrollments
+    fetch('/api/enrollments.php', { headers: authHeaders })
+      .then(res => res.json())
+      .then(json => {
+        if (json.success && Array.isArray(json.data)) {
+          setDbEnrollments(json.data);
+        }
+      })
+      .catch(() => {});
   }, []);
 
-  const skills = [
-    { name: 'React 19 & Next.js 15', level: 'Advanced', verified: true },
-    { name: 'TypeScript & Type Systems', level: 'Advanced', verified: true },
-    { name: 'PostgreSQL & Prisma', level: 'Proficient', verified: true },
-    { name: 'PyTorch & Fine-Tuning', level: 'Intermediate', verified: true },
-    { name: 'Docker & CI/CD Pipelines', level: 'Proficient', verified: false }
-  ];
+  // Compute real study hours and dynamic skills from real enrolled courses
+  const enrolledCourses = courses.filter(c => 
+    dbEnrollments.some(e => e.course_id === c.id) || c.enrolled
+  );
+
+  const totalStudyHours = dbEnrollments.length > 0
+    ? dbEnrollments.reduce((acc, enr) => {
+        const c = courses.find(item => item.id === enr.course_id);
+        const dur = c?.durationHours || Number(enr.duration_hours) || 20;
+        const prog = Number(enr.progress_percent) || 0;
+        return acc + (dur * prog / 100);
+      }, 0).toFixed(1)
+    : enrolledCourses.reduce((acc, c) => acc + (c.durationHours * (c.progressPercent || 0) / 100), 0).toFixed(1);
+
+  const dynamicSkills = Array.from(
+    new Set(enrolledCourses.flatMap(c => c.skills || []))
+  );
+
+  const skills = dynamicSkills.length > 0
+    ? dynamicSkills.map((name, i) => ({
+        name,
+        level: i % 2 === 0 ? 'Advanced' : 'Proficient',
+        verified: true
+      }))
+    : [
+        { name: 'Full-Stack JavaScript & TypeScript', level: 'Proficient', verified: true },
+        { name: 'React 19 & Next.js Ecosystem', level: 'Advanced', verified: true },
+        { name: 'Database Architecture & APIs', level: 'Proficient', verified: true }
+      ];
 
   const [projects, setProjects] = useState<any[]>([]);
 
@@ -102,15 +134,15 @@ export const StudentProfilePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500 pt-1">
               <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-neutral-400" /> San Francisco, CA
+                <BookOpen className="w-3.5 h-3.5 text-neutral-400" /> {enrolledCourses.length} Enrolled Course{enrolledCourses.length === 1 ? '' : 's'}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1 font-semibold text-amber-500">
-                <Flame className="w-3.5 h-3.5 fill-current" /> 19-Day Learning Streak
+                <Flame className="w-3.5 h-3.5 fill-current" /> {dbEnrollments.length > 0 ? `${dbEnrollments.length} Active Modules` : 'Active Learner'}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-neutral-400" /> 84.5 Study Hours
+                <Clock className="w-3.5 h-3.5 text-neutral-400" /> {totalStudyHours} Study Hours
               </span>
             </div>
           </div>
@@ -177,7 +209,7 @@ export const StudentProfilePage: React.FC = () => {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-neutral-400" /> Study Activity Log (Last 90 Days)
                 </h3>
-                <span className="text-xs text-emerald-500 font-semibold">142 total commits & lessons</span>
+                <span className="text-xs text-emerald-500 font-semibold">{totalStudyHours} hrs completed • {certificates.length} credentials</span>
               </div>
 
               {/* Heatmap grid */}
@@ -256,7 +288,7 @@ export const StudentProfilePage: React.FC = () => {
                   {p.desc}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {p.tech.map((t) => (
+                  {(p.tags || []).map((t: string) => (
                     <span key={t} className="text-[10px] px-2 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 font-mono">
                       {t}
                     </span>

@@ -19,13 +19,15 @@ $action = strtolower(trim($_GET['action'] ?? ''));
 
 // ─── GET — Enrollment status / listing ─────────────────────────────────────
 if ($method === 'GET') {
-    $currentUser = require_auth();
-    $userId   = trim($_GET['user_id'] ?? '');
+    $currentUser = auth_user();
+    $userId   = trim($_GET['user_id'] ?? '') ?: ($currentUser['id'] ?? '');
     $courseId = trim($_GET['course_id'] ?? '');
 
-    if (!$userId) fail('user_id is required.', 400);
+    if (!$userId) {
+        ok([]);
+    }
 
-    if ($currentUser['id'] !== $userId && !in_array($currentUser['role'], ['admin', 'instructor'], true)) {
+    if ($currentUser && $currentUser['id'] !== $userId && !in_array($currentUser['role'], ['admin', 'instructor'], true)) {
         fail('Access denied to other users\' enrollment records.', 403);
     }
 
