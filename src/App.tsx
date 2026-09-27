@@ -4,9 +4,6 @@ import { LmsProvider, useLms } from './context/LmsContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { MobileNav } from './components/layout/MobileNav';
-import { SearchModal } from './components/ui/SearchModal';
-import { CertificateModal } from './components/ui/CertificateModal';
-import { AuthModal } from './components/ui/AuthModal';
 import { ToastContainer } from './components/ui/ToastContainer';
 import { tokenStorage } from './services/api';
 import { setRobotsDirective } from './services/seo';
@@ -32,6 +29,9 @@ const FreeResourcesPage    = React.lazy(() => import('./views/FreeResourcesPage'
 const NotesPage            = React.lazy(() => import('./views/NotesPage').then(m => ({ default: m.NotesPage })));
 const ToolsPage            = React.lazy(() => import('./views/ToolsPage').then(m => ({ default: m.ToolsPage })));
 const ProjectsPage         = React.lazy(() => import('./views/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
+const SearchModal          = React.lazy(() => import('./components/ui/SearchModal').then(m => ({ default: m.SearchModal })));
+const CertificateModal     = React.lazy(() => import('./components/ui/CertificateModal').then(m => ({ default: m.CertificateModal })));
+const AuthModal            = React.lazy(() => import('./components/ui/AuthModal').then(m => ({ default: m.AuthModal })));
 
 const ViewLoadingFallback: React.FC = () => (
   <div className="flex-1 min-h-[50vh] flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
@@ -49,7 +49,7 @@ const isPathOrHashAdmin = () => {
 };
 
 const AppShell: React.FC = () => {
-  const { currentView, setCurrentView } = useLms();
+  const { currentView, setCurrentView, searchModalOpen, authModalOpen, certificateModal } = useLms();
 
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     const user = tokenStorage.getUser<{ role?: string }>();
@@ -163,10 +163,12 @@ const AppShell: React.FC = () => {
       {/* Mobile-Friendly Thumb Navigation */}
       {!isLearningInterface && <MobileNav />}
 
-      {/* Modals & Notifications */}
-      <SearchModal />
-      <CertificateModal />
-      <AuthModal />
+      {/* Modals & Notifications (Lazy-loaded on demand) */}
+      <React.Suspense fallback={null}>
+        {searchModalOpen && <SearchModal />}
+        {certificateModal && <CertificateModal />}
+        {authModalOpen && <AuthModal />}
+      </React.Suspense>
       <ToastContainer />
     </div>
   );

@@ -34,7 +34,6 @@ import { ThemeToggle } from '../ui/ThemeToggle';
 import { BrandLogo } from '../ui/BrandLogo';
 import { RoleType } from '../../types/lms';
 import { tokenStorage } from '../../services/api';
-import { signOutUser } from '../../services/firebaseAuth';
 
 export const Navbar: React.FC = () => {
   const {
@@ -495,6 +494,7 @@ export const Navbar: React.FC = () => {
                       <button
                         onClick={async () => {
                           setUserMenuOpen(false);
+                          const { signOutUser } = await import('../../services/firebaseAuth');
                           await signOutUser();
                           setRole('student');
                           setCurrentView('landing');
@@ -593,6 +593,7 @@ export const Navbar: React.FC = () => {
                     icon={<LogOut className="w-3.5 h-3.5" />}
                     onClick={async () => {
                       setMobileMenuOpen(false);
+                      const { signOutUser } = await import('../../services/firebaseAuth');
                       await signOutUser();
                       setRole('student');
                       setCurrentView('landing');

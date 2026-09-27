@@ -4,7 +4,8 @@
  * Uses Google Identity Services (GSI) Token Client with direct REST endpoints
  */
 
-import { GOOGLE_CLIENT_ID } from '../lib/firebase';
+import firebaseConfigData from '../../firebase-applet-config.json';
+const GOOGLE_CLIENT_ID = firebaseConfigData.oAuthClientId;
 
 declare global {
   interface Window {

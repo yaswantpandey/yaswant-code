@@ -1,7 +1,6 @@
 'use client';
 import React from 'react';
 import type { ComponentProps, ReactNode } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
 import { FacebookIcon, FrameIcon, InstagramIcon, LinkedinIcon, YoutubeIcon } from 'lucide-react';
 
 export interface FooterLink {
@@ -131,27 +130,15 @@ export function Footer({
 
 type ViewAnimationProps = {
 	delay?: number;
-	className?: ComponentProps<typeof motion.div>['className'];
+	className?: string;
 	children: ReactNode;
 	key?: React.Key;
 };
 
-function AnimatedContainer({ className, delay = 0.1, children }: ViewAnimationProps) {
-	const shouldReduceMotion = useReducedMotion();
-
-	if (shouldReduceMotion) {
-		return children;
-	}
-
+function AnimatedContainer({ className = '', children }: ViewAnimationProps) {
 	return (
-		<motion.div
-			initial={{ filter: 'blur(4px)', translateY: -8, opacity: 0 }}
-			whileInView={{ filter: 'blur(0px)', translateY: 0, opacity: 1 }}
-			viewport={{ once: true }}
-			transition={{ delay, duration: 0.8 }}
-			className={className}
-		>
+		<div className={`transition-all duration-300 ${className}`}>
 			{children}
-		</motion.div>
+		</div>
 	);
 }

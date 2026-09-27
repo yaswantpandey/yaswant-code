@@ -9,7 +9,6 @@ import {
 } from '../types/lms';
 import { BRAND_CONFIG, PRIMARY_INSTRUCTOR } from '../config/brand';
 import { useTheme, ThemeMode, ResolvedTheme } from './ThemeContext';
-import { syncCourseEnrollment, syncLessonProgress } from '../services/firebaseAuth';
 import { mapApiCourseToLmsCourse } from '../services/courseMapper';
 import { parseCurrentLocation, syncUrlWithView } from '../services/router';
 import { tokenStorage } from '../services/api';
@@ -312,7 +311,9 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (course) {
-      syncCourseEnrollment(courseId, course.title);
+      import('../services/firebaseAuth')
+        .then(m => m.syncCourseEnrollment(courseId, course.title))
+        .catch(() => {});
     }
     addToast("Enrollment Successful!", "Course added to your workspace.", "success");
     setCurrentView('learning-interface');
@@ -354,7 +355,9 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (selectedCourse?.id) {
-      syncLessonProgress(selectedCourse.id, updatedProgress);
+      import('../services/firebaseAuth')
+        .then(m => m.syncLessonProgress(selectedCourse.id, updatedProgress))
+        .catch(() => {});
     }
     addToast("Lesson Completed!", "Progress saved to your profile.", "success");
   };

@@ -29,7 +29,6 @@ import { RoleType } from '../../types/lms';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { Button } from '../ui/Button';
 import { tokenStorage } from '../../services/api';
-import { signOutUser } from '../../services/firebaseAuth';
 
 export const MobileNav: React.FC = () => {
   const { 
@@ -330,6 +329,7 @@ export const MobileNav: React.FC = () => {
                 <button
                   onClick={async () => {
                     setBottomSheetOpen(false);
+                    const { signOutUser } = await import('../../services/firebaseAuth');
                     await signOutUser();
                     setRole('student');
                     setCurrentView('landing');
