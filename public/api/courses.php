@@ -339,6 +339,10 @@ function cast_course(array $c): array {
 
 function cast_lesson(array $l): array {
     $l['preview_available'] = (bool)($l['preview_available'] ?? false);
+    $l['previewAvailable']  = $l['preview_available'];
+    $l['videoUrl']          = $l['video_url'] ?? '';
+    $l['codeSnippet']       = $l['code_snippet'] ?? '';
+    $l['codeLanguage']      = $l['code_language'] ?? '';
     return $l;
 }
 

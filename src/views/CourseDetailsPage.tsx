@@ -26,6 +26,24 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
+const getVideoEmbedUrl = (url?: string): { type: 'youtube' | 'vimeo' | 'video' | 'none'; embedUrl: string } => {
+  if (!url || typeof url !== 'string') return { type: 'none', embedUrl: '' };
+  const trimmed = url.trim();
+  if (!trimmed) return { type: 'none', embedUrl: '' };
+
+  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    return { type: 'youtube', embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0` };
+  }
+
+  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1` };
+  }
+
+  return { type: 'video', embedUrl: trimmed };
+};
+
 export const CourseDetailsPage: React.FC = () => {
   const { 
     selectedCourse, 
@@ -45,6 +63,13 @@ export const CourseDetailsPage: React.FC = () => {
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
 
   const isBookmarked = bookmarkedCourseIds.includes(selectedCourse.id);
+
+  // Check if course has an actual video available in database
+  const previewLesson = selectedCourse.modules
+    ?.flatMap(m => m.chapters?.flatMap(c => c.lessons) || [])
+    ?.find(l => (l.previewAvailable || l.type === 'video') && l.videoUrl && l.videoUrl.trim() !== '');
+
+  const previewVideo = previewLesson?.videoUrl ? getVideoEmbedUrl(previewLesson.videoUrl) : null;
 
   const toggleModule = (id: string) => {
     setExpandedModules(prev => ({ ...prev, [id]: !prev[id] }));
@@ -137,26 +162,62 @@ export const CourseDetailsPage: React.FC = () => {
         {/* Right Col: Video Preview & Enrollment Sticky Card */}
         <div className="lg:col-span-1">
           <GlassCard className="p-5 overflow-hidden sticky top-24 shadow-xl">
-            {/* Video Player Preview Box */}
-            <div className="relative aspect-video rounded-2xl overflow-hidden bg-neutral-950 mb-5 group">
-              <img
-                src={selectedCourse.thumbnail}
-                alt={selectedCourse.title}
-                className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-neutral-950/40 flex items-center justify-center">
-                <button
-                  onClick={() => setIsPlayingPreview(true)}
-                  className="w-14 h-14 rounded-2xl bg-white/90 text-neutral-950 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
-                  title="Watch 2-minute syllabus preview"
-                >
-                  <Play className="w-6 h-6 fill-current ml-1" />
-                </button>
+            {/* Video Player Preview Box or Clean Thumbnail */}
+            {previewVideo && previewVideo.type !== 'none' ? (
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-black mb-5 group">
+                {isPlayingPreview ? (
+                  <div className="relative w-full h-full">
+                    {previewVideo.type === 'youtube' || previewVideo.type === 'vimeo' ? (
+                      <iframe
+                        src={previewVideo.embedUrl}
+                        title={selectedCourse.title}
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={previewVideo.embedUrl}
+                        controls
+                        autoPlay
+                        className="w-full h-full object-cover bg-black"
+                      />
+                    )}
+                    <button
+                      onClick={() => setIsPlayingPreview(false)}
+                      className="absolute top-2 right-2 px-2.5 py-1 rounded-lg bg-black/80 text-white text-[11px] font-medium hover:bg-black transition-colors z-20"
+                    >
+                      Close Preview
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <img
+                      src={selectedCourse.thumbnail}
+                      alt={selectedCourse.title}
+                      className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-neutral-950/40 flex items-center justify-center">
+                      <button
+                        onClick={() => setIsPlayingPreview(true)}
+                        className="w-14 h-14 rounded-2xl bg-white/90 text-neutral-950 flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-transform"
+                        title="Watch syllabus preview"
+                      >
+                        <Play className="w-6 h-6 fill-current ml-1" />
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="absolute bottom-2.5 left-2.5 bg-neutral-950/80 px-2 py-0.5 rounded text-[10px] font-mono text-white">
-                Course Trailer (2:45)
+            ) : (
+              <div className="relative aspect-video rounded-2xl overflow-hidden bg-neutral-900 mb-5">
+                <img
+                  src={selectedCourse.thumbnail}
+                  alt={selectedCourse.title}
+                  className="w-full h-full object-cover"
+                />
               </div>
-            </div>
+            )}
 
             {/* Pricing Area */}
             <div className="flex items-baseline gap-3 mb-4">
@@ -371,7 +432,7 @@ export const CourseDetailsPage: React.FC = () => {
                                   </div>
 
                                   <div className="flex items-center gap-2 shrink-0">
-                                    {lesson.previewAvailable ? (
+                                    {lesson.previewAvailable && lesson.videoUrl && lesson.videoUrl.trim() !== '' ? (
                                       <Button
                                         variant="outline"
                                         size="sm"
@@ -483,33 +544,26 @@ export const CourseDetailsPage: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            {[
-              {
-                author: "Danielle Wright",
-                role: "Senior Full Stack Dev at Stripe",
-                date: "3 days ago",
-                comment: "Easily the highest caliber React 19 / RSC masterclass available anywhere. The optimistic mutations chapter alone saved our team weeks of architectural deliberation."
-              },
-              {
-                author: "Tobias Schmidt",
-                role: "Lead Platform Engineer",
-                date: "2 weeks ago",
-                comment: "Zero fluff. Real git repositories, strict typescript types, and clear performance benchmarks. Worth every penny."
-              }
-            ].map((rev, i) => (
-              <GlassCard key={i} className="p-4 sm:p-5">
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <div className="text-xs font-bold text-neutral-900 dark:text-white">{rev.author}</div>
-                    <div className="text-[11px] text-neutral-400">{rev.role}</div>
+            {Array.isArray((selectedCourse as any).reviews) && (selectedCourse as any).reviews.length > 0 ? (
+              (selectedCourse as any).reviews.map((rev: any, i: number) => (
+                <GlassCard key={i} className="p-4 sm:p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-xs font-bold text-neutral-900 dark:text-white">{rev.author}</div>
+                      <div className="text-[11px] text-neutral-400">{rev.role || 'Verified Student'}</div>
+                    </div>
+                    <span className="text-xs text-neutral-400">{rev.date || 'Recent'}</span>
                   </div>
-                  <span className="text-xs text-neutral-400">{rev.date}</span>
-                </div>
-                <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                  &ldquo;{rev.comment}&rdquo;
-                </p>
+                  <p className="text-xs text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                    &ldquo;{rev.comment}&rdquo;
+                  </p>
+                </GlassCard>
+              ))
+            ) : (
+              <GlassCard className="p-8 text-center text-xs text-neutral-400">
+                No student reviews published yet for this masterclass.
               </GlassCard>
-            ))}
+            )}
           </div>
         </div>
       )}

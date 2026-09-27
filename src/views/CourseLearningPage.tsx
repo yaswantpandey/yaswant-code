@@ -1,31 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useLms } from '../context/LmsContext';
 import { 
   Play, 
-  Pause, 
-  Volume2, 
-  VolumeX, 
-  Maximize2, 
   CheckCircle2, 
   ChevronLeft, 
   ChevronRight, 
   FileText, 
   Download, 
-  MessageSquare, 
-  Sparkles, 
   Code2, 
   Copy, 
   Check, 
   Menu, 
-  X, 
-  Clock, 
   HelpCircle,
-  Award,
   BookOpen
 } from 'lucide-react';
-import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+
+// Utility to parse YouTube, Vimeo, or direct HTML5 video URLs
+const getVideoEmbedUrl = (url?: string): { type: 'youtube' | 'vimeo' | 'video' | 'none'; embedUrl: string } => {
+  if (!url || typeof url !== 'string') return { type: 'none', embedUrl: '' };
+  const trimmed = url.trim();
+  if (!trimmed) return { type: 'none', embedUrl: '' };
+
+  // YouTube match
+  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+  if (ytMatch && ytMatch[1]) {
+    return { type: 'youtube', embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0` };
+  }
+
+  // Vimeo match
+  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/)(\d+)/i);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1` };
+  }
+
+  // Direct video file or cloud storage URL
+  return { type: 'video', embedUrl: trimmed };
+};
 
 export const CourseLearningPage: React.FC = () => {
   const { 
@@ -34,53 +46,53 @@ export const CourseLearningPage: React.FC = () => {
     setSelectedLesson, 
     setCurrentView,
     addToast,
-    setCertificateModal
+    completeLesson
   } = useLms();
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState('1.0x');
-  const [progressRatio, setProgressRatio] = useState(38); // percent
-  const [activeRightTab, setActiveRightTab] = useState<'notes' | 'resources' | 'discussion' | 'transcript'>('notes');
-  const [userNote, setUserNote] = useState(
-    "Server Actions in Next.js 15 must be treated as POST endpoints with implicit CSRF tokens. Always wrap mutations with useActionState for predictable rollback."
-  );
+  const [activeRightTab, setActiveRightTab] = useState<'notes' | 'resources' | 'discussion'>('notes');
+  const [userNote, setUserNote] = useState<string>('');
+  const [newQuestion, setNewQuestion] = useState<string>('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [copiedCode, setCopiedCode] = useState(false);
 
-  const sampleSnippet = `// app/actions/board.ts
-'use server';
+  // Flatten all lessons across modules and chapters to enable sequential navigation
+  const allLessons = useMemo(() => {
+    return selectedCourse?.modules?.flatMap(m => m.chapters?.flatMap(c => c.lessons) || []) || [];
+  }, [selectedCourse]);
 
-import { revalidatePath } from 'next/cache';
-import { z } from 'zod';
+  const currentLessonIndex = useMemo(() => {
+    return allLessons.findIndex(l => l.id === selectedLesson.id);
+  }, [allLessons, selectedLesson]);
 
-const TaskSchema = z.object({
-  title: z.string().min(3),
-  status: z.enum(['TODO', 'IN_PROGRESS', 'DONE'])
-});
+  const prevLesson = currentLessonIndex > 0 ? allLessons[currentLessonIndex - 1] : null;
+  const nextLesson = currentLessonIndex >= 0 && currentLessonIndex < allLessons.length - 1 
+    ? allLessons[currentLessonIndex + 1] 
+    : null;
 
-export async function moveTaskAction(prevState: any, formData: FormData) {
-  const parsed = TaskSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) {
-    return { error: 'Invalid payload format' };
-  }
-  
-  // Real database write
-  await db.task.update({ where: { id: formData.get('id') }, data: parsed.data });
-  revalidatePath('/dashboard');
-  return { success: true };
-}`;
+  // Real video detection from database
+  const hasVideo = Boolean(selectedLesson?.videoUrl && selectedLesson.videoUrl.trim() !== '');
+  const videoData = hasVideo ? getVideoEmbedUrl(selectedLesson.videoUrl) : null;
 
-  const copySnippet = () => {
-    navigator.clipboard.writeText(sampleSnippet);
+  const copyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
     addToast("Code Copied", "Snippet copied to clipboard.", "success");
   };
 
   const handleMarkComplete = () => {
-    addToast("Lesson Completed", "Progress saved! Continuing to next chapter...", "success");
+    completeLesson(selectedLesson.id);
+    if (nextLesson) {
+      setSelectedLesson(nextLesson);
+    }
+  };
+
+  const handlePostQuestion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newQuestion.trim()) return;
+    addToast("Question Submitted", "Your inquiry has been sent to the instructor.", "success");
+    setNewQuestion('');
   };
 
   return (
@@ -119,9 +131,9 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
           <div className="hidden md:flex items-center gap-2 text-xs text-neutral-400">
             <span>Course Progress:</span>
             <div className="w-24 h-1.5 rounded-full bg-neutral-850 overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${selectedCourse.progressPercent || 34}%` }} />
+              <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${selectedCourse.progressPercent || 0}%` }} />
             </div>
-            <span className="font-mono text-neutral-200">{selectedCourse.progressPercent || 34}%</span>
+            <span className="font-mono text-neutral-200">{selectedCourse.progressPercent || 0}%</span>
           </div>
 
           <Button
@@ -155,7 +167,7 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                 Course Syllabus
               </span>
               <span className="text-xs font-mono text-neutral-500">
-                {selectedCourse.lessonsCount} lessons
+                {allLessons.length} lessons
               </span>
             </div>
 
@@ -185,14 +197,18 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                             ) : lesson.type === 'quiz' ? (
                               <HelpCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                            ) : lesson.type === 'assignment' ? (
+                              <FileText className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
                             ) : (
                               <Play className="w-3 h-3 text-neutral-500 shrink-0 fill-current" />
                             )}
                             <span className="truncate">{lesson.title}</span>
                           </div>
-                          <span className="text-[10px] font-mono text-neutral-500 shrink-0">
-                            {lesson.duration}
-                          </span>
+                          {lesson.duration && (
+                            <span className="text-[10px] font-mono text-neutral-500 shrink-0">
+                              {lesson.duration}
+                            </span>
+                          )}
                         </button>
                       );
                     })}
@@ -218,83 +234,26 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
         {/* Center Video Player & Content Scroll Area */}
         <main className="flex-1 flex flex-col overflow-y-auto bg-neutral-950">
           
-          {/* Mock Video Container */}
-          <div className="w-full aspect-video sm:max-h-[56vh] bg-black relative flex items-center justify-center group overflow-hidden border-b border-neutral-850">
-            {/* Ambient background canvas simulation */}
-            <div className="absolute inset-0 bg-radial from-neutral-900 to-black opacity-80" />
-            
-            {/* Center Play Button Graphic */}
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              className="w-16 h-16 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md text-white flex items-center justify-center transition-transform transform group-hover:scale-110 active:scale-95 z-10"
-            >
-              {isPlaying ? (
-                <Pause className="w-7 h-7 fill-white text-white" />
-              ) : (
-                <Play className="w-7 h-7 fill-white text-white ml-1" />
-              )}
-            </button>
-
-            {/* Video Overlay Watermark & Info */}
-            <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
-              <Badge variant="purple" size="sm">1080p 60fps</Badge>
-              <span className="text-xs font-mono text-neutral-400">
-                Lesson ID: {selectedLesson.id}
-              </span>
-            </div>
-
-            {/* Bottom Video Controls Scrubber Bar */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-10 space-y-2 opacity-90 group-hover:opacity-100 transition-opacity">
-              {/* Scrubber */}
-              <div 
-                className="w-full h-1.5 bg-neutral-800 hover:h-2.5 rounded-full cursor-pointer relative overflow-hidden transition-all"
-                onClick={(e) => {
-                  const rect = e.currentTarget.getBoundingClientRect();
-                  const clickX = e.clientX - rect.left;
-                  setProgressRatio(Math.round((clickX / rect.width) * 100));
-                }}
-              >
-                <div
-                  className="h-full bg-emerald-500 rounded-full relative"
-                  style={{ width: `${progressRatio}%` }}
+          {/* ONLY SHOW VIDEO IF VIDEO URL IS ACTUALLY IN DATABASE */}
+          {hasVideo && videoData && videoData.type !== 'none' && (
+            <div className="w-full aspect-video sm:max-h-[58vh] bg-black relative flex items-center justify-center border-b border-neutral-850">
+              {videoData.type === 'youtube' || videoData.type === 'vimeo' ? (
+                <iframe
+                  src={videoData.embedUrl}
+                  title={selectedLesson.title}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
                 />
-              </div>
-
-              {/* Controls row */}
-              <div className="flex items-center justify-between text-xs text-neutral-300">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setIsPlaying(!isPlaying)}>
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
-                  </button>
-                  <button onClick={() => setIsMuted(!isMuted)}>
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <span className="font-mono text-[11px] text-neutral-400">
-                    08:14 / {selectedLesson.duration}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {/* Speed Selector */}
-                  <div className="flex items-center gap-1 text-[11px] font-mono bg-neutral-900/80 px-2 py-0.5 rounded border border-neutral-800">
-                    {['1.0x', '1.25x', '1.5x'].map((spd) => (
-                      <button
-                        key={spd}
-                        onClick={() => setPlaybackSpeed(spd)}
-                        className={`px-1.5 py-0.5 rounded ${playbackSpeed === spd ? 'bg-white text-black font-bold' : 'text-neutral-400'}`}
-                      >
-                        {spd}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button title="Toggle Fullscreen">
-                    <Maximize2 className="w-4 h-4 text-neutral-400 hover:text-white" />
-                  </button>
-                </div>
-              </div>
+              ) : (
+                <video
+                  src={videoData.embedUrl}
+                  controls
+                  className="w-full h-full max-h-[58vh] bg-black"
+                />
+              )}
             </div>
-          </div>
+          )}
 
           {/* Lesson Content, Code Snippet & Notes */}
           <div className="p-6 sm:p-8 max-w-4xl space-y-6">
@@ -305,7 +264,7 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                   {selectedLesson.title}
                 </h2>
                 <p className="text-xs text-neutral-400">
-                  Taught by {selectedCourse.instructor.name} • Recorded in Next.js 15 Canary & React 19
+                  {selectedCourse.title} • {selectedCourse.instructor.name}
                 </p>
               </div>
 
@@ -316,20 +275,20 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                   className="text-xs border-neutral-700"
                   onClick={() => setCurrentView('assignment')}
                 >
-                  View Capstone
+                  View Assignments
                 </Button>
               </div>
             </div>
 
-            {/* Real Lesson Explanation from Database */}
-            <div className="text-xs sm:text-sm text-neutral-300 leading-relaxed space-y-4">
-              <p>
-                {selectedLesson.content || (selectedLesson as any).description || 'In this masterclass lesson, explore the core concepts and architectural best practices demonstrated in the curriculum.'}
-              </p>
-            </div>
+            {/* Real Lesson Description from Database (if available) */}
+            {selectedLesson.description && selectedLesson.description.trim() !== '' && (
+              <div className="text-xs sm:text-sm text-neutral-300 leading-relaxed space-y-4">
+                <p>{selectedLesson.description}</p>
+              </div>
+            )}
 
-            {/* Real Code Snippet Box (if available from database) */}
-            {(selectedLesson.codeSnippet || (selectedLesson as any).code_snippet) && (
+            {/* Real Code Snippet Box (ONLY if available from database) */}
+            {selectedLesson.codeSnippet && selectedLesson.codeSnippet.trim() !== '' && (
               <div className="rounded-2xl bg-neutral-900 border border-neutral-800 overflow-hidden">
                 <div className="px-4 py-2.5 bg-neutral-850/60 border-b border-neutral-800 flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-mono text-neutral-300">
@@ -337,13 +296,7 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                     <span>Reference Implementation</span>
                   </div>
                   <button
-                    onClick={() => {
-                      const code = selectedLesson.codeSnippet || (selectedLesson as any).code_snippet || '';
-                      navigator.clipboard.writeText(code);
-                      setCopiedCode(true);
-                      setTimeout(() => setCopiedCode(false), 2000);
-                      addToast("Code Copied", "Snippet copied to clipboard.", "success");
-                    }}
+                    onClick={() => copyCode(selectedLesson.codeSnippet!)}
                     className="flex items-center gap-1 text-[11px] text-neutral-400 hover:text-white transition-colors"
                   >
                     {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -351,7 +304,7 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                   </button>
                 </div>
                 <pre className="p-4 text-xs font-mono text-emerald-400 overflow-x-auto bg-neutral-950">
-                  <code>{selectedLesson.codeSnippet || (selectedLesson as any).code_snippet}</code>
+                  <code>{selectedLesson.codeSnippet}</code>
                 </pre>
               </div>
             )}
@@ -361,9 +314,12 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-neutral-700 text-neutral-300"
+                disabled={!prevLesson}
+                className="border-neutral-700 text-neutral-300 disabled:opacity-40"
                 icon={<ChevronLeft className="w-4 h-4" />}
-                onClick={() => addToast("Previous Lesson", "Switched to preceding module.", "info")}
+                onClick={() => {
+                  if (prevLesson) setSelectedLesson(prevLesson);
+                }}
               >
                 Previous Lesson
               </Button>
@@ -371,9 +327,13 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
               <Button
                 variant="primary"
                 size="sm"
+                disabled={!nextLesson}
+                className="disabled:opacity-40"
                 icon={<ChevronRight className="w-4 h-4" />}
                 iconPosition="right"
-                onClick={() => addToast("Next Lesson", "Loaded next video in queue.", "success")}
+                onClick={() => {
+                  if (nextLesson) setSelectedLesson(nextLesson);
+                }}
               >
                 Next Lesson
               </Button>
@@ -386,7 +346,7 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
           <aside className="w-80 sm:w-96 border-l border-neutral-850 bg-neutral-900/90 flex flex-col shrink-0 overflow-hidden">
             {/* Panel Tabs */}
             <div className="flex border-b border-neutral-800 text-xs font-semibold bg-neutral-900">
-              {(['notes', 'resources', 'discussion', 'transcript'] as const).map((tab) => (
+              {(['notes', 'resources', 'discussion'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveRightTab(tab)}
@@ -409,30 +369,29 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
                     <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                       Personal Scratchpad
                     </span>
-                    <Badge variant="success" size="sm">Auto-saved</Badge>
+                    {userNote.trim() && <Badge variant="success" size="sm">Draft</Badge>}
                   </div>
-                  <p className="text-[11px] text-neutral-500 mb-3">
-                    Notes are synchronized with your student profile and searchable across all devices.
-                  </p>
                   <textarea
                     value={userNote}
                     onChange={(e) => setUserNote(e.target.value)}
                     rows={8}
                     className="w-full p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs font-mono text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 leading-relaxed resize-none"
-                    placeholder="Take timestamped notes here..."
+                    placeholder="Take personal lesson notes here..."
                   />
                 </div>
 
-                <div className="pt-2 border-t border-neutral-800">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs border-neutral-750"
-                    onClick={() => addToast("Notes Exported", "Notes downloaded as markdown (.md)", "success")}
-                  >
-                    Export Notes as Markdown
-                  </Button>
-                </div>
+                {userNote.trim() && (
+                  <div className="pt-2 border-t border-neutral-800">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs border-neutral-750"
+                      onClick={() => addToast("Notes Saved", "Notes saved to your browser session.", "success")}
+                    >
+                      Save Notes
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -440,32 +399,38 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
             {activeRightTab === 'resources' && (
               <div className="p-4 flex-1 overflow-y-auto space-y-3">
                 <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                  Lesson Assets & Code
+                  Lesson Materials
                 </div>
-                {[
-                  { name: 'Starter GitHub Monorepo (v15.2)', size: '14.2 MB', ext: 'ZIP' },
-                  { name: 'React 19 Hooks Cheatsheet', size: '2.1 MB', ext: 'PDF' },
-                  { name: 'Architecture Excalidraw Diagram', size: '820 KB', ext: 'PNG' }
-                ].map((res, i) => (
-                  <div
-                    key={i}
-                    className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <FileText className="w-4 h-4 text-neutral-400 shrink-0" />
-                      <div className="truncate">
-                        <div className="font-semibold text-neutral-200 truncate">{res.name}</div>
-                        <span className="text-[10px] text-neutral-500 font-mono">{res.size}</span>
+                {Array.isArray(selectedLesson.resources) && selectedLesson.resources.length > 0 ? (
+                  selectedLesson.resources.map((res: any, i: number) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 flex items-center justify-between text-xs"
+                    >
+                      <div className="flex items-center gap-2.5 truncate">
+                        <FileText className="w-4 h-4 text-neutral-400 shrink-0" />
+                        <div className="truncate">
+                          <div className="font-semibold text-neutral-200 truncate">{res.name}</div>
+                          {res.size && <span className="text-[10px] text-neutral-500 font-mono">{res.size}</span>}
+                        </div>
                       </div>
+                      {res.url && (
+                        <a
+                          href={res.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                        </a>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      icon={<Download className="w-3.5 h-3.5" />}
-                      onClick={() => addToast("Download Started", `${res.name} is downloading.`, "info")}
-                    />
+                  ))
+                ) : (
+                  <div className="p-6 text-center text-xs text-neutral-500">
+                    No downloadable files attached to this lesson.
                   </div>
-                ))}
+                )}
               </div>
             )}
 
@@ -474,61 +439,29 @@ export async function moveTaskAction(prevState: any, formData: FormData) {
               <div className="p-4 flex-1 flex flex-col justify-between overflow-y-auto space-y-3">
                 <div className="space-y-3">
                   <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-1">
-                    Lesson Q&A Thread (3 Questions)
+                    Lesson Q&A Thread
                   </div>
-                  <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-xs space-y-1.5">
-                    <div className="flex items-center justify-between text-[11px] text-neutral-400">
-                      <strong className="text-white">Marcus Vance</strong>
-                      <span>2h ago</span>
-                    </div>
-                    <p className="text-neutral-300">
-                      Does useOptimistic support asynchronous rolling cancellations if the user navigates away?
-                    </p>
-                    <div className="text-[11px] text-emerald-400 font-medium pt-1">
-                      Instructor verified reply: &ldquo;Yes, React discards the optimistic update automatically on unmount.&rdquo;
-                    </div>
+                  <div className="p-6 text-center text-xs text-neutral-500">
+                    No questions posted yet for this lesson.
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-neutral-800 flex gap-2">
+                <form onSubmit={handlePostQuestion} className="pt-2 border-t border-neutral-800 flex gap-2">
                   <input
                     type="text"
-                    placeholder="Ask an architecture question..."
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Ask a question about this lesson..."
                     className="flex-1 bg-neutral-950 border border-neutral-800 text-xs px-3 py-2 rounded-xl text-white placeholder-neutral-500 focus:outline-none"
                   />
                   <Button
+                    type="submit"
                     variant="primary"
                     size="sm"
-                    onClick={() => addToast("Question Posted", "Instructor has been notified.", "success")}
                   >
                     Ask
                   </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Transcript Tab */}
-            {activeRightTab === 'transcript' && (
-              <div className="p-4 flex-1 overflow-y-auto space-y-2 text-xs text-neutral-400 font-mono">
-                <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
-                  Click Timestamp to Jump
-                </div>
-                {[
-                  { time: '00:00', text: 'Introduction to Next.js 15 Server Actions and RPC bridges' },
-                  { time: '02:45', text: 'Defining action schemas using Zod validation pipelines' },
-                  { time: '06:12', text: 'Invoking mutations with useActionState inside client forms' },
-                  { time: '12:30', text: 'Optimistic state rollbacks and error boundary traps' },
-                  { time: '18:50', text: 'Benchmark comparisons with traditional REST handlers' }
-                ].map((t, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => addToast("Timestamp Jump", `Seek to ${t.time}`, "info")}
-                    className="w-full text-left p-2 rounded-lg hover:bg-neutral-800/60 flex items-start gap-2 text-neutral-300 transition-colors"
-                  >
-                    <span className="text-emerald-400 font-bold shrink-0">{t.time}</span>
-                    <span className="text-xs leading-relaxed text-neutral-400 hover:text-white font-sans">{t.text}</span>
-                  </button>
-                ))}
+                </form>
               </div>
             )}
 

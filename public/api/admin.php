@@ -2248,7 +2248,7 @@ if ($method === 'POST' && $action === 'create_lesson') {
     $id = 'les-' . uniqid();
     $duration = $b['duration'] ?? '15:00';
     $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
-    $videoUrl = $b['videoUrl'] ?? 'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ';
+    $videoUrl = $b['videoUrl'] ?? '';
     $previewAvailable = !empty($b['previewAvailable']) ? 1 : 0;
     $description = $b['description'] ?? '';
     $codeSnippet = $b['codeSnippet'] ?? '';

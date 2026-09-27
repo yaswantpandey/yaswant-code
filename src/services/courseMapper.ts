@@ -79,7 +79,37 @@ export function mapApiCourseToLmsCourse(apiCourse: any): Course {
       ? apiCourse.whatYouWillLearn 
       : (Array.isArray(apiCourse.what_you_will_learn) ? apiCourse.what_you_will_learn : []),
     requirements: Array.isArray(apiCourse.requirements) ? apiCourse.requirements : [],
-    modules: Array.isArray(apiCourse.modules) ? apiCourse.modules : [],
+    modules: Array.isArray(apiCourse.modules) 
+      ? apiCourse.modules.map((m: any) => ({
+          id: String(m.id),
+          title: m.title || '',
+          duration: m.duration || '',
+          chapters: Array.isArray(m.chapters)
+            ? m.chapters.map((ch: any) => ({
+                id: String(ch.id),
+                title: ch.title || '',
+                duration: ch.duration || '',
+                lessons: Array.isArray(ch.lessons)
+                  ? ch.lessons.map((l: any) => ({
+                      id: String(l.id),
+                      title: l.title || '',
+                      duration: l.duration || '0:00',
+                      type: (['video', 'quiz', 'assignment', 'reading'].includes(l.type) ? l.type : 'video') as any,
+                      completed: Boolean(l.completed),
+                      locked: Boolean(l.locked),
+                      previewAvailable: Boolean(l.previewAvailable ?? l.preview_available),
+                      videoUrl: l.videoUrl || l.video_url || '',
+                      description: l.description || '',
+                      codeSnippet: l.codeSnippet || l.code_snippet || '',
+                      codeLanguage: l.codeLanguage || l.code_language || '',
+                      resources: Array.isArray(l.resources) ? l.resources : [],
+                      transcript: Array.isArray(l.transcript) ? l.transcript : [],
+                    }))
+                  : []
+              }))
+            : []
+        }))
+      : [],
     skills: Array.isArray(apiCourse.skills) ? apiCourse.skills : [],
     projectsCount: Number(apiCourse.projectsCount ?? apiCourse.projects_count ?? 0),
   };

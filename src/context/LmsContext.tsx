@@ -12,6 +12,7 @@ import { useTheme, ThemeMode, ResolvedTheme } from './ThemeContext';
 import { syncCourseEnrollment, syncLessonProgress } from '../services/firebaseAuth';
 import { mapApiCourseToLmsCourse } from '../services/courseMapper';
 import { parseCurrentLocation, syncUrlWithView } from '../services/router';
+import { tokenStorage } from '../services/api';
 
 interface Toast {
   id: string;
@@ -279,36 +280,83 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const enrollCourse = (courseId: string) => {
+  const enrollCourse = async (courseId: string) => {
     const course = courses.find(c => c.id === courseId);
     setCourses(prev => prev.map(c => {
       if (c.id === courseId) {
-        return { ...c, enrolled: true, progressPercent: c.progressPercent || 5 };
+        return { ...c, enrolled: true, progressPercent: c.progressPercent || 0 };
       }
       return c;
     }));
+    setSelectedCourseState(prev => {
+      if (prev.id === courseId) {
+        return { ...prev, enrolled: true, progressPercent: prev.progressPercent || 0 };
+      }
+      return prev;
+    });
+
+    const token = tokenStorage.get();
+    if (token) {
+      try {
+        await fetch('/api/enrollments.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ course_id: courseId })
+        });
+      } catch (e) {
+        console.warn('Backend enrollment sync:', e);
+      }
+    }
+
     if (course) {
       syncCourseEnrollment(courseId, course.title);
     }
-    addToast("Enrollment Successful!", "Course added to your learning dashboard.", "success");
+    addToast("Enrollment Successful!", "Course added to your workspace.", "success");
     setCurrentView('learning-interface');
   };
 
-  const completeLesson = (lessonId: string) => {
+  const completeLesson = async (lessonId: string) => {
     setSelectedLesson(prev => ({ ...prev, completed: true }));
     let updatedProgress = 0;
     setCourses(prev => prev.map(c => {
       if (c.id === selectedCourse.id) {
-        const newProgress = Math.min(100, (c.progressPercent || 0) + 8);
+        const newProgress = Math.min(100, (c.progressPercent || 0) + 10);
         updatedProgress = newProgress;
         return { ...c, progressPercent: newProgress };
       }
       return c;
     }));
+    setSelectedCourseState(prev => ({
+      ...prev,
+      progressPercent: Math.min(100, (prev.progressPercent || 0) + 10)
+    }));
+
+    const token = tokenStorage.get();
+    if (token && selectedCourse?.id) {
+      try {
+        await fetch('/api/enrollments.php?action=complete_lesson', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            lesson_id: lessonId,
+            course_id: selectedCourse.id
+          })
+        });
+      } catch (e) {
+        console.warn('Lesson complete sync:', e);
+      }
+    }
+
     if (selectedCourse?.id) {
       syncLessonProgress(selectedCourse.id, updatedProgress);
     }
-    addToast("Lesson Completed!", "+25 XP added to your daily streak.", "success");
+    addToast("Lesson Completed!", "Progress saved to your profile.", "success");
   };
 
   const markAllNotificationsRead = () => {
