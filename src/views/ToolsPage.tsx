@@ -54,28 +54,107 @@ export const TOOL_CATEGORY_THUMBNAILS: Record<string, string> = {
   'Utilities': 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80'
 };
 
+export const DEFAULT_DEV_TOOLS: DevToolItem[] = [
+  {
+    id: 'tool-yt-insta-downloader',
+    name: 'Instagram Video Downloader | YouTube Video Downloader',
+    tagline: 'High-speed Instagram Reels, Stories & YouTube HD Video/Audio Downloader',
+    description: 'Fast, secure online web downloader to save Instagram Reels, videos, IGTV, and YouTube 4K/1080p videos or shorts with high-bitrate MP3 audio with no watermarks.',
+    category: 'Utilities',
+    downloadType: 'direct',
+    downloadUrl: 'https://yt-insta-video-downloader-toy4.onrender.com/',
+    fileSize: 'Free Web App',
+    version: 'v2.5.0',
+    osSupport: ['Cross-Platform', 'Windows', 'macOS', 'Linux'],
+    thumbnail: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=80',
+    downloadsCount: 18450,
+    featured: true,
+    author: 'Yaswant Pandey',
+    updatedAt: '2026-09-27'
+  },
+  {
+    id: 'tool-docker-fullstack',
+    name: 'Full-Stack Docker Development Environment',
+    tagline: 'Production-ready Node.js, Python, MariaDB & Redis container bundle',
+    description: 'Pre-configured Docker Compose environment for rapid full-stack local development with hot reloading and volume persistence.',
+    category: 'DevOps & Docker',
+    downloadType: 'zip',
+    downloadUrl: 'https://github.com/yaswantpandey',
+    fileSize: '48 MB • ZIP',
+    version: 'v3.2.0',
+    osSupport: ['Windows', 'macOS', 'Linux'],
+    thumbnail: 'https://images.unsplash.com/photo-1605745341112-85968b19335b?w=800&auto=format&fit=crop&q=80',
+    downloadsCount: 4210,
+    featured: true,
+    author: 'Yaswant Pandey',
+    updatedAt: '2026-09-26'
+  },
+  {
+    id: 'tool-vscode-pack',
+    name: 'VS Code Ultimate Web Dev Extension Pack',
+    tagline: 'Carefully curated extensions, snippets, and themes for maximum productivity',
+    description: 'Complete configuration bundle including settings.json, keybindings, linting rules, and top extensions for React, TypeScript, and Tailwind.',
+    category: 'IDE & Editors',
+    downloadType: 'drive',
+    downloadUrl: 'https://drive.google.com',
+    fileSize: '12 MB • Drive',
+    version: 'v2026.4',
+    osSupport: ['Cross-Platform', 'Windows', 'macOS'],
+    thumbnail: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80',
+    downloadsCount: 3890,
+    featured: false,
+    author: 'Yaswant Pandey',
+    updatedAt: '2026-09-25'
+  },
+  {
+    id: 'tool-db-gui-studio',
+    name: 'Universal Database GUI & Query Visualizer',
+    tagline: 'Modern lightweight GUI client for MySQL, MariaDB, PostgreSQL & SQLite',
+    description: 'Instant SQL query runner, schema diagram generator, and table data exporter with dark mode and zero telemetry.',
+    category: 'Database GUI',
+    downloadType: 'zip',
+    downloadUrl: 'https://github.com/yaswantpandey',
+    fileSize: '34 MB • ZIP',
+    version: 'v1.9.2',
+    osSupport: ['Windows', 'macOS', 'Linux'],
+    thumbnail: 'https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=800&auto=format&fit=crop&q=80',
+    downloadsCount: 2950,
+    featured: false,
+    author: 'Yaswant Pandey',
+    updatedAt: '2026-09-24'
+  }
+];
+
 const TOOLS_STORAGE_KEY = 'yaswant_code_dev_tools_v1';
 
 export const ToolsPage: React.FC = () => {
   const { addToast } = useLms();
 
-  // Load tools from localStorage or empty array
+  // Load tools from localStorage or defaults
   const [tools, setTools] = useState<DevToolItem[]>(() => {
     try {
       const saved = localStorage.getItem(TOOLS_STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasYtInsta = parsed.some(
+            (t: DevToolItem) =>
+              t.id === 'tool-yt-insta-downloader' ||
+              (t.downloadUrl && t.downloadUrl.includes('yt-insta-video-downloader'))
+          );
+          if (!hasYtInsta) {
+            return [DEFAULT_DEV_TOOLS[0], ...parsed];
+          }
           return parsed;
         }
       }
     } catch {
       // ignore
     }
-    return [];
+    return DEFAULT_DEV_TOOLS;
   });
 
-  // Fetch live tools from backend API
+  // Fetch live tools from backend API (merging our featured tool if not yet stored in DB)
   useEffect(() => {
     const fetchTools = async () => {
       try {
@@ -83,7 +162,16 @@ export const ToolsPage: React.FC = () => {
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            setTools(json.data);
+            const hasYtInsta = json.data.some(
+              (t: DevToolItem) =>
+                t.id === 'tool-yt-insta-downloader' ||
+                (t.downloadUrl && t.downloadUrl.includes('yt-insta-video-downloader'))
+            );
+            if (!hasYtInsta) {
+              setTools([DEFAULT_DEV_TOOLS[0], ...json.data]);
+            } else {
+              setTools(json.data);
+            }
           }
         }
       } catch (err) {
@@ -93,10 +181,19 @@ export const ToolsPage: React.FC = () => {
     fetchTools();
   }, []);
 
+  // Save to localStorage on change
+  useEffect(() => {
+    try {
+      localStorage.setItem(TOOLS_STORAGE_KEY, JSON.stringify(tools));
+    } catch {
+      // ignore
+    }
+  }, [tools]);
+
   // Filters & State
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [selectedType, setSelectedType] = useState<'all' | 'zip' | 'drive'>('all');
+  const [selectedType, setSelectedType] = useState<'all' | 'zip' | 'drive' | 'direct'>('all');
   const [selectedOs, setSelectedOs] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -109,35 +206,14 @@ export const ToolsPage: React.FC = () => {
   const [formName, setFormName] = useState<string>('');
   const [formTagline, setFormTagline] = useState<string>('');
   const [formDescription, setFormDescription] = useState<string>('');
-  const [formCategory, setFormCategory] = useState<DevToolItem['category']>('DevOps & Docker');
-  const [formDownloadType, setFormDownloadType] = useState<'zip' | 'drive'>('zip');
+  const [formCategory, setFormCategory] = useState<DevToolItem['category']>('Utilities');
+  const [formDownloadType, setFormDownloadType] = useState<'zip' | 'drive' | 'direct'>('direct');
   const [formDownloadUrl, setFormDownloadUrl] = useState<string>('');
   const [formFileSize, setFormFileSize] = useState<string>('');
   const [formVersion, setFormVersion] = useState<string>('v1.0.0');
   const [formThumbnail, setFormThumbnail] = useState<string>('');
-  const [formOs, setFormOs] = useState<string[]>(['Windows', 'macOS', 'Linux']);
+  const [formOs, setFormOs] = useState<string[]>(['Windows', 'macOS', 'Linux', 'Cross-Platform']);
   const [formAuthor, setFormAuthor] = useState<string>('Yaswant Pandey');
-
-  // Load live developer tools from MariaDB database
-  useEffect(() => {
-    fetch('/api/tools.php')
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && Array.isArray(data.data)) {
-          setTools(data.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Save to localStorage on change
-  useEffect(() => {
-    try {
-      localStorage.setItem(TOOLS_STORAGE_KEY, JSON.stringify(tools));
-    } catch {
-      // ignore
-    }
-  }, [tools]);
 
   const categories = [
     'All',
@@ -186,32 +262,33 @@ export const ToolsPage: React.FC = () => {
   // Statistics
   const stats = useMemo(() => {
     const total = tools.length;
+    const directCount = tools.filter((t) => t.downloadType === 'direct').length;
     const zipCount = tools.filter((t) => t.downloadType === 'zip').length;
     const driveCount = tools.filter((t) => t.downloadType === 'drive').length;
     const totalDownloads = tools.reduce((acc, t) => acc + (t.downloadsCount || 0), 0);
-    return { total, zipCount, driveCount, totalDownloads };
+    return { total, directCount, zipCount, driveCount, totalDownloads };
   }, [tools]);
 
   // Handlers
-  const handleOpenAddModal = (type: 'zip' | 'drive' = 'zip') => {
+  const handleOpenAddModal = (type: 'zip' | 'drive' | 'direct' = 'direct') => {
     setEditingTool(null);
     setFormDownloadType(type);
     setFormName('');
     setFormTagline('');
     setFormDescription('');
-    setFormCategory('DevOps & Docker');
+    setFormCategory('Utilities');
     setFormDownloadUrl('');
-    setFormFileSize(type === 'zip' ? '25 MB • ZIP' : 'Google Drive Link');
-    setFormVersion('v1.0.0');
-    setFormThumbnail(TOOL_CATEGORY_THUMBNAILS['DevOps & Docker']);
-    setFormOs(['Windows', 'macOS', 'Linux']);
+    setFormFileSize(type === 'zip' ? '25 MB • ZIP' : type === 'drive' ? 'Google Drive Link' : 'Online Web App');
+    setFormVersion('v2.5.0');
+    setFormThumbnail(TOOL_CATEGORY_THUMBNAILS['Utilities']);
+    setFormOs(['Cross-Platform', 'Windows', 'macOS', 'Linux']);
     setFormAuthor('Yaswant Pandey');
     setIsAddModalOpen(true);
   };
 
   const handleOpenEditModal = (tool: DevToolItem) => {
     setEditingTool(tool);
-    setFormDownloadType(tool.downloadType === 'drive' ? 'drive' : 'zip');
+    setFormDownloadType(tool.downloadType || 'direct');
     setFormName(tool.name);
     setFormTagline(tool.tagline);
     setFormDescription(tool.description);
@@ -234,7 +311,7 @@ export const ToolsPage: React.FC = () => {
     }
 
     if (!formDownloadUrl.trim()) {
-      addToast('Download link required', 'Please provide a Google Drive or ZIP URL.', 'warning');
+      addToast('Download link required', 'Please provide a tool URL or download link.', 'warning');
       return;
     }
 
@@ -258,7 +335,7 @@ export const ToolsPage: React.FC = () => {
                 category: formCategory,
                 downloadType: formDownloadType,
                 downloadUrl: cleanUrl,
-                fileSize: formFileSize.trim() || 'Direct Download',
+                fileSize: formFileSize.trim() || (formDownloadType === 'direct' ? 'Online Web App' : 'Direct Download'),
                 version: formVersion.trim() || 'v1.0.0',
                 osSupport: formOs.length > 0 ? (formOs as any) : ['Cross-Platform'],
                 thumbnail: formThumbnail.trim() || fallbackThumb,
@@ -278,7 +355,7 @@ export const ToolsPage: React.FC = () => {
         category: formCategory,
         downloadType: formDownloadType,
         downloadUrl: cleanUrl,
-        fileSize: formFileSize.trim() || (formDownloadType === 'zip' ? 'ZIP Archive' : 'Google Drive'),
+        fileSize: formFileSize.trim() || (formDownloadType === 'direct' ? 'Online Web App' : formDownloadType === 'zip' ? 'ZIP Archive' : 'Google Drive'),
         version: formVersion.trim() || 'v1.0.0',
         osSupport: formOs.length > 0 ? (formOs as any) : ['Cross-Platform'],
         thumbnail: formThumbnail.trim() || fallbackThumb,
@@ -316,7 +393,7 @@ export const ToolsPage: React.FC = () => {
     setTools((prev) =>
       prev.map((t) => (t.id === tool.id ? { ...t, downloadsCount: (t.downloadsCount || 0) + 1 } : t))
     );
-    addToast('Starting Download', `Downloading ${tool.name}...`, 'info');
+    addToast('Opening Tool', `Launching ${tool.name}...`, 'info');
   };
 
   const toggleOsSelection = (os: string) => {
@@ -363,10 +440,10 @@ export const ToolsPage: React.FC = () => {
             Developer Software & Utilities Hub
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
-            Developer Tools & ZIP Downloads
+            Developer Tools & Utilities
           </h1>
           <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1 max-w-2xl">
-            Download production developer environments, pre-configured ZIP archives, and shared Google Drive toolkits directly with zero paywalls.
+            Access free online productivity tools, developer environments, pre-configured ZIP archives, and shared cloud toolkits with zero paywalls.
           </p>
         </div>
 
@@ -374,11 +451,20 @@ export const ToolsPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
+            onClick={() => handleOpenAddModal('direct')}
+            className="border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
+            + Online Tool
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handleOpenAddModal('drive')}
             className="border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs"
           >
             <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-sky-500" />
-            + Google Drive Tool
+            + Drive Toolkit
           </Button>
           <Button
             variant="primary"
@@ -402,7 +488,18 @@ export const ToolsPage: React.FC = () => {
           <div className="text-2xl font-black text-neutral-950 dark:text-white tracking-tight">
             {stats.total}
           </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">Software & bundles</div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">Software & tools</div>
+        </div>
+
+        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-purple-200/60 dark:border-purple-900/40 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">
+            <span>Online Web Tools</span>
+            <Sparkles className="w-4 h-4 text-purple-500" />
+          </div>
+          <div className="text-2xl font-black text-purple-600 dark:text-purple-400 tracking-tight">
+            {stats.directCount}
+          </div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">Instant browser tools</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-emerald-200/60 dark:border-emerald-900/40 shadow-xs">
@@ -416,26 +513,15 @@ export const ToolsPage: React.FC = () => {
           <div className="text-[11px] text-neutral-400 mt-0.5">Direct 1-click downloads</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-sky-200/60 dark:border-sky-900/40 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-sky-600 dark:text-sky-400 font-medium mb-1">
-            <span>Google Drive Toolkits</span>
-            <FolderOpen className="w-4 h-4 text-sky-500" />
-          </div>
-          <div className="text-2xl font-black text-sky-600 dark:text-sky-400 tracking-tight">
-            {stats.driveCount}
-          </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">Shared cloud repositories</div>
-        </div>
-
         <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-amber-200/60 dark:border-amber-900/40 shadow-xs">
           <div className="flex items-center justify-between text-xs text-amber-600 dark:text-amber-400 font-medium mb-1">
-            <span>Total Community Downloads</span>
+            <span>Total Community Access</span>
             <Download className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-2xl font-black text-amber-600 dark:text-amber-400 tracking-tight">
             {stats.totalDownloads.toLocaleString()}
           </div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">Verified downloads</div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">Verified uses & downloads</div>
         </div>
       </div>
 
@@ -448,7 +534,7 @@ export const ToolsPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tools, dockers, environments, extensions..."
+            placeholder="Search tools, downloaders, dockers, environments..."
             className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:border-neutral-950 dark:focus:border-white shadow-2xs"
           />
           {searchQuery && (
@@ -475,6 +561,17 @@ export const ToolsPage: React.FC = () => {
               All ({stats.total})
             </button>
             <button
+              onClick={() => setSelectedType('direct')}
+              className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
+                selectedType === 'direct'
+                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 shadow-2xs font-bold'
+                  : 'text-neutral-500 hover:text-neutral-950'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              Web Apps ({stats.directCount})
+            </button>
+            <button
               onClick={() => setSelectedType('zip')}
               className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 selectedType === 'zip'
@@ -483,7 +580,7 @@ export const ToolsPage: React.FC = () => {
               }`}
             >
               <FileArchive className="w-3.5 h-3.5 text-emerald-500" />
-              ZIP Only ({stats.zipCount})
+              ZIP ({stats.zipCount})
             </button>
             <button
               onClick={() => setSelectedType('drive')}
@@ -494,7 +591,7 @@ export const ToolsPage: React.FC = () => {
               }`}
             >
               <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
-              Drive Links ({stats.driveCount})
+              Drive ({stats.driveCount})
             </button>
           </div>
 
@@ -543,16 +640,17 @@ export const ToolsPage: React.FC = () => {
             No tools found
           </h3>
           <p className="text-xs text-neutral-500 mb-4">
-            Try resetting your filters or upload a new tool ZIP link.
+            Try resetting your filters or share a new tool link.
           </p>
-          <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('zip')}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add ZIP Tool
+          <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('direct')}>
+            <Plus className="w-3.5 h-3.5 mr-1" /> Add Online Tool
           </Button>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTools.map((tool) => {
             const isZip = tool.downloadType === 'zip';
+            const isDirect = tool.downloadType === 'direct';
 
             return (
               <div
@@ -578,6 +676,11 @@ export const ToolsPage: React.FC = () => {
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-emerald-600/90 text-white shadow-xs backdrop-blur-md">
                         <FileArchive className="w-3 h-3" />
                         ZIP ARCHIVE
+                      </span>
+                    ) : isDirect ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs backdrop-blur-md">
+                        <Sparkles className="w-3 h-3" />
+                        ONLINE TOOL
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-sky-600/90 text-white shadow-xs backdrop-blur-md">
@@ -612,12 +715,12 @@ export const ToolsPage: React.FC = () => {
                     </div>
 
                     {/* Tool Name */}
-                    <h3 className="text-base font-bold text-neutral-950 dark:text-white leading-snug tracking-tight mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors line-clamp-1">
+                    <h3 className="text-base font-bold text-neutral-950 dark:text-white leading-snug tracking-tight mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
                       {tool.name}
                     </h3>
 
                     {/* Tagline */}
-                    <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 line-clamp-1 mb-2">
+                    <p className="text-[11px] font-medium text-purple-600 dark:text-purple-400 line-clamp-1 mb-2">
                       {tool.tagline}
                     </p>
 
@@ -633,7 +736,7 @@ export const ToolsPage: React.FC = () => {
                       <span>By {tool.author}</span>
                       <span className="flex items-center gap-1">
                         <Download className="w-3 h-3 text-neutral-400" />
-                        {tool.downloadsCount} downloads
+                        {tool.downloadsCount} uses
                       </span>
                     </div>
 
@@ -648,6 +751,17 @@ export const ToolsPage: React.FC = () => {
                         >
                           <Download className="w-3.5 h-3.5" />
                           Download ZIP
+                        </a>
+                      ) : isDirect ? (
+                        <a
+                          href={tool.downloadUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => handleTriggerDownload(tool)}
+                          className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/20"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          Open Tool
                         </a>
                       ) : (
                         <a
@@ -706,6 +820,7 @@ export const ToolsPage: React.FC = () => {
             <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
               {filteredTools.map((tool) => {
                 const isZip = tool.downloadType === 'zip';
+                const isDirect = tool.downloadType === 'direct';
 
                 return (
                   <tr key={tool.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-850/30 transition-colors">
@@ -716,6 +831,8 @@ export const ToolsPage: React.FC = () => {
                       <div className="flex items-center gap-2 mb-0.5">
                         {isZip ? (
                           <span className="text-[10px] font-mono font-bold text-emerald-600">ZIP</span>
+                        ) : isDirect ? (
+                          <span className="text-[10px] font-mono font-bold text-purple-600">ONLINE</span>
                         ) : (
                           <span className="text-[10px] font-mono font-bold text-sky-600">DRIVE</span>
                         )}
@@ -741,6 +858,16 @@ export const ToolsPage: React.FC = () => {
                             className="py-1 px-2.5 rounded-lg text-xs font-bold bg-emerald-600 text-white flex items-center gap-1"
                           >
                             <Download className="w-3 h-3" /> Download
+                          </a>
+                        ) : isDirect ? (
+                          <a
+                            href={tool.downloadUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => handleTriggerDownload(tool)}
+                            className="py-1 px-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Open Tool
                           </a>
                         ) : (
                           <a
@@ -783,10 +910,10 @@ export const ToolsPage: React.FC = () => {
             <div className="flex items-center justify-between pb-3 mb-4 border-b border-neutral-200 dark:border-neutral-800">
               <div>
                 <h3 className="text-base font-bold text-neutral-950 dark:text-white">
-                  {editingTool ? 'Edit Tool Resource' : 'Share Developer Tool / ZIP Link'}
+                  {editingTool ? 'Edit Tool Resource' : 'Share Developer Tool / Utility'}
                 </h3>
                 <p className="text-[11px] text-neutral-500">
-                  Anyone will be able to download this tool or open the shared Google Drive folder.
+                  Anyone will be able to launch this online tool, download the ZIP, or open the shared Drive folder.
                 </p>
               </div>
               <button
@@ -801,6 +928,18 @@ export const ToolsPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-4">
               <button
                 type="button"
+                onClick={() => setFormDownloadType('direct')}
+                className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  formDownloadType === 'direct'
+                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-600 dark:text-purple-400 shadow-2xs'
+                    : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                Online Web Tool
+              </button>
+              <button
+                type="button"
                 onClick={() => setFormDownloadType('zip')}
                 className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   formDownloadType === 'zip'
@@ -809,7 +948,7 @@ export const ToolsPage: React.FC = () => {
                 }`}
               >
                 <FileArchive className="w-3.5 h-3.5 text-emerald-500" />
-                ZIP Archive Download
+                ZIP Download
               </button>
               <button
                 type="button"
@@ -821,7 +960,7 @@ export const ToolsPage: React.FC = () => {
                 }`}
               >
                 <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
-                Google Drive Link
+                Google Drive
               </button>
             </div>
 
@@ -855,10 +994,14 @@ export const ToolsPage: React.FC = () => {
                 />
               </div>
 
-              {/* Download / Drive URL */}
+              {/* Download / Drive / Web URL */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  {formDownloadType === 'zip' ? 'Direct ZIP Download URL *' : 'Google Drive Folder / File URL *'}
+                  {formDownloadType === 'direct'
+                    ? 'Online Tool Web URL *'
+                    : formDownloadType === 'zip'
+                    ? 'Direct ZIP Download URL *'
+                    : 'Google Drive Folder / File URL *'}
                 </label>
                 <input
                   type="text"
@@ -866,7 +1009,9 @@ export const ToolsPage: React.FC = () => {
                   value={formDownloadUrl}
                   onChange={(e) => setFormDownloadUrl(e.target.value)}
                   placeholder={
-                    formDownloadType === 'zip'
+                    formDownloadType === 'direct'
+                      ? 'https://yt-insta-video-downloader-toy4.onrender.com/ or web app URL'
+                      : formDownloadType === 'zip'
                       ? 'https://.../download.zip or github zip link'
                       : 'https://drive.google.com/drive/folders/...'
                   }
