@@ -22,10 +22,14 @@ import {
   Award,
   Sun,
   Moon,
-  Cloud
+  Cloud,
+  LogOut
 } from 'lucide-react';
 import { RoleType } from '../../types/lms';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { Button } from '../ui/Button';
+import { tokenStorage } from '../../services/api';
+import { signOutUser } from '../../services/firebaseAuth';
 
 export const MobileNav: React.FC = () => {
   const { 
@@ -34,10 +38,15 @@ export const MobileNav: React.FC = () => {
     role, 
     setRole, 
     setSearchModalOpen,
-    userProfile 
+    openAuthModal,
   } = useLms();
 
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+
+  const storedToken = tokenStorage.get();
+  const storedUser = tokenStorage.getUser<{ name?: string; email?: string; role?: string; avatar?: string }>();
+  const isUserLoggedIn = Boolean(storedToken);
+  const activeRole: RoleType = role === 'admin' || storedUser?.role === 'admin' ? 'admin' : 'student';
 
   // 5 primary Material Design 3 Bottom Navigation items
   const mainNavItems = [
@@ -183,33 +192,73 @@ export const MobileNav: React.FC = () => {
 
             {/* Profile & Quick Bar */}
             <div className="flex items-center justify-between gap-3 pb-3 border-b border-neutral-100 dark:border-neutral-800">
-              <div className="flex items-center gap-3">
-                <img 
-                  src={userProfile.avatar} 
-                  alt={userProfile.name}
-                  referrerPolicy="no-referrer" 
-                  className="w-11 h-11 rounded-full object-cover border-2 border-white dark:border-neutral-800 shadow-xs"
-                />
-                <div>
-                  <div className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-1.5">
-                    <span>{userProfile.name}</span>
-                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 capitalize">
-                      {role}
-                    </span>
-                  </div>
-                  <div className="text-xs text-neutral-500 flex items-center gap-2 mt-0.5">
-                    <span className="flex items-center gap-1 text-amber-500 font-medium">
-                      <Flame className="w-3.5 h-3.5 fill-amber-500" /> 12 day streak
-                    </span>
-                    <span>•</span>
-                    <span>Level 14</span>
+              {isUserLoggedIn ? (
+                <div className="flex items-center gap-3 min-w-0">
+                  {storedUser?.avatar ? (
+                    <img 
+                      src={storedUser.avatar} 
+                      alt={storedUser.name || 'User'}
+                      referrerPolicy="no-referrer" 
+                      className="w-10 h-10 rounded-xl object-cover border border-neutral-200 dark:border-neutral-800 shadow-xs shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                      {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold text-neutral-900 dark:text-white flex items-center gap-1.5 truncate">
+                      <span className="truncate">{storedUser?.name || 'Engineer'}</span>
+                      <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-md bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 capitalize shrink-0">
+                        {activeRole}
+                      </span>
+                    </div>
+                    <div className="text-xs text-neutral-500 truncate mt-0.5">
+                      {storedUser?.email || 'Logged In Student'}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                      YC
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-neutral-900 dark:text-white">Welcome Guest</div>
+                      <div className="text-[10px] text-neutral-500">Sign in to track progress</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs px-2.5 py-1"
+                      onClick={() => {
+                        setBottomSheetOpen(false);
+                        openAuthModal('login');
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="text-xs px-2.5 py-1 font-bold"
+                      onClick={() => {
+                        setBottomSheetOpen(false);
+                        openAuthModal('signup');
+                      }}
+                    >
+                      Join
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={() => setBottomSheetOpen(false)}
-                className="p-2 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 transition-colors"
+                className="p-2 rounded-full text-neutral-400 hover:text-neutral-900 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 transition-colors shrink-0"
                 aria-label="Close menu"
               >
                 <X className="w-4 h-4" />
@@ -270,6 +319,35 @@ export const MobileNav: React.FC = () => {
                 })}
               </div>
             </div>
+
+            {/* Logout & Admin Action for Logged In User */}
+            {isUserLoggedIn && (
+              <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+                <button
+                  onClick={async () => {
+                    setBottomSheetOpen(false);
+                    await signOutUser();
+                    setRole('student');
+                    setCurrentView('landing');
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:opacity-80 py-1"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
+                </button>
+                {activeRole === 'admin' && (
+                  <button
+                    onClick={() => {
+                      setBottomSheetOpen(false);
+                      window.location.hash = '#admin';
+                      setCurrentView('admin-dashboard');
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline py-1"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5" /> Admin Portal
+                  </button>
+                )}
+              </div>
+            )}
 
           </div>
         </div>
