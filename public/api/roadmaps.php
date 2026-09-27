@@ -19,17 +19,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 $method = $_SERVER['REQUEST_METHOD'];
-$id     = trim($_GET['id'] ?? $_GET['slug'] ?? '');
+$id = trim($_GET['id'] ?? $_GET['slug'] ?? '');
 
-// Helper to load fallback tracks from seed file if DB is down or empty
-function get_seed_tracks(?string $filterId = null): array {
+// Helper to load fal tracks from seed file if DB is down or empty
+function get_seed_tracks(?string $filterId = null): array
+{
     $seedFile = __DIR__ . '/seed_roadmaps.json';
     if (!file_exists($seedFile)) {
         return [];
     }
     $raw = @file_get_contents($seedFile);
     $tracks = json_decode($raw ?: '[]', true);
-    if (!is_array($tracks)) return [];
+    if (!is_array($tracks))
+        return [];
 
     if ($filterId !== null && $filterId !== '') {
         foreach ($tracks as $t) {
@@ -42,9 +44,10 @@ function get_seed_tracks(?string $filterId = null): array {
     return $tracks;
 }
 
-function format_roadmap_row(array $r): array {
+function format_roadmap_row(array $r): array
+{
     $stages = !empty($r['stages']) ? json_decode($r['stages'], true) : [];
-    $totalTopics = (int)($r['total_topics'] ?? 0);
+    $totalTopics = (int) ($r['total_topics'] ?? 0);
     if ($totalTopics === 0 && is_array($stages)) {
         foreach ($stages as $stg) {
             if (!empty($stg['topics']) && is_array($stg['topics'])) {
@@ -71,7 +74,7 @@ function format_roadmap_row(array $r): array {
         'careerRoles' => array_values(array_filter(array_map('trim', explode(',', $r['career_roles'] ?? '')))),
         'stages' => is_array($stages) ? $stages : [],
         'status' => $r['status'] ?? 'published',
-        'orderIndex' => (int)($r['order_index'] ?? 0),
+        'orderIndex' => (int) ($r['order_index'] ?? 0),
         'createdAt' => $r['created_at'] ?? '',
         'updatedAt' => $r['updated_at'] ?? '',
     ];

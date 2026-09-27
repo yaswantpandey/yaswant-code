@@ -22,5 +22,34 @@ export default defineConfig(() => {
       hmr: process.env.DISABLE_HMR !== 'true',
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
+    build: {
+      chunkSizeWarningLimit: 1000,
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('firebase')) {
+                return 'vendor-firebase';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
+              if (id.includes('@google/genai')) {
+                return 'vendor-ai';
+              }
+              if (
+                id.includes('react') ||
+                id.includes('react-dom') ||
+                id.includes('framer-motion') ||
+                id.includes('motion')
+              ) {
+                return 'vendor-framework';
+              }
+              return 'vendor-utils';
+            }
+          },
+        },
+      },
+    },
   };
 });

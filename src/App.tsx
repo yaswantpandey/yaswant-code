@@ -12,28 +12,36 @@ import { tokenStorage } from './services/api';
 import { setRobotsDirective } from './services/seo';
 import { isPrivateView } from './services/router';
 
-// Admin Views
-import { AdminDashboardPage } from './views/AdminDashboardPage';
-import { AdminAuthGate } from './views/AdminAuthGate';
+// Lazy-loaded Views for High-Performance Code-Splitting
+const AdminDashboardPage   = React.lazy(() => import('./views/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
+const AdminAuthGate        = React.lazy(() => import('./views/AdminAuthGate').then(m => ({ default: m.AdminAuthGate })));
+const LandingPage          = React.lazy(() => import('./views/LandingPage').then(m => ({ default: m.LandingPage })));
+const CourseDiscoveryPage  = React.lazy(() => import('./views/CourseDiscoveryPage').then(m => ({ default: m.CourseDiscoveryPage })));
+const CourseDetailsPage    = React.lazy(() => import('./views/CourseDetailsPage').then(m => ({ default: m.CourseDetailsPage })));
+const StudentDashboardPage = React.lazy(() => import('./views/StudentDashboardPage').then(m => ({ default: m.StudentDashboardPage })));
+const CourseLearningPage   = React.lazy(() => import('./views/CourseLearningPage').then(m => ({ default: m.CourseLearningPage })));
+const QuizPage             = React.lazy(() => import('./views/QuizPage').then(m => ({ default: m.QuizPage })));
+const AssignmentPage       = React.lazy(() => import('./views/AssignmentPage').then(m => ({ default: m.AssignmentPage })));
+const CertificatePage      = React.lazy(() => import('./views/CertificatePage').then(m => ({ default: m.CertificatePage })));
+const LearningPathsPage    = React.lazy(() => import('./views/LearningPathsPage').then(m => ({ default: m.LearningPathsPage })));
+const CommunityPage        = React.lazy(() => import('./views/CommunityPage').then(m => ({ default: m.CommunityPage })));
+const StudentProfilePage   = React.lazy(() => import('./views/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
+const SettingsPage         = React.lazy(() => import('./views/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const BlogPage             = React.lazy(() => import('./views/BlogPage').then(m => ({ default: m.BlogPage })));
+const FreeResourcesPage    = React.lazy(() => import('./views/FreeResourcesPage').then(m => ({ default: m.FreeResourcesPage })));
+const NotesPage            = React.lazy(() => import('./views/NotesPage').then(m => ({ default: m.NotesPage })));
+const ToolsPage            = React.lazy(() => import('./views/ToolsPage').then(m => ({ default: m.ToolsPage })));
+const ProjectsPage         = React.lazy(() => import('./views/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 
-// Student & Public Views
-import { LandingPage } from './views/LandingPage';
-import { CourseDiscoveryPage } from './views/CourseDiscoveryPage';
-import { CourseDetailsPage } from './views/CourseDetailsPage';
-import { StudentDashboardPage } from './views/StudentDashboardPage';
-import { CourseLearningPage } from './views/CourseLearningPage';
-import { QuizPage } from './views/QuizPage';
-import { AssignmentPage } from './views/AssignmentPage';
-import { CertificatePage } from './views/CertificatePage';
-import { LearningPathsPage } from './views/LearningPathsPage';
-import { CommunityPage } from './views/CommunityPage';
-import { StudentProfilePage } from './views/StudentProfilePage';
-import { SettingsPage } from './views/SettingsPage';
-import { BlogPage } from './views/BlogPage';
-import { FreeResourcesPage } from './views/FreeResourcesPage';
-import { NotesPage } from './views/NotesPage';
-import { ToolsPage } from './views/ToolsPage';
-import { ProjectsPage } from './views/ProjectsPage';
+const ViewLoadingFallback: React.FC = () => (
+  <div className="flex-1 min-h-[50vh] flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
+    <div className="relative w-10 h-10">
+      <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-800" />
+      <div className="absolute inset-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+    </div>
+    <p className="mt-3 text-xs font-mono text-neutral-400 dark:text-neutral-500 tracking-wider uppercase">Loading experience...</p>
+  </div>
+);
 
 const isPathOrHashAdmin = () => {
   if (typeof window === 'undefined') return false;
@@ -71,7 +79,7 @@ const AppShell: React.FC = () => {
   if (isAdminRoute) {
     if (!isAdminAuthenticated) {
       return (
-        <>
+        <React.Suspense fallback={<ViewLoadingFallback />}>
           <AdminAuthGate 
             onAuthenticated={() => setIsAdminAuthenticated(true)}
             onExit={() => {
@@ -79,13 +87,15 @@ const AppShell: React.FC = () => {
             }}
           />
           <ToastContainer />
-        </>
+        </React.Suspense>
       );
     }
 
     return (
       <div className="min-h-screen bg-neutral-50/50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
-        <AdminDashboardPage />
+        <React.Suspense fallback={<ViewLoadingFallback />}>
+          <AdminDashboardPage />
+        </React.Suspense>
         <ToastContainer />
       </div>
     );
@@ -142,7 +152,9 @@ const AppShell: React.FC = () => {
 
       {/* Main Student Experience Area */}
       <main className={`flex-1 ${isLearningInterface ? 'overflow-hidden' : 'pb-28 md:pb-12'}`}>
-        {renderStudentView()}
+        <React.Suspense fallback={<ViewLoadingFallback />}>
+          {renderStudentView()}
+        </React.Suspense>
       </main>
 
       {/* Global Footer (hidden only on learning player for immersion) */}

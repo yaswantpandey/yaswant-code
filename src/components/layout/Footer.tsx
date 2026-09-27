@@ -122,7 +122,7 @@ export const Footer: React.FC = () => {
         },
         {
           title: 'LinkedIn',
-          href: 'https://linkedin.com/in/yaswant-pandey',
+          href: 'https://linkedin.com/in/yaswantdev',
           icon: Linkedin
         },
         {
