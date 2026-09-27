@@ -206,7 +206,7 @@ export const SearchModal: React.FC = () => {
                         className="p-3 rounded-2xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 flex items-center justify-between gap-3 cursor-pointer transition-all"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <img src={course.thumbnail} alt={course.title} className="w-12 h-12 rounded-xl object-cover shrink-0" />
+                          <img src={course.thumbnail} alt={course.title} width={48} height={48} loading="lazy" decoding="async" className="w-12 h-12 rounded-xl object-cover shrink-0" />
                           <div className="min-w-0">
                             <h4 className="text-sm font-semibold text-neutral-900 dark:text-white truncate">{course.title}</h4>
                             <p className="text-xs text-neutral-500 truncate">{course.instructor.name} • {course.difficulty} • {course.durationHours} hrs</p>
@@ -265,7 +265,7 @@ export const SearchModal: React.FC = () => {
                         className="p-3 rounded-2xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 flex items-center justify-between gap-3 cursor-pointer transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <img src={inst.avatar} alt={inst.name} className="w-10 h-10 rounded-full object-cover" />
+                          <img src={inst.avatar} alt={inst.name} width={40} height={40} loading="lazy" decoding="async" className="w-10 h-10 rounded-full object-cover" />
                           <div>
                             <div className="text-sm font-semibold text-neutral-900 dark:text-white">{inst.name}</div>
                             <div className="text-xs text-neutral-500 truncate max-w-sm">{inst.role}</div>

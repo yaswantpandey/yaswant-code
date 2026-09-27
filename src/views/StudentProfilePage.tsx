@@ -116,6 +116,10 @@ export const StudentProfilePage: React.FC = () => {
           <img
             src={avatarUrl}
             alt={studentName}
+            width={128}
+            height={128}
+            loading="lazy"
+            decoding="async"
             className="w-24 h-24 sm:w-32 sm:h-32 rounded-3xl object-cover ring-2 ring-neutral-300 dark:ring-neutral-700 shadow-xl"
           />
 

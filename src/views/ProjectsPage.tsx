@@ -289,6 +289,10 @@ export const ProjectsPage: React.FC = () => {
                     <img 
                       src={project.thumbnail} 
                       alt={project.title}
+                      width={640}
+                      height={360}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-85 group-hover:opacity-100" 
                     />

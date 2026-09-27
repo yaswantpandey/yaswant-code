@@ -564,8 +564,11 @@ export const ToolsPage: React.FC = () => {
                   <img
                     src={tool.thumbnail}
                     alt={tool.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    width={640}
+                    height={360}
                     loading="lazy"
+                    decoding="async"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 

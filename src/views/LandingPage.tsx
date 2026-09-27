@@ -247,6 +247,10 @@ export const LandingPage: React.FC = () => {
                   <img
                     src={course.thumbnail}
                     alt={course.title}
+                    width={640}
+                    height={360}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 left-3 flex gap-1.5">
@@ -283,6 +287,10 @@ export const LandingPage: React.FC = () => {
                       <img
                         src={course.instructor?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(course.instructor?.name || 'Yaswant Pandey')}&background=6366f1&color=fff`}
                         alt={course.instructor?.name || 'Instructor'}
+                        width={24}
+                        height={24}
+                        loading="lazy"
+                        decoding="async"
                         className="w-6 h-6 rounded-full object-cover"
                       />
                       <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">

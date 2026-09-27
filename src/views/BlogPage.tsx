@@ -205,6 +205,10 @@ export const BlogPage: React.FC = () => {
                   <img
                     src={featuredPost.author.avatar}
                     alt={featuredPost.author.name}
+                    width={40}
+                    height={40}
+                    loading="lazy"
+                    decoding="async"
                     className="w-10 h-10 rounded-full object-cover ring-2 ring-white/20"
                   />
                   <div>
@@ -225,6 +229,10 @@ export const BlogPage: React.FC = () => {
               <img
                 src={featuredPost.coverImage}
                 alt={featuredPost.title}
+                width={640}
+                height={360}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 opacity-80"
               />
               <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-neutral-900 via-neutral-900/40 to-transparent" />
@@ -272,8 +280,11 @@ export const BlogPage: React.FC = () => {
                     <img
                       src={post.coverImage}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      width={640}
+                      height={360}
                       loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-neutral-950/80 text-white backdrop-blur-md">
@@ -322,6 +333,10 @@ export const BlogPage: React.FC = () => {
                         <img
                           src={post.author.avatar}
                           alt={post.author.name}
+                          width={28}
+                          height={28}
+                          loading="lazy"
+                          decoding="async"
                           className="w-7 h-7 rounded-full object-cover"
                         />
                         <div>
@@ -451,6 +466,10 @@ export const BlogPage: React.FC = () => {
                 <img
                   src={activePost.author.avatar}
                   alt={activePost.author.name}
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  decoding="async"
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
@@ -468,6 +487,10 @@ export const BlogPage: React.FC = () => {
                 <img
                   src={activePost.coverImage}
                   alt={activePost.title}
+                  width={800}
+                  height={450}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>

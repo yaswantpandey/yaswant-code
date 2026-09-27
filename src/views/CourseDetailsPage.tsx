@@ -126,6 +126,10 @@ export const CourseDetailsPage: React.FC = () => {
               <img
                 src={selectedCourse.instructor.avatar}
                 alt={selectedCourse.instructor.name}
+                width={32}
+                height={32}
+                loading="lazy"
+                decoding="async"
                 className="w-8 h-8 rounded-full object-cover ring-1 ring-neutral-300 dark:ring-neutral-700"
               />
               <div>
@@ -195,6 +199,10 @@ export const CourseDetailsPage: React.FC = () => {
                     <img
                       src={selectedCourse.thumbnail}
                       alt={selectedCourse.title}
+                      width={640}
+                      height={360}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover opacity-80 group-hover:scale-105 transition-transform duration-300"
                     />
                     <div className="absolute inset-0 bg-neutral-950/40 flex items-center justify-center">
@@ -214,6 +222,10 @@ export const CourseDetailsPage: React.FC = () => {
                 <img
                   src={selectedCourse.thumbnail}
                   alt={selectedCourse.title}
+                  width={640}
+                  height={360}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -474,6 +486,10 @@ export const CourseDetailsPage: React.FC = () => {
             <img
               src={selectedCourse.instructor.avatar}
               alt={selectedCourse.instructor.name}
+              width={96}
+              height={96}
+              loading="lazy"
+              decoding="async"
               className="w-24 h-24 rounded-2xl object-cover ring-2 ring-neutral-300 dark:ring-neutral-700 shrink-0"
             />
             <div className="space-y-3 flex-1">

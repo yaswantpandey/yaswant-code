@@ -92,7 +92,22 @@ DefaultLanguage en-US
   ExpiresByType font/otf               "access plus 1 year"
 </IfModule>
 
-# 6. Gzip / Deflate Compression
+# 6. Brotli & Gzip / Deflate Compression
+<IfModule mod_brotli.c>
+  AddOutputFilterByType BROTLI_COMPRESS text/plain
+  AddOutputFilterByType BROTLI_COMPRESS text/html
+  AddOutputFilterByType BROTLI_COMPRESS text/xml
+  AddOutputFilterByType BROTLI_COMPRESS text/css
+  AddOutputFilterByType BROTLI_COMPRESS application/xml
+  AddOutputFilterByType BROTLI_COMPRESS application/xhtml+xml
+  AddOutputFilterByType BROTLI_COMPRESS application/rss+xml
+  AddOutputFilterByType BROTLI_COMPRESS application/javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/x-javascript
+  AddOutputFilterByType BROTLI_COMPRESS application/json
+  AddOutputFilterByType BROTLI_COMPRESS image/svg+xml
+  AddOutputFilterByType BROTLI_COMPRESS font/woff2
+</IfModule>
+
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/plain
   AddOutputFilterByType DEFLATE text/html
@@ -106,6 +121,21 @@ DefaultLanguage en-US
   AddOutputFilterByType DEFLATE application/json
   AddOutputFilterByType DEFLATE image/svg+xml
   AddOutputFilterByType DEFLATE font/woff2
+</IfModule>
+
+# 6b. Immutable Cache Headers for Vite Build Assets
+<IfModule mod_headers.c>
+  # 1-year immutable cache for hashed bundles in /assets/
+  <FilesMatch "\.(js|css|woff2|woff|ttf|wasm)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # HTML shell must revalidate
+  <FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+  </FilesMatch>
 </IfModule>
 
 # 7. Security Headers

@@ -198,6 +198,10 @@ export const MobileNav: React.FC = () => {
                     <img 
                       src={storedUser.avatar} 
                       alt={storedUser.name || 'User'}
+                      width={40}
+                      height={40}
+                      loading="lazy"
+                      decoding="async"
                       referrerPolicy="no-referrer" 
                       className="w-10 h-10 rounded-xl object-cover border border-neutral-200 dark:border-neutral-800 shadow-xs shrink-0"
                     />

@@ -271,6 +271,10 @@ export const StudentDashboardPage: React.FC = () => {
                   <img
                     src={enrolledCourses[0].thumbnail}
                     alt={enrolledCourses[0].title}
+                    width={192}
+                    height={108}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full sm:w-48 aspect-video rounded-xl object-cover ring-1 ring-neutral-200 dark:ring-neutral-800 shrink-0"
                   />
                   <div className="space-y-2 flex-1">
@@ -562,6 +566,10 @@ export const StudentDashboardPage: React.FC = () => {
                     <img
                       src={course.thumbnail}
                       alt={course.title}
+                      width={480}
+                      height={270}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute top-2.5 right-2.5 bg-neutral-950/80 px-2 py-0.5 rounded text-[10px] font-mono text-white">

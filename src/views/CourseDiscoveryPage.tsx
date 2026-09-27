@@ -378,6 +378,10 @@ export const CourseDiscoveryPage: React.FC = () => {
                       <img
                         src={course.thumbnail}
                         alt={course.title}
+                        width={640}
+                        height={360}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-2.5 left-2.5 flex gap-1.5">
@@ -450,6 +454,10 @@ export const CourseDiscoveryPage: React.FC = () => {
                             <img
                               src={course.instructor.avatar}
                               alt={course.instructor.name}
+                              width={20}
+                              height={20}
+                              loading="lazy"
+                              decoding="async"
                               className="w-5 h-5 rounded-full object-cover"
                             />
                             <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 truncate max-w-[110px]">
@@ -493,6 +501,10 @@ export const CourseDiscoveryPage: React.FC = () => {
                       <img
                         src={course.thumbnail}
                         alt={course.title}
+                        width={640}
+                        height={360}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-2 left-2 flex gap-1">
@@ -535,7 +547,15 @@ export const CourseDiscoveryPage: React.FC = () => {
                       <div className="flex items-center justify-between pt-3 border-t border-neutral-100 dark:border-neutral-800">
                         <div className="flex items-center gap-3 text-xs text-neutral-500">
                           <span className="flex items-center gap-1.5">
-                            <img src={course.instructor.avatar} alt={course.instructor.name} className="w-5 h-5 rounded-full object-cover" />
+                            <img
+                              src={course.instructor.avatar}
+                              alt={course.instructor.name}
+                              width={20}
+                              height={20}
+                              loading="lazy"
+                              decoding="async"
+                              className="w-5 h-5 rounded-full object-cover"
+                            />
                             <strong className="text-neutral-700 dark:text-neutral-300">{course.instructor.name}</strong>
                           </span>
                           <span>•</span>

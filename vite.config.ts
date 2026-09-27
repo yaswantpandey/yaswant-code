@@ -23,6 +23,9 @@ export default defineConfig(() => {
       watch: process.env.DISABLE_HMR === 'true' ? null : {},
     },
     build: {
+      target: 'es2022',
+      cssCodeSplit: true,
+      minify: 'esbuild',
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
