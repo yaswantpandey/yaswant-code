@@ -1,15 +1,35 @@
 import { Course, Instructor } from '../types/lms';
 import { PRIMARY_INSTRUCTOR } from '../config/brand';
 
+export function optimizeImageUrl(url: string, width: number = 600, quality: number = 75): string {
+  if (!url) return '';
+  if (url.includes('images.unsplash.com')) {
+    try {
+      const u = new URL(url);
+      u.searchParams.set('w', String(width));
+      u.searchParams.set('q', String(quality));
+      u.searchParams.set('auto', 'format');
+      u.searchParams.set('fit', 'crop');
+      return u.toString();
+    } catch {
+      return url;
+    }
+  }
+  return url;
+}
+
 export function mapApiCourseToLmsCourse(apiCourse: any): Course {
   const defaultInstructor: Instructor = PRIMARY_INSTRUCTOR;
+
+  const rawAvatar = apiCourse.instructor?.avatar || apiCourse.instructor_avatar || defaultInstructor.avatar;
+  const optimizedAvatar = optimizeImageUrl(rawAvatar, 96, 75);
 
   const instructor: Instructor = apiCourse.instructor && typeof apiCourse.instructor === 'object'
     ? {
         id: apiCourse.instructor.id || apiCourse.instructor_id || defaultInstructor.id,
         name: apiCourse.instructor.name || apiCourse.instructor_name || defaultInstructor.name,
         role: apiCourse.instructor.role || apiCourse.instructor_title || defaultInstructor.role,
-        avatar: apiCourse.instructor.avatar || apiCourse.instructor_avatar || defaultInstructor.avatar,
+        avatar: optimizedAvatar,
         bio: apiCourse.instructor.bio || defaultInstructor.bio,
         rating: Number(apiCourse.instructor.rating ?? defaultInstructor.rating),
         reviewsCount: Number(apiCourse.instructor.reviewsCount ?? apiCourse.instructor.reviews_count ?? defaultInstructor.reviewsCount),
@@ -27,7 +47,7 @@ export function mapApiCourseToLmsCourse(apiCourse: any): Course {
         id: apiCourse.instructor_id || defaultInstructor.id,
         name: apiCourse.instructor_name || defaultInstructor.name,
         role: apiCourse.instructor_title || defaultInstructor.role,
-        avatar: apiCourse.instructor_avatar || defaultInstructor.avatar,
+        avatar: optimizedAvatar,
         bio: apiCourse.instructor_bio || defaultInstructor.bio,
         rating: Number(apiCourse.instructor_rating ?? defaultInstructor.rating),
         reviewsCount: Number(apiCourse.instructor_reviews_count ?? defaultInstructor.reviewsCount),
@@ -47,7 +67,7 @@ export function mapApiCourseToLmsCourse(apiCourse: any): Course {
     title: apiCourse.title || '',
     tagline: apiCourse.tagline || apiCourse.short_description || '',
     description: apiCourse.description || '',
-    thumbnail: apiCourse.thumbnail || apiCourse.cover_image || '',
+    thumbnail: optimizeImageUrl(apiCourse.thumbnail || apiCourse.cover_image || '', 600, 75),
     instructor,
     category: apiCourse.category || 'General',
     difficulty: (['Beginner', 'Intermediate', 'Advanced', 'All Levels'].includes(apiCourse.difficulty)

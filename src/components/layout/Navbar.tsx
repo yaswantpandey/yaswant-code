@@ -53,14 +53,29 @@ export const Navbar: React.FC = () => {
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // Live Announcement Banner from MariaDB site_settings
+  // Live Announcement Banner from MariaDB site_settings (initialized synchronously to avoid CLS)
+  const DEFAULT_ANNOUNCEMENT = {
+    enabled: true,
+    badge: 'NEW RELEASE',
+    text: '🚀 Welcome to Yaswant Code — Direct ZIP developer downloads & university study notes now available!',
+    link: '#paths',
+    btnText: 'Explore Roadmaps →',
+  };
+
   const [announcement, setAnnouncement] = useState<{
     enabled: boolean;
     badge: string;
     text: string;
     link: string;
     btnText: string;
-  } | null>(null);
+  } | null>(() => {
+    try {
+      const cached = localStorage.getItem('yaswant_announcement');
+      return cached ? JSON.parse(cached) : DEFAULT_ANNOUNCEMENT;
+    } catch {
+      return DEFAULT_ANNOUNCEMENT;
+    }
+  });
 
   useEffect(() => {
     fetch('/api/settings.php')
@@ -69,13 +84,18 @@ export const Navbar: React.FC = () => {
         if (data.success && data.data) {
           const s = data.data;
           if (s.announcement_enabled === '1' && s.announcement_text) {
-            setAnnouncement({
+            const fresh = {
               enabled: true,
               badge: s.announcement_badge || 'ANNOUNCEMENT',
               text: s.announcement_text,
               link: s.announcement_link || '#paths',
               btnText: s.announcement_btn_text || 'Learn More →',
-            });
+            };
+            setAnnouncement(fresh);
+            try { localStorage.setItem('yaswant_announcement', JSON.stringify(fresh)); } catch {}
+          } else {
+            setAnnouncement(null);
+            try { localStorage.removeItem('yaswant_announcement'); } catch {}
           }
         }
       })

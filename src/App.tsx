@@ -12,7 +12,7 @@ import { isPrivateView } from './services/router';
 // Lazy-loaded Views for High-Performance Code-Splitting
 const AdminDashboardPage   = React.lazy(() => import('./views/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
 const AdminAuthGate        = React.lazy(() => import('./views/AdminAuthGate').then(m => ({ default: m.AdminAuthGate })));
-const LandingPage          = React.lazy(() => import('./views/LandingPage').then(m => ({ default: m.LandingPage })));
+import { LandingPage } from './views/LandingPage';
 const CourseDiscoveryPage  = React.lazy(() => import('./views/CourseDiscoveryPage').then(m => ({ default: m.CourseDiscoveryPage })));
 const CourseDetailsPage    = React.lazy(() => import('./views/CourseDetailsPage').then(m => ({ default: m.CourseDetailsPage })));
 const StudentDashboardPage = React.lazy(() => import('./views/StudentDashboardPage').then(m => ({ default: m.StudentDashboardPage })));
@@ -154,11 +154,10 @@ const AppShell: React.FC = () => {
       <main className={`flex-1 ${isLearningInterface ? 'overflow-hidden' : 'pb-28 md:pb-12'}`}>
         <React.Suspense fallback={<ViewLoadingFallback />}>
           {renderStudentView()}
+          {/* Global Footer (hidden only on learning player for immersion) */}
+          {!isLearningInterface && <Footer />}
         </React.Suspense>
       </main>
-
-      {/* Global Footer (hidden only on learning player for immersion) */}
-      {!isLearningInterface && <Footer />}
 
       {/* Mobile-Friendly Thumb Navigation */}
       {!isLearningInterface && <MobileNav />}

@@ -31,7 +31,11 @@ export default defineConfig(() => {
         output: {
           manualChunks(id) {
             if (id.includes('node_modules')) {
-              if (id.includes('firebase')) {
+              if (
+                id.includes('firebase') ||
+                id.includes('@firebase') ||
+                id.includes('re2js')
+              ) {
                 return 'vendor-firebase';
               }
               if (id.includes('lucide-react')) {
@@ -43,12 +47,10 @@ export default defineConfig(() => {
               if (
                 id.includes('react') ||
                 id.includes('react-dom') ||
-                id.includes('framer-motion') ||
-                id.includes('motion')
+                id.includes('scheduler')
               ) {
                 return 'vendor-framework';
               }
-              return 'vendor-utils';
             }
           },
         },

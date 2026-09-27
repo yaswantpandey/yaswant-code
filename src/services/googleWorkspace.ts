@@ -142,10 +142,31 @@ export class GoogleWorkspaceService {
     }
   }
 
+function ensureGsiScript(): Promise<void> {
+  if (typeof window === 'undefined') return Promise.resolve();
+  if (window.google?.accounts?.oauth2) return Promise.resolve();
+  return new Promise((resolve) => {
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve());
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve();
+    script.onerror = () => resolve();
+    document.head.appendChild(script);
+  });
+}
+
   public async requestOAuthToken(): Promise<string> {
+    await ensureGsiScript();
+
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.google?.accounts?.oauth2) {
-        reject(new Error('Google Identity Services library is not loaded yet. Please try again in a few seconds.'));
+        reject(new Error('Google Identity Services library could not be loaded. Please check your connection.'));
         return;
       }
 
