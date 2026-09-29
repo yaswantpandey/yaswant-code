@@ -115,8 +115,8 @@ if ($method === 'POST') {
 
     $courseId = 'course-' . uniqid();
     $stmt = $pdo->prepare("
-        INSERT INTO courses (id, instructor_id, title, tagline, description, thumbnail, category, difficulty, price, duration_hours, lessons_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO courses (id, instructor_id, title, tagline, description, thumbnail, category, difficulty, price, duration_hours, lessons_count, drive_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
     $stmt->execute([
         $courseId,
@@ -130,6 +130,7 @@ if ($method === 'POST') {
         $input['price'] ?? 0.00,
         $input['duration_hours'] ?? 10,
         $input['lessons_count'] ?? 15,
+        $input['drive_url'] ?? ($input['driveUrl'] ?? null),
     ]);
 
     jsonResponse(true, ['id' => $courseId], 'Course created successfully', 201);

@@ -192,9 +192,25 @@ function ensure_extended_tables(PDO $pdo): void
                 setting_key TEXT PRIMARY KEY,
                 setting_value TEXT,
                 updated_at TEXT DEFAULT CURRENT_TIMESTAMP
-            );
         ");
     }
+
+    // Ensure drive_url column exists on courses and lessons
+    try {
+        if ($driver === 'mysql') {
+            $pdo->exec("ALTER TABLE `courses` ADD COLUMN `drive_url` VARCHAR(500) NULL");
+        } else {
+            $pdo->exec("ALTER TABLE courses ADD COLUMN drive_url TEXT");
+        }
+    } catch (Throwable $e) {}
+
+    try {
+        if ($driver === 'mysql') {
+            $pdo->exec("ALTER TABLE `lessons` ADD COLUMN `drive_url` VARCHAR(500) NULL");
+        } else {
+            $pdo->exec("ALTER TABLE lessons ADD COLUMN drive_url TEXT");
+        }
+    } catch (Throwable $e) {}
 
     // Seed default settings if empty
     try {
@@ -589,7 +605,7 @@ if ($method === 'GET' && $action === 'courses') {
         SELECT c.id, c.title, c.tagline, c.description, c.thumbnail, c.category, c.difficulty,
                c.rating, c.reviews_count, c.students_count, c.duration_hours, c.lessons_count,
                c.price, c.original_price, c.discount_percentage,
-               c.is_bestseller, c.is_featured, c.is_deleted, c.language, c.created_at,
+               c.is_bestseller, c.is_featured, c.is_deleted, c.language, c.created_at, c.drive_url,
                u.id AS instructor_id, u.name AS instructor_name, u.email AS instructor_email
         FROM courses c
         LEFT JOIN users u ON c.instructor_id = u.id
@@ -617,6 +633,7 @@ if ($method === 'GET' && $action === 'courses') {
             'isBestseller'   => (bool)$c['is_bestseller'],
             'isFeatured'     => (bool)$c['is_featured'],
             'isDeleted'      => (bool)$c['is_deleted'],
+            'driveUrl'       => $c['drive_url'] ?? '',
             'createdAt'      => $c['created_at'],
             'instructor'     => [
                 'id'    => $c['instructor_id'] ?? '',
@@ -641,12 +658,13 @@ if ($method === 'POST' && $action === 'create_course') {
     $id = generate_id('course');
     $instructorId = $currentAdmin['id'];
     $price = isset($input['price']) ? (float)$input['price'] : 0.00;
+    $driveUrl = str_input($input, 'drive_url') ?: (str_input($input, 'driveUrl') ?: null);
 
     $stmt = $pdo->prepare('
         INSERT INTO courses
           (id, instructor_id, title, tagline, description, thumbnail, category,
-           difficulty, price, original_price, discount_percentage, duration_hours, lessons_count, language, is_featured, is_bestseller)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+           difficulty, price, original_price, discount_percentage, duration_hours, lessons_count, language, is_featured, is_bestseller, drive_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ');
     $stmt->execute([
         $id,
@@ -665,6 +683,7 @@ if ($method === 'POST' && $action === 'create_course') {
         str_input($input, 'language') ?: 'English',
         !empty($input['is_featured']) ? 1 : 0,
         !empty($input['is_bestseller']) ? 1 : 0,
+        $driveUrl
     ]);
 
     ok(['id' => $id], 'Course created successfully', 201);
@@ -678,9 +697,14 @@ if ($method === 'POST' && $action === 'update_course') {
     $id = str_input($input, 'id');
     if (!$id) fail('Course ID is required.', 422);
 
+    if (isset($input['driveUrl']) && !isset($input['drive_url'])) {
+        $input['drive_url'] = $input['driveUrl'];
+    }
+
     $allowed = ['title', 'tagline', 'description', 'thumbnail', 'category', 'difficulty',
                 'price', 'original_price', 'discount_percentage', 'duration_hours',
-                'lessons_count', 'language', 'is_featured', 'is_bestseller', 'is_deleted'];
+                'lessons_count', 'language', 'is_featured', 'is_bestseller', 'is_deleted',
+                'drive_url'];
     $sets = [];
     $vals = [];
 
@@ -2196,6 +2220,7 @@ if ($action === 'course_curriculum') {
                         'codeSnippet'      => $l['code_snippet'] ?? '',
                         'codeLanguage'     => $l['code_language'] ?? 'typescript',
                         'orderIndex'       => (int)$l['order_index'],
+                        'driveUrl'         => $l['drive_url'] ?? '',
                     ];
                 }, $lessons)
             ];
@@ -2249,14 +2274,15 @@ if ($method === 'POST' && $action === 'create_lesson') {
     $duration = $b['duration'] ?? '15:00';
     $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
     $videoUrl = $b['videoUrl'] ?? '';
+    $driveUrl = $b['driveUrl'] ?? ($b['drive_url'] ?? '');
     $previewAvailable = !empty($b['previewAvailable']) ? 1 : 0;
     $description = $b['description'] ?? '';
     $codeSnippet = $b['codeSnippet'] ?? '';
     $codeLanguage = $b['codeLanguage'] ?? 'typescript';
     $orderIndex = (int)($b['orderIndex'] ?? 0);
 
-    $stmt = $pdo->prepare("INSERT INTO lessons (id, chapter_id, title, duration, type, video_url, preview_available, description, code_snippet, code_language, order_index) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
-    $stmt->execute([$id, $b['chapterId'], $b['title'], $duration, $type, $videoUrl, $previewAvailable, $description, $codeSnippet, $codeLanguage, $orderIndex]);
+    $stmt = $pdo->prepare("INSERT INTO lessons (id, chapter_id, title, duration, type, video_url, preview_available, description, code_snippet, code_language, order_index, drive_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
+    $stmt->execute([$id, $b['chapterId'], $b['title'], $duration, $type, $videoUrl, $previewAvailable, $description, $codeSnippet, $codeLanguage, $orderIndex, $driveUrl]);
 
     ok(['id' => $id], 'Lesson created successfully');
 }
@@ -2266,7 +2292,8 @@ if ($method === 'POST' && $action === 'update_lesson') {
     if (empty($b['id'])) fail('Lesson ID is required.', 400);
 
     $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
-    $stmt = $pdo->prepare("UPDATE lessons SET title=?, duration=?, type=?, video_url=?, preview_available=?, description=?, code_snippet=?, code_language=?, order_index=? WHERE id=?");
+    $driveUrl = $b['driveUrl'] ?? ($b['drive_url'] ?? '');
+    $stmt = $pdo->prepare("UPDATE lessons SET title=?, duration=?, type=?, video_url=?, preview_available=?, description=?, code_snippet=?, code_language=?, order_index=?, drive_url=? WHERE id=?");
     $stmt->execute([
         $b['title'] ?? '',
         $b['duration'] ?? '15:00',
@@ -2277,6 +2304,7 @@ if ($method === 'POST' && $action === 'update_lesson') {
         $b['codeSnippet'] ?? '',
         $b['codeLanguage'] ?? 'typescript',
         (int)($b['orderIndex'] ?? 0),
+        $driveUrl,
         $b['id']
     ]);
 

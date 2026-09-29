@@ -39,6 +39,7 @@ import {
   Save,
   Radio,
   FolderGit2,
+  FolderOpen,
   Map,
   Layout,
   Link,
@@ -268,6 +269,7 @@ export interface AdminCurriculumLesson {
   codeSnippet: string;
   codeLanguage: string;
   orderIndex: number;
+  driveUrl?: string;
 }
 
 export interface AdminCurriculumChapter {
@@ -322,6 +324,7 @@ interface AdminCourse {
   isFeatured: boolean;
   isDeleted: boolean;
   createdAt: string;
+  driveUrl?: string;
   instructor: {
     id: string;
     name: string;
@@ -644,7 +647,8 @@ export const AdminDashboardPage: React.FC = () => {
     description: '',
     codeSnippet: '',
     codeLanguage: 'typescript',
-    orderIndex: 0
+    orderIndex: 0,
+    driveUrl: ''
   });
 
   // Database Optimization
@@ -679,6 +683,7 @@ export const AdminDashboardPage: React.FC = () => {
     lessonsCount: 30,
     isFeatured: true,
     isBestseller: false,
+    driveUrl: '',
   });
   const [isSubmittingCourse, setIsSubmittingCourse] = useState<boolean>(false);
 
@@ -1528,7 +1533,8 @@ export const AdminDashboardPage: React.FC = () => {
         duration_hours: Number(courseForm.durationHours) || 10,
         lessons_count: Number(courseForm.lessonsCount) || 15,
         is_featured: courseForm.isFeatured,
-        is_bestseller: courseForm.isBestseller
+        is_bestseller: courseForm.isBestseller,
+        drive_url: courseForm.driveUrl
       };
 
       const res = await adminFetch(action, {
@@ -1567,7 +1573,8 @@ export const AdminDashboardPage: React.FC = () => {
       durationHours: c.durationHours,
       lessonsCount: c.lessonsCount,
       isFeatured: c.isFeatured,
-      isBestseller: c.isBestseller
+      isBestseller: c.isBestseller,
+      driveUrl: c.driveUrl || '',
     });
     setIsCourseModalOpen(true);
   };
@@ -2252,6 +2259,7 @@ export const AdminDashboardPage: React.FC = () => {
                       lessonsCount: 30,
                       isFeatured: true,
                       isBestseller: false,
+                      driveUrl: '',
                     });
                     setIsCourseModalOpen(true);
                   }}
@@ -2479,6 +2487,7 @@ export const AdminDashboardPage: React.FC = () => {
                   lessonsCount: 30,
                   isFeatured: true,
                   isBestseller: false,
+                  driveUrl: '',
                 });
                 setIsCourseModalOpen(true);
               }}
@@ -2525,6 +2534,20 @@ export const AdminDashboardPage: React.FC = () => {
                           <Badge variant="neutral" size="sm" className="bg-rose-500/10 text-rose-500">
                             Archived
                           </Badge>
+                        )}
+                        {c.driveUrl && (
+                          <a
+                            href={c.driveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
+                            title="Open Google Drive Link"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <FolderOpen className="w-2.5 h-2.5" />
+                            <span>Drive</span>
+                            <ExternalLink className="w-2 h-2 opacity-70" />
+                          </a>
                         )}
                       </div>
 
@@ -4095,6 +4118,25 @@ export const AdminDashboardPage: React.FC = () => {
                   onChange={(e) => setCourseForm({ ...courseForm, thumbnail: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono"
                 />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block font-semibold text-neutral-700 dark:text-neutral-300">
+                    Google Drive Course Link (Folder or Shared Files)
+                  </label>
+                  <span className="text-[11px] text-indigo-500 font-medium">Shared Course Materials</span>
+                </div>
+                <input
+                  type="url"
+                  value={courseForm.driveUrl}
+                  onChange={(e) => setCourseForm({ ...courseForm, driveUrl: e.target.value })}
+                  placeholder="https://drive.google.com/drive/folders/... or Drive file link"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-xs"
+                />
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-1">
+                  Paste your Google Drive link here. Students will be able to access course notes, assets, and project files directly on the Course Details & Learning player.
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -6470,7 +6512,8 @@ export const AdminDashboardPage: React.FC = () => {
                               description: '',
                               codeSnippet: '',
                               codeLanguage: 'typescript',
-                              orderIndex: 0
+                              orderIndex: 0,
+                              driveUrl: ''
                             });
                             setIsLessonModalOpen(true);
                           }}
@@ -6511,6 +6554,11 @@ export const AdminDashboardPage: React.FC = () => {
                                   FREE PREVIEW
                                 </span>
                               )}
+                              {les.driveUrl && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-400">
+                                  DRIVE
+                                </span>
+                              )}
                               {les.codeSnippet && (
                                 <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
                                   CODE
@@ -6535,7 +6583,8 @@ export const AdminDashboardPage: React.FC = () => {
                                     description: les.description || '',
                                     codeSnippet: les.codeSnippet || '',
                                     codeLanguage: les.codeLanguage || 'typescript',
-                                    orderIndex: les.orderIndex || 0
+                                    orderIndex: les.orderIndex || 0,
+                                    driveUrl: les.driveUrl || ''
                                   });
                                   setIsLessonModalOpen(true);
                                 }}
@@ -6630,15 +6679,29 @@ export const AdminDashboardPage: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">Video Stream URL</label>
+                  <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">Video / Drive Stream URL</label>
                   <input
                     type="url"
                     value={lessonForm.videoUrl}
                     onChange={(e) => setLessonForm({ ...lessonForm, videoUrl: e.target.value })}
-                    placeholder="https://youtu.be/... or .mp4"
-                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono"
+                    placeholder="https://drive.google.com/file/d/... or YouTube or .mp4"
+                    className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-xs"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block font-semibold mb-1 text-neutral-700 dark:text-neutral-300">Lesson Google Drive Resources (Optional)</label>
+                <input
+                  type="url"
+                  value={lessonForm.driveUrl}
+                  onChange={(e) => setLessonForm({ ...lessonForm, driveUrl: e.target.value })}
+                  placeholder="https://drive.google.com/drive/folders/... or Drive file link"
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200 dark:border-neutral-750 text-neutral-900 dark:text-white font-mono text-xs"
+                />
+                <p className="text-[11px] text-neutral-400 mt-1">
+                  Supports Google Drive video links (automatically converted to embedded player) or shared materials folder.
+                </p>
               </div>
 
               <div>

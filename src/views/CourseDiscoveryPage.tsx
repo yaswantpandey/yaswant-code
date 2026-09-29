@@ -14,7 +14,8 @@ import {
   X, 
   SlidersHorizontal,
   Sparkles,
-  RotateCcw
+  RotateCcw,
+  FolderOpen
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
@@ -384,11 +385,16 @@ export const CourseDiscoveryPage: React.FC = () => {
                         decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+                      <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
                         {course.isBestseller && (
                           <Badge variant="primary" size="sm">Bestseller</Badge>
                         )}
                         <Badge variant="neutral" size="sm">{course.difficulty}</Badge>
+                        {course.driveUrl && (
+                          <Badge variant="purple" size="sm" icon={<FolderOpen className="w-2.5 h-2.5 text-indigo-400" />}>
+                            Drive
+                          </Badge>
+                        )}
                       </div>
 
                       {/* Bookmark toggle */}
@@ -507,9 +513,14 @@ export const CourseDiscoveryPage: React.FC = () => {
                         decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute top-2 left-2 flex gap-1">
+                      <div className="absolute top-2 left-2 flex flex-wrap gap-1">
                         {course.isBestseller && (
                           <Badge variant="primary" size="sm">Bestseller</Badge>
+                        )}
+                        {course.driveUrl && (
+                          <Badge variant="purple" size="sm" icon={<FolderOpen className="w-2.5 h-2.5 text-indigo-400" />}>
+                            Drive Included
+                          </Badge>
                         )}
                       </div>
                     </div>

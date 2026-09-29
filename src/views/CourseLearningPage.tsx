@@ -12,32 +12,14 @@ import {
   Check, 
   Menu, 
   HelpCircle,
-  BookOpen
+  BookOpen,
+  ExternalLink,
+  FolderOpen,
+  HardDrive
 } from 'lucide-react';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-
-// Utility to parse YouTube, Vimeo, or direct HTML5 video URLs
-const getVideoEmbedUrl = (url?: string): { type: 'youtube' | 'vimeo' | 'video' | 'none'; embedUrl: string } => {
-  if (!url || typeof url !== 'string') return { type: 'none', embedUrl: '' };
-  const trimmed = url.trim();
-  if (!trimmed) return { type: 'none', embedUrl: '' };
-
-  // YouTube match
-  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-  if (ytMatch && ytMatch[1]) {
-    return { type: 'youtube', embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0` };
-  }
-
-  // Vimeo match
-  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/)(\d+)/i);
-  if (vimeoMatch && vimeoMatch[1]) {
-    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1` };
-  }
-
-  // Direct video file or cloud storage URL
-  return { type: 'video', embedUrl: trimmed };
-};
+import { getVideoEmbedUrl } from '../services/mediaEmbed';
 
 export const CourseLearningPage: React.FC = () => {
   const { 
@@ -135,6 +117,20 @@ export const CourseLearningPage: React.FC = () => {
             </div>
             <span className="font-mono text-neutral-200">{selectedCourse.progressPercent || 0}%</span>
           </div>
+
+          {selectedCourse.driveUrl && (
+            <a
+              href={selectedCourse.driveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 hover:text-white border border-indigo-500/30 text-xs font-medium transition-all shadow-sm"
+              title="Open Google Drive Course Materials & Repository"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">Google Drive</span>
+              <ExternalLink className="w-3 h-3 opacity-70" />
+            </a>
+          )}
 
           <Button
             variant="outline"
@@ -234,17 +230,32 @@ export const CourseLearningPage: React.FC = () => {
         {/* Center Video Player & Content Scroll Area */}
         <main className="flex-1 flex flex-col overflow-y-auto bg-neutral-950">
           
-          {/* ONLY SHOW VIDEO IF VIDEO URL IS ACTUALLY IN DATABASE */}
+          {/* VIDEO / DRIVE PLAYER */}
           {hasVideo && videoData && videoData.type !== 'none' && (
-            <div className="w-full aspect-video sm:max-h-[58vh] bg-black relative flex items-center justify-center border-b border-neutral-850">
-              {videoData.type === 'youtube' || videoData.type === 'vimeo' ? (
-                <iframe
-                  src={videoData.embedUrl}
-                  title={selectedLesson.title}
-                  className="w-full h-full border-0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+            <div className="w-full aspect-video sm:max-h-[58vh] bg-black relative flex items-center justify-center border-b border-neutral-850 group">
+              {videoData.type === 'youtube' || videoData.type === 'vimeo' || videoData.type === 'googledrive' || videoData.type === 'googledrive-folder' ? (
+                <div className="relative w-full h-full">
+                  <iframe
+                    src={videoData.embedUrl}
+                    title={selectedLesson.title}
+                    className="w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                  {(videoData.type === 'googledrive' || videoData.type === 'googledrive-folder') && (
+                    <a
+                      href={videoData.driveInfo?.directUrl || selectedLesson.videoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute top-3 right-3 z-20 px-3 py-1.5 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 text-neutral-200 hover:text-white border border-neutral-700/80 shadow-xl text-xs font-semibold flex items-center gap-1.5 backdrop-blur-md transition-all"
+                      title="Open file directly in Google Drive"
+                    >
+                      <FolderOpen className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Open in Drive</span>
+                      <ExternalLink className="w-3 h-3 text-neutral-400" />
+                    </a>
+                  )}
+                </div>
               ) : (
                 <video
                   src={videoData.embedUrl}
@@ -269,6 +280,18 @@ export const CourseLearningPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
+                {selectedCourse.driveUrl && (
+                  <a
+                    href={selectedCourse.driveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 border border-indigo-500/30 text-xs font-medium flex items-center gap-1.5 transition-colors"
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Course Drive</span>
+                    <ExternalLink className="w-3 h-3 opacity-70" />
+                  </a>
+                )}
                 <Button
                   variant="outline"
                   size="sm"
@@ -279,6 +302,50 @@ export const CourseLearningPage: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            {/* Google Drive Materials Banner (If lesson or course has a Drive link) */}
+            {(selectedLesson.driveUrl || selectedCourse.driveUrl) && (
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/40 via-neutral-900 to-neutral-900 border border-indigo-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center shrink-0">
+                    <FolderOpen className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-bold text-white">Google Drive Course Resources</h4>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-mono">Drive Cloud</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400">
+                      {selectedLesson.driveUrl 
+                        ? 'Specific lecture files, starter templates, and notebooks for this lesson.' 
+                        : 'Full course workspace repository, slides, and code assets on Google Drive.'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-stretch sm:self-auto shrink-0">
+                  <a
+                    href={selectedLesson.driveUrl || selectedCourse.driveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
+                  >
+                    <span>Open in Google Drive</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedLesson.driveUrl || selectedCourse.driveUrl || '');
+                      addToast("Link Copied", "Google Drive link copied to clipboard.", "success");
+                    }}
+                    className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+                    title="Copy Drive Link"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Real Lesson Description from Database (if available) */}
             {selectedLesson.description && selectedLesson.description.trim() !== '' && (
@@ -397,7 +464,45 @@ export const CourseLearningPage: React.FC = () => {
 
             {/* Resources Tab */}
             {activeRightTab === 'resources' && (
-              <div className="p-4 flex-1 overflow-y-auto space-y-3">
+              <div className="p-4 flex-1 overflow-y-auto space-y-4">
+                {/* Google Drive Repository Hub Card */}
+                {(selectedLesson.driveUrl || selectedCourse.driveUrl || videoData?.type === 'googledrive') && (
+                  <div className="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FolderOpen className="w-4 h-4 text-indigo-400" />
+                        <span className="text-xs font-bold text-white">Google Drive Repository</span>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-mono">Cloud Sync</span>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 leading-relaxed">
+                      Course materials, lecture notes, and starter code are synced to Google Drive for quick cloud access and downloads.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={selectedLesson.driveUrl || selectedCourse.driveUrl || videoData?.driveInfo?.directUrl || selectedLesson.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                      >
+                        <span>Access Google Drive</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        onClick={() => {
+                          const driveLink = selectedLesson.driveUrl || selectedCourse.driveUrl || videoData?.driveInfo?.directUrl || selectedLesson.videoUrl || '';
+                          navigator.clipboard.writeText(driveLink);
+                          addToast("Link Copied", "Google Drive URL copied to clipboard.", "success");
+                        }}
+                        className="p-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition-colors"
+                        title="Copy Link"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-xs font-bold uppercase tracking-wider text-neutral-400 mb-2">
                   Lesson Materials
                 </div>
@@ -427,9 +532,11 @@ export const CourseLearningPage: React.FC = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="p-6 text-center text-xs text-neutral-500">
-                    No downloadable files attached to this lesson.
-                  </div>
+                  !selectedLesson.driveUrl && !selectedCourse.driveUrl && (
+                    <div className="p-6 text-center text-xs text-neutral-500">
+                      No downloadable files attached to this lesson.
+                    </div>
+                  )
                 )}
               </div>
             )}

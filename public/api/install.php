@@ -88,6 +88,8 @@ ensure_column($pdo, 'courses', 'is_featured', 'TINYINT(1) DEFAULT 0');
 ensure_column($pdo, 'courses', 'is_bestseller', 'TINYINT(1) DEFAULT 0');
 ensure_column($pdo, 'courses', 'projects_count', 'INT UNSIGNED DEFAULT 1');
 ensure_column($pdo, 'courses', 'has_certificate', 'TINYINT(1) DEFAULT 1');
+ensure_column($pdo, 'courses', 'drive_url', 'VARCHAR(500) NULL');
+ensure_column($pdo, 'lessons', 'drive_url', 'VARCHAR(500) NULL');
 ensure_column($pdo, 'users', 'is_active', 'TINYINT(1) DEFAULT 1');
 
 // ── 1. Users ─────────────────────────────────────────────────────────────────
@@ -167,6 +169,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
     `language`            VARCHAR(50)   DEFAULT 'English',
     `has_certificate`     TINYINT(1)    DEFAULT 1,
     `projects_count`      INT UNSIGNED  DEFAULT 1,
+    `drive_url`           VARCHAR(500)  NULL,
     `created_at`          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at`          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_category   (category),
@@ -220,6 +223,7 @@ CREATE TABLE IF NOT EXISTS `lessons` (
     `duration`          VARCHAR(50)  NOT NULL,
     `type`              ENUM('video','quiz','assignment','reading') NOT NULL DEFAULT 'video',
     `video_url`         VARCHAR(500) NULL,
+    `drive_url`         VARCHAR(500) NULL,
     `preview_available` TINYINT(1)   DEFAULT 0,
     `description`       LONGTEXT     NULL,
     `code_snippet`      LONGTEXT     NULL,

@@ -99,6 +99,7 @@ export function mapApiCourseToLmsCourse(apiCourse: any): Course {
       ? apiCourse.whatYouWillLearn 
       : (Array.isArray(apiCourse.what_you_will_learn) ? apiCourse.what_you_will_learn : []),
     requirements: Array.isArray(apiCourse.requirements) ? apiCourse.requirements : [],
+    driveUrl: apiCourse.driveUrl || apiCourse.drive_url || apiCourse.googleDriveUrl || apiCourse.google_drive_url || '',
     modules: Array.isArray(apiCourse.modules) 
       ? apiCourse.modules.map((m: any) => ({
           id: String(m.id),
@@ -119,6 +120,7 @@ export function mapApiCourseToLmsCourse(apiCourse: any): Course {
                       locked: Boolean(l.locked),
                       previewAvailable: Boolean(l.previewAvailable ?? l.preview_available),
                       videoUrl: l.videoUrl || l.video_url || '',
+                      driveUrl: l.driveUrl || l.drive_url || l.googleDriveUrl || l.google_drive_url || '',
                       description: l.description || '',
                       codeSnippet: l.codeSnippet || l.code_snippet || '',
                       codeLanguage: l.codeLanguage || l.code_language || '',

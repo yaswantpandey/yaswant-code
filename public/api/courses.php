@@ -131,7 +131,7 @@ if ($method === 'GET') {
             SELECT c.id, c.title, c.tagline, c.thumbnail, c.category, c.difficulty,
                    c.rating, c.reviews_count, c.students_count, c.price, c.original_price,
                    c.discount_percentage, c.duration_hours, c.lessons_count,
-                   c.is_bestseller, c.has_certificate, c.language,
+                   c.is_bestseller, c.has_certificate, c.language, c.drive_url,
                    u.name AS instructor_name, u.avatar AS instructor_avatar
             FROM courses c
             JOIN users u ON c.instructor_id = u.id
@@ -183,7 +183,7 @@ if ($method === 'GET') {
         SELECT c.id, c.title, c.tagline, c.description, c.thumbnail, c.category, c.difficulty,
                c.rating, c.reviews_count, c.students_count, c.price, c.original_price,
                c.discount_percentage, c.duration_hours, c.lessons_count,
-               c.is_bestseller, c.is_featured, c.has_certificate, c.language,
+               c.is_bestseller, c.is_featured, c.has_certificate, c.language, c.drive_url,
                u.name AS instructor_name, u.avatar AS instructor_avatar, u.title AS instructor_title
         FROM courses c
         LEFT JOIN users u ON c.instructor_id = u.id
@@ -334,6 +334,7 @@ function cast_course(array $c): array {
     $c['is_bestseller']       = (bool)($c['is_bestseller'] ?? false);
     $c['is_featured']         = (bool)($c['is_featured'] ?? false);
     $c['has_certificate']     = (bool)($c['has_certificate'] ?? true);
+    $c['driveUrl']            = $c['drive_url'] ?? '';
     return $c;
 }
 
@@ -341,6 +342,7 @@ function cast_lesson(array $l): array {
     $l['preview_available'] = (bool)($l['preview_available'] ?? false);
     $l['previewAvailable']  = $l['preview_available'];
     $l['videoUrl']          = $l['video_url'] ?? '';
+    $l['driveUrl']          = $l['drive_url'] ?? '';
     $l['codeSnippet']       = $l['code_snippet'] ?? '';
     $l['codeLanguage']      = $l['code_language'] ?? '';
     return $l;

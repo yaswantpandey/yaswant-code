@@ -20,29 +20,14 @@ import {
   FileText, 
   ArrowRight,
   Sparkles,
-  Award
+  Award,
+  FolderOpen,
+  ExternalLink
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
-
-const getVideoEmbedUrl = (url?: string): { type: 'youtube' | 'vimeo' | 'video' | 'none'; embedUrl: string } => {
-  if (!url || typeof url !== 'string') return { type: 'none', embedUrl: '' };
-  const trimmed = url.trim();
-  if (!trimmed) return { type: 'none', embedUrl: '' };
-
-  const ytMatch = trimmed.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-  if (ytMatch && ytMatch[1]) {
-    return { type: 'youtube', embedUrl: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?autoplay=1&rel=0` };
-  }
-
-  const vimeoMatch = trimmed.match(/(?:vimeo\.com\/)(\d+)/i);
-  if (vimeoMatch && vimeoMatch[1]) {
-    return { type: 'vimeo', embedUrl: `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1` };
-  }
-
-  return { type: 'video', embedUrl: trimmed };
-};
+import { getVideoEmbedUrl } from '../services/mediaEmbed';
 
 export const CourseDetailsPage: React.FC = () => {
   const { 
@@ -106,6 +91,11 @@ export const CourseDetailsPage: React.FC = () => {
             <Badge variant="neutral" size="sm">{selectedCourse.category}</Badge>
             {selectedCourse.isBestseller && (
               <Badge variant="warning" size="sm">Bestseller</Badge>
+            )}
+            {selectedCourse.driveUrl && (
+              <Badge variant="purple" size="sm" icon={<FolderOpen className="w-3 h-3 text-indigo-400" />}>
+                Google Drive Resources Included
+              </Badge>
             )}
           </div>
 
@@ -171,7 +161,7 @@ export const CourseDetailsPage: React.FC = () => {
               <div className="relative aspect-video rounded-2xl overflow-hidden bg-black mb-5 group">
                 {isPlayingPreview ? (
                   <div className="relative w-full h-full">
-                    {previewVideo.type === 'youtube' || previewVideo.type === 'vimeo' ? (
+                    {previewVideo.type === 'youtube' || previewVideo.type === 'vimeo' || previewVideo.type === 'googledrive' || previewVideo.type === 'googledrive-folder' ? (
                       <iframe
                         src={previewVideo.embedUrl}
                         title={selectedCourse.title}
@@ -280,6 +270,30 @@ export const CourseDetailsPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Google Drive Direct Repository Link (if set) */}
+            {selectedCourse.driveUrl && (
+              <div className="mb-6 p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-2.5 truncate">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <FolderOpen className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="truncate">
+                    <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">Google Drive Materials</div>
+                    <div className="text-[10px] text-neutral-500 truncate">Course starter files & slides</div>
+                  </div>
+                </div>
+                <a
+                  href={selectedCourse.driveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-1 shrink-0 transition-colors shadow-sm"
+                >
+                  <span>Open Drive</span>
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            )}
+
             {/* Guarantee and Features */}
             <div className="space-y-2 text-xs text-neutral-600 dark:text-neutral-400 pt-4 border-t border-neutral-100 dark:border-neutral-800">
               <div className="font-semibold text-neutral-900 dark:text-white mb-2">
@@ -305,6 +319,12 @@ export const CourseDetailsPage: React.FC = () => {
                 <Sparkles className="w-4 h-4 text-amber-500" />
                 <span>Direct Q&A thread with instructor</span>
               </div>
+              {selectedCourse.driveUrl && (
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-medium">
+                  <FolderOpen className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <span>Google Drive cloud repository & offline downloads</span>
+                </div>
+              )}
             </div>
           </GlassCard>
         </div>

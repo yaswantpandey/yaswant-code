@@ -29,6 +29,7 @@ export interface Lesson {
   locked: boolean;
   previewAvailable?: boolean;
   videoUrl?: string;
+  driveUrl?: string;
   description?: string;
   codeSnippet?: string;
   codeLanguage?: string;
@@ -100,6 +101,7 @@ export interface Course {
   modules: Module[];
   skills: string[];
   projectsCount: number;
+  driveUrl?: string;
 }
 
 export interface QuizQuestion {

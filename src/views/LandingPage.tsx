@@ -20,7 +20,8 @@ import {
   ChevronDown,
   BookOpen,
   Award,
-  Play
+  Play,
+  FolderOpen
 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -253,11 +254,16 @@ export const LandingPage: React.FC = () => {
                     decoding="async"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-3 left-3 flex gap-1.5">
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                     {course.isBestseller && (
                       <Badge variant="primary" size="sm">Bestseller</Badge>
                     )}
                     <Badge variant="neutral" size="sm">{course.difficulty}</Badge>
+                    {course.driveUrl && (
+                      <Badge variant="purple" size="sm" icon={<FolderOpen className="w-2.5 h-2.5 text-indigo-400" />}>
+                        Drive
+                      </Badge>
+                    )}
                   </div>
                   <div className="absolute bottom-3 right-3 bg-neutral-950/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-[11px] font-mono text-white">
                     {course.durationHours}h • {course.lessonsCount} lessons
