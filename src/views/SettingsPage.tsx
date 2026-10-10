@@ -71,29 +71,29 @@ export const SettingsPage: React.FC = () => {
         setPhpTestResult(data);
         setPhpTestStatus('success');
         const ver = data.php_version || data.php?.version || '8.3';
-        const server = data.server_software || data.php?.sapi || 'Hostinger LiteSpeed';
+        const server = data.server_software || data.php?.sapi || 'Apache / InfinityFree';
         addToast("PHP Health Diagnostic Succeeded", `PHP ${ver} active on ${server}`, "success");
       } else {
         // In local Vite dev mode, PHP script is served as text/plain or bundled in /public
         setPhpTestResult({
           status: 'ok',
-          message: 'PHP scripts compiled and verified in /public/api/. Ready for Hostinger Apache/LiteSpeed execution upon deployment.',
+          message: 'PHP scripts compiled and verified in /public/api/. Ready for InfinityFree Apache execution upon deployment.',
           endpoint: '/api/health.php',
           php_files_ready: ['config.php', 'health.php', 'contact.php', 'newsletter.php', 'courses.php'],
           htaccess_ready: true,
-          web_server: 'Hostinger LiteSpeed / Apache (Configured)'
+          web_server: 'InfinityFree Apache (Configured)'
         });
         setPhpTestStatus('ready');
-        addToast("Hostinger Bridge Ready", "PHP endpoints & .htaccess validated for Hostinger deployment.", "info");
+        addToast("Hosting Bridge Ready", "PHP endpoints & .htaccess validated for InfinityFree deployment.", "info");
       }
     } catch (err: any) {
       setPhpTestResult({
         status: 'ok',
-        message: 'PHP endpoints created in /public/api/. Live execution will run on Hostinger Apache server.',
+        message: 'PHP endpoints created in /public/api/. Live execution will run on InfinityFree Apache server.',
         error: err?.message || 'Local development environment'
       });
       setPhpTestStatus('ready');
-      addToast("PHP Deployment Ready", "Endpoints will execute natively on Hostinger public_html.", "info");
+      addToast("PHP Deployment Ready", "Endpoints will execute natively on InfinityFree yaswant.co.in/htdocs/.", "info");
     }
   };
 
@@ -137,7 +137,7 @@ export const SettingsPage: React.FC = () => {
             {tab === 'hosting' ? (
               <>
                 <Server className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Hostinger & PHP</span>
+                <span>InfinityFree & PHP</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
               </>
             ) : (
@@ -463,7 +463,7 @@ export const SettingsPage: React.FC = () => {
 
         {activeTab === 'hosting' && (
           <div className="space-y-6">
-            {/* Hostinger Readiness Header Card */}
+            {/* InfinityFree Readiness Header Card */}
             <GlassCard className="p-6 sm:p-8 space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-5 border-b border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-3">
@@ -472,11 +472,11 @@ export const SettingsPage: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
-                      Hostinger & PHP Compatibility
+                      InfinityFree & PHP Compatibility
                       <Badge variant="green" size="sm">Production Ready</Badge>
                     </h3>
                     <p className="text-xs text-neutral-500 mt-0.5">
-                      Target server: Hostinger Shared/Cloud/VPS (Apache & LiteSpeed with PHP 8.x)
+                      Target server: InfinityFree Apache (with PHP 8.x & mod_rewrite)
                     </p>
                   </div>
                 </div>
@@ -500,8 +500,8 @@ export const SettingsPage: React.FC = () => {
                     <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Web Server</span>
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
                   </div>
-                  <div className="text-sm font-bold text-neutral-900 dark:text-white">Apache / LiteSpeed</div>
-                  <div className="text-[10px] text-neutral-500 font-mono mt-0.5">Hostinger hPanel Native</div>
+                  <div className="text-sm font-bold text-neutral-900 dark:text-white">Apache Web Server</div>
+                  <div className="text-[10px] text-neutral-500 font-mono mt-0.5">InfinityFree vPanel Native</div>
                 </div>
 
                 <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/80 dark:border-neutral-750">
@@ -632,7 +632,7 @@ export const SettingsPage: React.FC = () => {
               </GlassCard>
             </div>
 
-            {/* 3-Step Hostinger Deployment Guide Card */}
+            {/* 3-Step InfinityFree Deployment Guide Card */}
             <GlassCard className="p-6 sm:p-8 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
@@ -641,7 +641,7 @@ export const SettingsPage: React.FC = () => {
                     Step-by-Step Deployment Quickstart
                   </h4>
                 </div>
-                <span className="text-xs text-neutral-400">See HOSTINGER_DEPLOYMENT.md for full guide</span>
+                <span className="text-xs text-neutral-400">See INFINITYFREE_DEPLOYMENT.md for full guide</span>
               </div>
 
               <div className="space-y-3 text-xs text-neutral-600 dark:text-neutral-300">
@@ -664,19 +664,19 @@ export const SettingsPage: React.FC = () => {
                 {/* Step 2 */}
                 <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/70 dark:border-neutral-750 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <strong className="text-neutral-900 dark:text-white">Step 2: Upload to Hostinger hPanel</strong>
-                    <div className="text-[11px] text-neutral-500 mt-0.5">Open File Manager &rarr; public_html/ &rarr; Upload and extract contents of dist/</div>
+                    <strong className="text-neutral-900 dark:text-white">Step 2: Deploy to InfinityFree (yaswant.co.in/htdocs/)</strong>
+                    <div className="text-[11px] text-neutral-500 mt-0.5">Automated push via GitHub Actions or run npm run deploy:ftp</div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg bg-neutral-200/70 dark:bg-neutral-750 text-neutral-700 dark:text-neutral-300 font-mono text-[11px]">
-                    public_html/
+                    yaswant.co.in/htdocs/
                   </span>
                 </div>
 
                 {/* Step 3 */}
                 <div className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/70 dark:border-neutral-750 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <strong className="text-neutral-900 dark:text-white">Step 3: Confirm PHP 8.x in hPanel</strong>
-                    <div className="text-[11px] text-neutral-500 mt-0.5">hPanel &rarr; Advanced &rarr; PHP Configuration &rarr; Select PHP 8.2 or 8.3</div>
+                    <strong className="text-neutral-900 dark:text-white">Step 3: Confirm PHP 8.x in vPanel</strong>
+                    <div className="text-[11px] text-neutral-500 mt-0.5">vPanel &rarr; Alter PHP Version &rarr; Select PHP 8.2</div>
                   </div>
                   <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[11px] font-bold">
                     PHP 8.2+

@@ -1,4 +1,4 @@
-name: Deploy to Hostinger
+name: Deploy to InfinityFree
 
 on:
   push:
@@ -47,22 +47,27 @@ jobs:
 
       - name: ⚠️ Validate FTP Secrets
         run: |
+          if [ -z "${{ secrets.FTP_USERNAME }}" ]; then
+            echo "::error::GitHub secret 'FTP_USERNAME' is missing!"
+            echo "Please add your InfinityFree FTP Username (e.g. if0_xxxxxxxx or epiz_xxxxxxxx) in:"
+            echo "GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret -> Name: FTP_USERNAME"
+            exit 1
+          fi
           if [ -z "${{ secrets.FTP_PASSWORD }}" ]; then
             echo "::error::GitHub secret 'FTP_PASSWORD' is missing!"
-            echo "To enable automated deployment, add your Hostinger FTP password in:"
+            echo "Please add your InfinityFree FTP Password in:"
             echo "GitHub Repo -> Settings -> Secrets and variables -> Actions -> New repository secret -> Name: FTP_PASSWORD"
             exit 1
           fi
 
-      - name: 🚀 Deploy to Hostinger via FTP
+      - name: 🚀 Deploy to InfinityFree via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER || '82.25.125.43' }}
-          username: ${{ secrets.FTP_USERNAME || 'u865909543.yaswant.co.in' }}
+          server: ${{ secrets.FTP_SERVER || 'ftpupload.net' }}
+          username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: ${{ secrets.FTP_PORT || 21 }}
           protocol: ${{ secrets.FTP_PROTOCOL || 'ftp' }}
           local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_REMOTE_DIR || './' }}
+          server-dir: ${{ secrets.FTP_REMOTE_DIR || 'yaswant.co.in/htdocs/' }}
           dangerous-clean-slate: false
-
