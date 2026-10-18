@@ -3,24 +3,71 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-neutral-750: #2c2c31;
-  --color-neutral-850: #1b1b20;
-  --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-pine: #004741;
+  --color-pine-deep: #003631;
+  --color-pine-surface: #003d37;
+  --color-pine-elevated: #005049;
+  --color-pine-light: #005c54;
+
+  /* Sand / Warm Chalk (#F0EDE4) */
+  --color-sand: #F0EDE4;
+  --color-sand-hover: #ded9cc;
+  --color-chalk: #F0EDE4;
+  --color-chalk-muted: rgba(240, 237, 228, 0.78);
+  --color-chalk-subtle: rgba(240, 237, 228, 0.55);
+
+  --color-white: #F0EDE4;
+  --color-foreground: #F0EDE4;
+  --color-muted-foreground: rgba(240, 237, 228, 0.78);
   --radius-4xl: 2rem;
   --radius-6xl: 3rem;
 }
 
 @layer base {
-  :root {
+  :root,
+  .light,
+  .dark {
     --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
+
+    /* Primary Palette: Pine #004741 Background & Sand #F0EDE4 Text */
+    --background: #004741;
+    --foreground: #F0EDE4;
+    --muted-foreground: rgba(240, 237, 228, 0.78);
+    --color-contrast-surface: #003630;
+    --color-contrast-surface-elevated: #003d37;
+    --color-contrast-surface-subtle: #00302b;
+    --color-contrast-text-heading: #F0EDE4;
+    --color-contrast-text-body: #F0EDE4;
+    --color-contrast-text-muted: rgba(240, 237, 228, 0.78);
+    --color-contrast-text-subtle: rgba(240, 237, 228, 0.55);
+    --color-contrast-border: rgba(240, 237, 228, 0.15);
+    --color-contrast-input-bg: #00342e;
+    --color-contrast-input-text: #F0EDE4;
+  }
+
+  html {
+    background-color: #004741 !important;
+    color: #F0EDE4 !important;
   }
 
   body {
     font-family: var(--font-sans);
+    background-color: #004741 !important;
+    color: #F0EDE4 !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Standard Content Typography Defaults (Sand #F0EDE4) */
+  h1, h2, h3, h4, h5, h6,
+  p, li, a, dt, dd, label, legend, td, th {
+    color: #F0EDE4;
+  }
+
+  ::selection {
+    background-color: #F0EDE4;
+    color: #004741;
   }
 }
 
@@ -31,110 +78,171 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #003631;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.4);
+  background: rgba(240, 237, 228, 0.25);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(107, 114, 128, 0.7);
+  background: rgba(240, 237, 228, 0.45);
 }
 
+/* Pine & Sand Glassmorphic Surfaces */
 .glass-surface {
-  background: rgba(255, 255, 255, 0.78);
+  background: rgba(0, 54, 48, 0.88);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(240, 237, 228, 0.14);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25);
+  color: #F0EDE4;
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.dark .glass-surface {
-  background: rgba(18, 18, 22, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.45);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(0, 54, 48, 0.90);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.04), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(240, 237, 228, 0.15);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  color: #F0EDE4;
   transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.dark .glass-card {
-  background: rgba(24, 24, 27, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 4px 24px -2px rgba(0, 0, 0, 0.4);
-}
-
 /* ==========================================================================
-   Auto-Contrast Theme Utilities
-   Prevents white-on-white and dark-on-dark text contrast issues automatically
+   Pine (#004741) & Sand (#F0EDE4) Typography and Theme Overrides
    ========================================================================== */
 
-:root {
-  --foreground: #09090b;
-  --muted-foreground: #71717a;
-  --color-contrast-surface: #ffffff;
-  --color-contrast-surface-elevated: #fafafa;
-  --color-contrast-surface-subtle: #f4f4f5;
-  --color-contrast-text-heading: #09090b;
-  --color-contrast-text-body: #18181b;
-  --color-contrast-text-muted: #52525b;
-  --color-contrast-text-subtle: #71717a;
-  --color-contrast-border: #e4e4e7;
-  --color-contrast-input-bg: #ffffff;
-  --color-contrast-input-text: #09090b;
+/* 1. Guaranteed Sand (#F0EDE4) text color for headings, titles, labels */
+:is(h1, h2, h3, h4, h5, h6,
+    .text-neutral-950,
+    .text-neutral-900,
+    .text-neutral-850,
+    .text-neutral-800,
+    .text-neutral-750,
+    .text-neutral-700,
+    .text-black,
+    .text-white,
+    .dark\:text-white,
+    .dark\:text-neutral-100,
+    .dark\:text-neutral-200):not(.text-\[\#004741\]):not(.bg-\[\#F0EDE4\]):not([class*="text-emerald-"]):not([class*="text-rose-"]):not([class*="text-amber-"]):not([class*="text-cyan-"]):not([class*="text-blue-"]):not([class*="text-indigo-"]):not([class*="text-yellow-"]):not([class*="text-purple-"]) {
+  color: #F0EDE4 !important;
 }
 
-.dark {
-  --foreground: #fafafa;
-  --muted-foreground: #a1a1aa;
-  --color-contrast-surface: #18181b;
-  --color-contrast-surface-elevated: #1b1b20;
-  --color-contrast-surface-subtle: #27272a;
-  --color-contrast-text-heading: #ffffff;
-  --color-contrast-text-body: #f4f4f5;
-  --color-contrast-text-muted: #a1a1aa;
-  --color-contrast-text-subtle: #71717a;
-  --color-contrast-border: #2c2c31;
-  --color-contrast-input-bg: #141417;
-  --color-contrast-input-text: #fafafa;
+/* 2. Soft Sand (#F0EDE4 at ~78% opacity) for secondary descriptions & subtitles */
+:is(.text-neutral-600,
+    .text-neutral-500,
+    .text-neutral-400,
+    .dark\:text-neutral-400,
+    .dark\:text-neutral-300,
+    .text-neutral-300):not(.text-\[\#004741\]):not(.bg-\[\#F0EDE4\]) {
+  color: rgba(240, 237, 228, 0.78) !important;
 }
 
-/* 1. Theme-safe card & panel surfaces (Automatically matches background and foreground text) */
+/* 3. Surface & Card backgrounds across all views */
+:is(.bg-white,
+    .bg-neutral-900,
+    .bg-neutral-850,
+    .dark\:bg-neutral-900,
+    .dark\:bg-neutral-850):not(.bg-\[\#F0EDE4\]):not([class*="bg-emerald-"]):not([class*="bg-rose-"]):not([class*="bg-amber-"]) {
+  background-color: #003630 !important;
+  color: #F0EDE4 !important;
+}
+
+/* Allow semi-transparent dark overlays on cards */
+.bg-white\/90,
+.bg-white\/80 {
+  background-color: rgba(0, 54, 48, 0.90) !important;
+}
+
+/* 4. Subtle chips, filters, and elevated surfaces */
+:is(.bg-neutral-100,
+    .bg-neutral-800,
+    .dark\:bg-neutral-800,
+    .dark\:bg-neutral-750):not(.bg-\[\#F0EDE4\]) {
+  background-color: #003d37 !important;
+  color: #F0EDE4 !important;
+}
+
+/* 5. Base canvas & page backgrounds */
+:is(.bg-neutral-50,
+    .bg-neutral-50\/50,
+    .bg-neutral-950,
+    .dark\:bg-neutral-950) {
+  background-color: #004741 !important;
+}
+
+/* 6. Hairline subtle sand borders */
+:is(.border-neutral-200,
+    .border-neutral-200\/80,
+    .border-neutral-200\/60,
+    .border-neutral-300,
+    .border-neutral-700,
+    .border-neutral-750,
+    .border-neutral-800,
+    .dark\:border-neutral-800,
+    .dark\:border-neutral-750,
+    .dark\:border-neutral-700) {
+  border-color: rgba(240, 237, 228, 0.14) !important;
+}
+
+/* 7. Form inputs, search fields, textareas */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+select,
+textarea {
+  background-color: #00342e !important;
+  color: #F0EDE4 !important;
+  border-color: rgba(240, 237, 228, 0.18) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(240, 237, 228, 0.5) !important;
+}
+
+/* 8. Sand Primary Buttons: Sand (#F0EDE4) background + Deep Pine (#004741) text */
+.bg-\[\#F0EDE4\],
+button.bg-\[\#F0EDE4\] {
+  background-color: #F0EDE4 !important;
+  color: #004741 !important;
+}
+
+/* Force Deep Pine text on all child spans and text inside primary sand buttons */
+.bg-\[\#F0EDE4\] *:not([class*="bg-"]):not([class*="text-rose-"]):not([class*="text-emerald-"]),
+button.bg-\[\#F0EDE4\] * {
+  color: #004741 !important;
+}
+
+button.bg-\[\#F0EDE4\]:hover {
+  background-color: #ded9cc !important;
+}
+
+/* Elements with explicit text-[#004741] class */
+.text-\[\#004741\] {
+  color: #004741 !important;
+}
+
+/* 9. Theme-safe card & panel utilities */
 .contrast-card {
   background-color: var(--color-contrast-surface);
   color: var(--color-contrast-text-body);
   border: 1px solid var(--color-contrast-border);
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .contrast-card-elevated {
   background-color: var(--color-contrast-surface-elevated);
   color: var(--color-contrast-text-body);
   border: 1px solid var(--color-contrast-border);
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .contrast-card-subtle {
   background-color: var(--color-contrast-surface-subtle);
   color: var(--color-contrast-text-body);
   border: 1px solid var(--color-contrast-border);
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
-/* 2. Guaranteed high-contrast typography */
 .contrast-heading {
   color: var(--color-contrast-text-heading);
 }
@@ -151,12 +259,10 @@
   color: var(--color-contrast-text-subtle);
 }
 
-/* 3. Auto-contrast input and form fields */
 .contrast-input {
   background-color: var(--color-contrast-input-bg);
   color: var(--color-contrast-input-text);
   border: 1px solid var(--color-contrast-border);
-  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
 }
 
 .contrast-input::placeholder {
@@ -165,11 +271,100 @@
 
 .contrast-input:focus {
   outline: none;
-  border-color: var(--color-contrast-text-heading);
+  border-color: #F0EDE4;
 }
 
-/* 4. Auto-contrast border */
 .contrast-border {
   border-color: var(--color-contrast-border);
 }
 
+/* ==========================================================================
+   Landing page motion utilities
+   ========================================================================== */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+.marquee-track {
+  animation: marquee linear infinite;
+}
+
+@keyframes gradient-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.text-gradient-sand {
+  background-image: linear-gradient(100deg, #F0EDE4 0%, #F5C451 30%, #5EEAD4 60%, #F0EDE4 100%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent;
+  animation: gradient-pan 8s ease-in-out infinite;
+}
+
+@keyframes beam {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(400%); }
+}
+.beam-line {
+  animation: beam 4.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(260%) skewX(-20deg); }
+}
+.shine-sweep {
+  animation: shine 3.6s ease-in-out infinite;
+}
+
+.grid-backdrop {
+  background-image:
+    linear-gradient(rgba(240, 237, 228, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240, 237, 228, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track,
+  .text-gradient-sand,
+  .beam-line,
+  .spin-slow,
+  .shine-sweep {
+    animation: none !important;
+  }
+}
+
+/* Shared <Button> click ripple */
+@keyframes btn-ripple {
+  from { transform: translate(-50%, -50%) scale(0); opacity: 0.35; }
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.btn-ripple {
+  position: absolute;
+  z-index: -1;
+  width: 240%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: currentColor;
+  pointer-events: none;
+  animation: btn-ripple 600ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-ripple { display: none; }
+  .btn-anim,
+  .btn-anim .btn-icon,
+  .btn-anim svg {
+    transition: none !important;
+    transform: none !important;
+  }
+}

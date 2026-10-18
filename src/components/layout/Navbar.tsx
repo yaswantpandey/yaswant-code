@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLms } from '../../context/LmsContext';
+import { safeHref } from '../../lib/safeHref';
 import { 
   Search, 
   Bell, 
@@ -8,7 +9,6 @@ import {
   Moon, 
   Menu, 
   X, 
-  BookOpen, 
   Sparkles, 
   GraduationCap, 
   ShieldCheck, 
@@ -132,7 +132,6 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
-    { id: 'courses', label: 'Courses', desc: 'Interactive full-stack masterclasses', icon: BookOpen },
     { id: 'projects', label: 'Projects', desc: 'Hands-on capstones & repositories', icon: FolderGit2 },
     { id: 'learning-paths', label: 'Roadmaps', desc: 'Tech upskilling & mindtree roadmaps', icon: Sparkles },
     { id: 'notes', label: 'Notes', desc: 'Study notes & code snippets', icon: FileText },
@@ -145,30 +144,29 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* ── Sticky Navigation Header Container (Wraps Announcement + Main Nav to prevent any misalignment) ── */}
-      <header className="sticky top-0 z-40 w-full bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl border-b border-neutral-200/80 dark:border-neutral-800/80 shadow-xs">
+      <header className="sticky top-0 z-40 w-full bg-[#004741]/95 backdrop-blur-xl border-b border-[#F0EDE4]/15 shadow-xs text-[#F0EDE4]">
         
         {/* ── Global Announcement Banner Configured via Admin ── */}
         {announcement?.enabled && (
-          <aside aria-label="Global Announcement" className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white text-[11px] sm:text-xs py-1.5 sm:py-2 px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 text-center transition-all">
-            <span className="px-2 py-0.5 rounded-full bg-white/20 font-bold uppercase text-[9px] sm:text-[10px] tracking-wider shrink-0">
+          <aside aria-label="Global Announcement" className="w-full bg-[#003630] text-[#F0EDE4] border-b border-[#F0EDE4]/10 text-[11px] sm:text-xs py-1.5 sm:py-2 px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 text-center transition-all">
+            <span className="px-2 py-0.5 rounded-full bg-[#F0EDE4]/20 text-[#F0EDE4] font-bold uppercase text-[9px] sm:text-[10px] tracking-wider shrink-0">
               {announcement.badge}
             </span>
-            <span className="font-medium truncate max-w-[200px] xs:max-w-xs sm:max-w-md lg:max-w-xl">
+            <span className="font-medium truncate max-w-[200px] xs:max-w-xs sm:max-w-md lg:max-w-xl text-[#F0EDE4]">
               {announcement.text}
             </span>
             {announcement.link && (
               <a
-                href={announcement.link}
+                href={safeHref(announcement.link)}
                 onClick={(e) => {
                   if (announcement.link.startsWith('#')) {
                     const target = announcement.link.replace('#', '');
                     if (target === 'paths' || target === 'roadmaps') setCurrentView('learning-paths');
                     else if (target === 'notes') setCurrentView('notes');
                     else if (target === 'tools') setCurrentView('tools');
-                    else if (target === 'courses') setCurrentView('courses');
                   }
                 }}
-                className="inline-flex items-center gap-1 font-bold underline hover:opacity-90 shrink-0 text-[10px] sm:text-[11px]"
+                className="inline-flex items-center gap-1 font-bold underline hover:opacity-90 shrink-0 text-[10px] sm:text-[11px] text-[#F0EDE4]"
               >
                 {announcement.btnText}
               </a>
@@ -199,8 +197,8 @@ export const Navbar: React.FC = () => {
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       isActive 
-                        ? 'text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-850 font-semibold shadow-2xs' 
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-900'
+                        ? 'text-[#004741] bg-[#F0EDE4] font-bold shadow-2xs' 
+                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
                     }`}
                   >
                     {link.label}
@@ -219,8 +217,8 @@ export const Navbar: React.FC = () => {
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       isActive 
-                        ? 'text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-850 font-semibold shadow-2xs' 
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-900'
+                        ? 'text-[#004741] bg-[#F0EDE4] font-bold shadow-2xs' 
+                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
                     }`}
                   >
                     {link.label}
@@ -239,8 +237,8 @@ export const Navbar: React.FC = () => {
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       isActive 
-                        ? 'text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-850 font-semibold' 
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-900'
+                        ? 'text-[#004741] bg-[#F0EDE4] font-bold' 
+                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
                     }`}
                   >
                     {link.label}
@@ -278,7 +276,7 @@ export const Navbar: React.FC = () => {
             >
               <div className="flex items-center gap-2">
                 <Search className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="truncate">Search courses, paths...</span>
+                <span className="truncate">Search roadmaps, projects...</span>
               </div>
               <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-neutral-200 dark:bg-neutral-800 rounded">
                 ⌘K
@@ -294,7 +292,7 @@ export const Navbar: React.FC = () => {
               id="navbar-mobile-search-btn"
               onClick={() => setSearchModalOpen(true)}
               className="lg:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-colors"
-              aria-label="Search courses, skills, and paths"
+              aria-label="Search roadmaps, projects, and resources"
             >
               <Search className="w-4 h-4" />
             </button>
@@ -385,14 +383,17 @@ export const Navbar: React.FC = () => {
             {/* User Profile / Auth Action */}
             {!isUserLoggedIn ? (
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:inline-flex text-xs px-2.5 py-1.5"
-                  onClick={() => openAuthModal('login')}
-                >
-                  Log In
-                </Button>
+                {/* Wrapper owns the responsive display: Button's own inline-flex would override `hidden` */}
+                <div className="hidden md:block">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs px-2.5 py-1.5"
+                    onClick={() => openAuthModal('login')}
+                  >
+                    Log In
+                  </Button>
+                </div>
                 <Button
                   variant="primary"
                   size="sm"
@@ -585,7 +586,7 @@ export const Navbar: React.FC = () => {
               >
                 <div className="flex items-center gap-2.5">
                   <Search className="w-4 h-4 text-neutral-400" />
-                  <span>Search courses, tools, roadmaps...</span>
+                  <span>Search tools, roadmaps, notes...</span>
                 </div>
                 <span className="font-mono text-[10px] bg-neutral-200 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500">⌘K</span>
               </button>

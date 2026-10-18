@@ -147,7 +147,7 @@ export const LearningPathsPage: React.FC = () => {
 
   // Synchronize browser URL bar, title, meta tags, and schema with active roadmap track
   useEffect(() => {
-    syncUrlWithView('learning-paths', null, false, selectedTrackId);
+    syncUrlWithView('learning-paths', false, selectedTrackId);
   }, [selectedTrackId]);
 
   // Handle browser Back / Forward navigation between roadmap tracks
@@ -272,7 +272,7 @@ export const LearningPathsPage: React.FC = () => {
                   key={track.id}
                   onClick={() => {
                     setSelectedTrackId(slugOrId);
-                    syncUrlWithView('learning-paths', null, false, slugOrId);
+                    syncUrlWithView('learning-paths', false, slugOrId);
                   }}
                   className={`px-3.5 py-2 rounded-xl font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
                     isActive

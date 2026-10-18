@@ -21,7 +21,7 @@ if (!$authorizedBySecret) {
     $isAdmin = false;
     if ($token) {
         try {
-            $stmt = $pdo->prepare('SELECT u.role FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > NOW()');
+            $stmt = $pdo->prepare('SELECT u.role FROM user_sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ? AND s.expires_at > NOW() AND u.is_active = 1');
             $stmt->execute([$token]);
             $role = $stmt->fetchColumn();
             if ($role === 'admin') {

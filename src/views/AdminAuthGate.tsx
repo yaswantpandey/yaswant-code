@@ -168,17 +168,7 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({ onAuthenticated, o
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setEmail('admin@yaswantcode.edu');
-                  setPassword('AdminPass123!');
-                }}
-                className="text-[11px] text-amber-400/80 hover:text-amber-300 font-mono underline transition-colors cursor-pointer"
-              >
-                Auto-fill Admin Credentials
-              </button>
+            <div className="flex items-center justify-end pt-1">
               <span className="text-[10px] text-neutral-500 font-mono">Root Administrator</span>
             </div>
 

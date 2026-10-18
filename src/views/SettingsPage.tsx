@@ -79,7 +79,7 @@ export const SettingsPage: React.FC = () => {
           status: 'ok',
           message: 'PHP scripts compiled and verified in /public/api/. Ready for InfinityFree Apache execution upon deployment.',
           endpoint: '/api/health.php',
-          php_files_ready: ['config.php', 'health.php', 'contact.php', 'newsletter.php', 'courses.php'],
+          php_files_ready: ['config.php', 'health.php', 'contact.php', 'newsletter.php', 'roadmaps.php'],
           htaccess_ready: true,
           web_server: 'InfinityFree Apache (Configured)'
         });
@@ -253,7 +253,7 @@ export const SettingsPage: React.FC = () => {
                 <span>Dynamic Glassmorphism Architecture</span>
               </div>
               <p className="text-[11px] text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                All course cards, navigation bars, code playgrounds, and interactive modals use dual-mode frosted glass. In <strong>Light Mode</strong>, surfaces render with high-key daylight diffusion and soft ambient shadows. In <strong>Dark Mode</strong>, surfaces dynamically shift to deep obsidian glass with luminous edge borders and specular highlights.
+                All cards, navigation bars, code playgrounds, and interactive modals use dual-mode frosted glass. In <strong>Light Mode</strong>, surfaces render with high-key daylight diffusion and soft ambient shadows. In <strong>Dark Mode</strong>, surfaces dynamically shift to deep obsidian glass with luminous edge borders and specular highlights.
               </p>
             </div>
 
@@ -587,9 +587,9 @@ export const SettingsPage: React.FC = () => {
                   <div className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 flex items-center justify-between">
                     <div>
                       <span className="text-emerald-500 font-bold">GET</span>{' '}
-                      <span className="text-neutral-800 dark:text-neutral-200">/api/courses.php</span>
+                      <span className="text-neutral-800 dark:text-neutral-200">/api/roadmaps.php</span>
                     </div>
-                    <span className="text-[10px] text-neutral-400">Course Data / Catalog</span>
+                    <span className="text-[10px] text-neutral-400">Roadmap Data</span>
                   </div>
                 </div>
               </GlassCard>

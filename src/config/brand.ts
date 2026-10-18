@@ -4,7 +4,7 @@ export const BRAND_CONFIG = {
   name: "Yaswant Code",
   shortName: "YaswantCode",
   tagline: "Empowering Developers with Modern Engineering & Practical Tech Skills",
-  description: "Master modern software engineering, web development, cloud computing, and systems architecture with practical, industry-aligned courses by Yaswant Pandey.",
+  description: "Master modern software engineering, web development, cloud computing, and systems architecture with practical, industry-aligned roadmaps and projects by Yaswant Pandey.",
   founded: "2026",
   founder: "Yaswant Pandey",
   email: "support@yaswant.co.in",

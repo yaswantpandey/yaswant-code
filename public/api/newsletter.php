@@ -66,7 +66,7 @@ if ($method === 'POST') {
              . "  • Technical articles & tutorials\n"
              . "  • Exclusive learning paths\n\n"
              . "Visit us at: " . PLATFORM_URL . "\n\n"
-             . "To unsubscribe, visit: " . PLATFORM_URL . "/unsubscribe?email=" . urlencode($email) . "\n\n"
+             . "To unsubscribe, visit: " . PLATFORM_URL . "/unsubscribe?email=" . urlencode($email) . "&token=" . unsubscribe_token($email) . "\n\n"
              . "— The Yaswant Code Team";
 
     $headers = "From: Yaswant Code <noreply@{$host}>\r\nContent-Type: text/plain; charset=UTF-8";
@@ -89,6 +89,14 @@ if ($method === 'DELETE') {
         fail('Valid email is required.', 422);
     }
 
+    // Require the signed token from the unsubscribe email, or the logged-in owner of that address
+    $token = (string)($input['token'] ?? $_GET['token'] ?? '');
+    $viewer = auth_user();
+    $isOwner = $viewer && strtolower((string)($viewer['email'] ?? '')) === $email;
+    if (!$isOwner && !hash_equals(unsubscribe_token($email), $token)) {
+        fail('Invalid or missing unsubscribe token.', 403);
+    }
+
     $pdo = get_db();
     if ($pdo) {
         $pdo->prepare(
@@ -100,3 +108,9 @@ if ($method === 'DELETE') {
 }
 
 fail('Method not allowed.', 405);
+
+// HMAC of the email so unsubscribe links can't be forged for arbitrary addresses
+function unsubscribe_token(string $email): string {
+    $key = INSTALL_SECRET !== '' ? INSTALL_SECRET : DB_PASS . DB_NAME;
+    return hash_hmac('sha256', 'unsubscribe:' . strtolower($email), $key);
+}

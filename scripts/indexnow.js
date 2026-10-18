@@ -13,7 +13,6 @@ const KEY_LOCATION = `https://${HOST}/${KEY}.txt`;
 const sitemapPath = path.resolve(__dirname, '../public/sitemap.xml');
 let urls = [
   `https://${HOST}/`,
-  `https://${HOST}/courses`,
   `https://${HOST}/blog`,
   `https://${HOST}/roadmaps`,
   `https://${HOST}/projects`,

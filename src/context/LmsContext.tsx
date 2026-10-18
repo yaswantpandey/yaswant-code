@@ -1,17 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  ActiveView, 
-  RoleType, 
-  Course, 
-  Lesson, 
-  Certificate, 
-  NotificationItem 
-} from '../types/lms';
-import { BRAND_CONFIG, PRIMARY_INSTRUCTOR } from '../config/brand';
+import { ActiveView, RoleType, NotificationItem } from '../types/lms';
+import { BRAND_CONFIG } from '../config/brand';
 import { useTheme, ThemeMode, ResolvedTheme } from './ThemeContext';
-import { mapApiCourseToLmsCourse } from '../services/courseMapper';
 import { parseCurrentLocation, syncUrlWithView } from '../services/router';
-import { tokenStorage } from '../services/api';
 
 interface Toast {
   id: string;
@@ -22,7 +13,7 @@ interface Toast {
 
 interface LmsContextType {
   currentView: ActiveView;
-  setCurrentView: (view: ActiveView, customCourse?: Course) => void;
+  setCurrentView: (view: ActiveView) => void;
   role: RoleType;
   setRole: (role: RoleType) => void;
   theme: ThemeMode;
@@ -33,15 +24,6 @@ interface LmsContextType {
   toggleTheme: () => void;
   brandName: string;
   setBrandName: (name: string) => void;
-  courses: Course[];
-  selectedCourse: Course;
-  setSelectedCourse: (course: Course) => void;
-  selectedLesson: Lesson;
-  setSelectedLesson: (lesson: Lesson) => void;
-  bookmarkedCourseIds: string[];
-  toggleBookmark: (courseId: string) => void;
-  enrollCourse: (courseId: string) => void;
-  completeLesson: (lessonId: string) => void;
   notifications: NotificationItem[];
   unreadCount: number;
   markAllNotificationsRead: () => void;
@@ -51,15 +33,11 @@ interface LmsContextType {
   authModalMode: 'login' | 'signup' | 'forgot' | 'verify';
   openAuthModal: (mode?: 'login' | 'signup' | 'forgot' | 'verify') => void;
   closeAuthModal: () => void;
-  certificateModal: Certificate | null;
-  setCertificateModal: (cert: Certificate | null) => void;
   toasts: Toast[];
   addToast: (title: string, message?: string, type?: 'success' | 'info' | 'warning') => void;
   removeToast: (id: string) => void;
   emptyStateSimulated: boolean;
   toggleEmptyState: () => void;
-  refreshCourses: () => Promise<void>;
-  isLoadingCourses: boolean;
 }
 
 const LmsContext = createContext<LmsContextType | undefined>(undefined);
@@ -68,73 +46,21 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const { theme, resolvedTheme, isDark, setTheme, toggleTheme } = useTheme();
   const setIsDark = (dark: boolean) => setTheme(dark ? 'dark' : 'light');
 
-  // Parse initial view and course from browser URL / hash
+  // Parse initial view from browser URL / hash
   const initialLocation = parseCurrentLocation();
   const [currentView, setCurrentViewInternal] = useState<ActiveView>(initialLocation.view);
-  const [pendingCourseId, setPendingCourseId] = useState<string | undefined>(initialLocation.courseId);
-
-  const EMPTY_COURSE: Course = {
-    id: '',
-    title: 'Loading Course Catalog...',
-    tagline: '',
-    description: '',
-    thumbnail: '',
-    instructor: PRIMARY_INSTRUCTOR,
-    category: 'General',
-    difficulty: 'All Levels',
-    rating: 5.0,
-    reviewsCount: 0,
-    studentsCount: 0,
-    durationHours: 0,
-    lessonsCount: 0,
-    price: 0,
-    language: 'English & Hindi',
-    lastUpdated: new Date().toISOString().split('T')[0],
-    hasCertificate: true,
-    whatYouWillLearn: [],
-    requirements: [],
-    modules: [],
-    skills: [],
-    projectsCount: 0,
-  };
-
-  const EMPTY_LESSON: Lesson = {
-    id: '',
-    title: 'No Lesson Selected',
-    duration: '0:00',
-    type: 'video',
-    completed: false,
-    locked: false,
-  };
 
   const [role, setRole] = useState<RoleType>('student');
   const [brandName, setBrandName] = useState<string>(BRAND_CONFIG.name);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [isLoadingCourses, setIsLoadingCourses] = useState<boolean>(true);
-  const [selectedCourse, setSelectedCourseState] = useState<Course>(EMPTY_COURSE);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson>(EMPTY_LESSON);
-  const [bookmarkedCourseIds, setBookmarkedCourseIds] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Synchronize view changes with browser URL and update window history
-  const setCurrentView = useCallback((view: ActiveView, customCourse?: Course) => {
+  const setCurrentView = useCallback((view: ActiveView) => {
     setCurrentViewInternal(view);
-    const course = customCourse || selectedCourse;
-    syncUrlWithView(view, course);
+    syncUrlWithView(view);
     if (typeof window !== 'undefined' && window.scrollY > 80) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }, [selectedCourse]);
-
-  // Wrapped setSelectedCourse that syncs URL if currently in course-detail or learn
-  const setSelectedCourse = useCallback((course: Course) => {
-    setSelectedCourseState(course);
-    setCurrentViewInternal(prev => {
-      if (prev === 'course-detail' || prev === 'learning-interface') {
-        syncUrlWithView(prev, course, true);
-      }
-      return prev;
-    });
   }, []);
 
   // Handle browser Back / Forward buttons (popstate event)
@@ -142,92 +68,18 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handlePopState = () => {
       const loc = parseCurrentLocation();
       setCurrentViewInternal(loc.view);
-      if (loc.courseId) {
-        setPendingCourseId(loc.courseId);
-      }
-      syncUrlWithView(loc.view, selectedCourse, true);
+      syncUrlWithView(loc.view, true, loc.roadmapSlug);
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedCourse]);
+  }, []);
 
   // Initial canonical URL normalization (e.g. converting #notes to /notes)
   useEffect(() => {
-    syncUrlWithView(initialLocation.view, selectedCourse, true);
+    syncUrlWithView(initialLocation.view, true, initialLocation.roadmapSlug);
   }, []);
   
-  // Refresh live courses from Hostinger MySQL /api/courses.php
-  const refreshCourses = useCallback(async () => {
-    try {
-      setIsLoadingCourses(true);
-      const res = await fetch('/api/courses.php?per_page=100');
-      if (res.ok) {
-        const json = await res.json();
-        if (json.success && json.data) {
-          const rawCourses = Array.isArray(json.data)
-            ? json.data
-            : (Array.isArray(json.data.courses) ? json.data.courses : []);
-
-          const mappedCourses = rawCourses.map(mapApiCourseToLmsCourse);
-          setCourses(mappedCourses);
-
-          if (mappedCourses.length > 0) {
-            setSelectedCourseState(prev => {
-              if (pendingCourseId) {
-                const matched = mappedCourses.find(c => 
-                  c.id === pendingCourseId || 
-                  c.title.toLowerCase().replace(/[^a-z0-9]+/g, '-') === pendingCourseId
-                );
-                if (matched) {
-                  setPendingCourseId(undefined);
-                  syncUrlWithView(initialLocation.view, matched, true);
-                  return matched;
-                }
-              }
-              const existing = mappedCourses.find(c => c.id === prev?.id);
-              return existing || mappedCourses[0];
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.warn('Could not fetch live courses from API, maintaining fallback:', err);
-    } finally {
-      setIsLoadingCourses(false);
-    }
-  }, [pendingCourseId, initialLocation.view]);
-
-  // Fetch live courses on platform initial mount
-  useEffect(() => {
-    refreshCourses();
-  }, [refreshCourses]);
-
-  // Load full curriculum when a course is selected if modules are missing
-  useEffect(() => {
-    if (selectedCourse?.id && (!selectedCourse.modules || selectedCourse.modules.length === 0)) {
-      fetch(`/api/courses.php?id=${encodeURIComponent(selectedCourse.id)}`)
-        .then(res => res.json())
-        .then(json => {
-          if (json.success && json.data) {
-            const full = mapApiCourseToLmsCourse(json.data);
-            setSelectedCourseState(prev => prev.id === full.id ? full : prev);
-            if (full.modules?.[0]?.chapters?.[0]?.lessons?.[0]) {
-              setSelectedLesson(full.modules[0].chapters[0].lessons[0]);
-            }
-          }
-        })
-        .catch(() => {});
-    }
-  }, [selectedCourse?.id]);
-
-  // Selected lesson updates when course changes
-  useEffect(() => {
-    if (selectedCourse?.modules?.[0]?.chapters?.[0]?.lessons?.[0]) {
-      setSelectedLesson(selectedCourse.modules[0].chapters[0].lessons[0]);
-    }
-  }, [selectedCourse]);
-
   // Fetch real notifications from database
   useEffect(() => {
     fetch('/api/notifications.php')
@@ -239,7 +91,7 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             title: n.title,
             message: n.message,
             timeAgo: n.created_at ? new Date(n.created_at).toLocaleDateString() : 'Just now',
-            type: n.type || 'course',
+            type: n.type || 'announcement',
             read: Boolean(n.is_read),
             link: n.link || undefined
           })));
@@ -250,7 +102,6 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
   const [authModalOpen, setAuthModalOpen] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot' | 'verify'>('login');
-  const [certificateModal, setCertificateModal] = useState<Certificate | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [emptyStateSimulated, setEmptyStateSimulated] = useState<boolean>(false);
 
@@ -264,102 +115,6 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
-  };
-
-  const toggleBookmark = (courseId: string) => {
-    setBookmarkedCourseIds(prev => {
-      const exists = prev.includes(courseId);
-      if (exists) {
-        addToast("Removed from Bookmarks", undefined, "info");
-        return prev.filter(id => id !== courseId);
-      } else {
-        addToast("Saved to Bookmarks", "You can easily review this course in your library.", "success");
-        return [...prev, courseId];
-      }
-    });
-  };
-
-  const enrollCourse = async (courseId: string) => {
-    const course = courses.find(c => c.id === courseId);
-    setCourses(prev => prev.map(c => {
-      if (c.id === courseId) {
-        return { ...c, enrolled: true, progressPercent: c.progressPercent || 0 };
-      }
-      return c;
-    }));
-    setSelectedCourseState(prev => {
-      if (prev.id === courseId) {
-        return { ...prev, enrolled: true, progressPercent: prev.progressPercent || 0 };
-      }
-      return prev;
-    });
-
-    const token = tokenStorage.get();
-    if (token) {
-      try {
-        await fetch('/api/enrollments.php', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ course_id: courseId })
-        });
-      } catch (e) {
-        console.warn('Backend enrollment sync:', e);
-      }
-    }
-
-    if (course) {
-      import('../services/firebaseAuth')
-        .then(m => m.syncCourseEnrollment(courseId, course.title))
-        .catch(() => {});
-    }
-    addToast("Enrollment Successful!", "Course added to your workspace.", "success");
-    setCurrentView('learning-interface');
-  };
-
-  const completeLesson = async (lessonId: string) => {
-    setSelectedLesson(prev => ({ ...prev, completed: true }));
-    let updatedProgress = 0;
-    setCourses(prev => prev.map(c => {
-      if (c.id === selectedCourse.id) {
-        const newProgress = Math.min(100, (c.progressPercent || 0) + 10);
-        updatedProgress = newProgress;
-        return { ...c, progressPercent: newProgress };
-      }
-      return c;
-    }));
-    setSelectedCourseState(prev => ({
-      ...prev,
-      progressPercent: Math.min(100, (prev.progressPercent || 0) + 10)
-    }));
-
-    const token = tokenStorage.get();
-    if (token && selectedCourse?.id) {
-      try {
-        await fetch('/api/enrollments.php?action=complete_lesson', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            lesson_id: lessonId,
-            course_id: selectedCourse.id
-          })
-        });
-      } catch (e) {
-        console.warn('Lesson complete sync:', e);
-      }
-    }
-
-    if (selectedCourse?.id) {
-      import('../services/firebaseAuth')
-        .then(m => m.syncLessonProgress(selectedCourse.id, updatedProgress))
-        .catch(() => {});
-    }
-    addToast("Lesson Completed!", "Progress saved to your profile.", "success");
   };
 
   const markAllNotificationsRead = () => {
@@ -398,15 +153,6 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleTheme,
         brandName,
         setBrandName,
-        courses,
-        selectedCourse,
-        setSelectedCourse,
-        selectedLesson,
-        setSelectedLesson,
-        bookmarkedCourseIds,
-        toggleBookmark,
-        enrollCourse,
-        completeLesson,
         notifications,
         unreadCount,
         markAllNotificationsRead,
@@ -416,15 +162,11 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         authModalMode,
         openAuthModal,
         closeAuthModal,
-        certificateModal,
-        setCertificateModal,
         toasts,
         addToast,
         removeToast,
         emptyStateSimulated,
         toggleEmptyState,
-        refreshCourses,
-        isLoadingCourses,
       }}
     >
       {children}

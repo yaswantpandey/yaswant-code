@@ -7,7 +7,6 @@
  *   const res = await api.auth.login({ email, password });
  */
 
-import type { Course, Certificate } from '../types/lms';
 
 // ─── Base URL ────────────────────────────────────────────────────────────────
 // On Hostinger (same domain), use relative path '/api'
@@ -182,166 +181,6 @@ export const authService = {
 };
 
 // ============================================================================
-// 2. COURSES
-// ============================================================================
-export interface CourseListParams {
-  category?: string; search?: string; difficulty?: string;
-  sort?: 'popular' | 'newest' | 'rating' | 'price_low' | 'price_high';
-  page?: number; per_page?: number;
-}
-export interface CourseListResponse {
-  courses: Course[]; total: number; page: number; per_page: number; total_pages: number;
-}
-export interface CreateCoursePayload {
-  title: string; description: string; category: string; price: number;
-  tagline?: string; thumbnail?: string;
-  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced' | 'All Levels';
-  duration_hours?: number; lessons_count?: number; language?: string;
-  whatYouWillLearn?: string[]; requirements?: string[]; skills?: string[];
-}
-
-export const courseService = {
-  async getAll(params?: CourseListParams): Promise<ApiResponse<CourseListResponse>> {
-    return apiClient.get<CourseListResponse>('courses.php', { params: params as Record<string, unknown> });
-  },
-  async getById(id: string): Promise<ApiResponse<Course>> {
-    return apiClient.get<Course>('courses.php', { params: { id } });
-  },
-  async getFeatured(): Promise<ApiResponse<Course[]>> {
-    return apiClient.get<Course[]>('courses.php', { params: { action: 'featured' } });
-  },
-  async create(payload: CreateCoursePayload): Promise<ApiResponse<{ id: string }>> {
-    return apiClient.post<{ id: string }>('courses.php', payload);
-  },
-  async update(id: string, payload: Partial<CreateCoursePayload>): Promise<ApiResponse<{ id: string }>> {
-    return apiClient.put<{ id: string }>('courses.php', payload, { params: { id } });
-  },
-  async delete(id: string): Promise<ApiResponse<null>> {
-    return apiClient.delete('courses.php', { params: { id } });
-  },
-};
-
-// ============================================================================
-// 3. ENROLLMENTS & PROGRESS
-// ============================================================================
-export interface EnrollmentRecord {
-  id: number; user_id: string; course_id: string; progress_percent: number;
-  current_lesson_id?: string; enrolled_at: string; completed_at?: string;
-  title: string; thumbnail: string; category: string; duration_hours: number;
-  lessons_count: number; instructor_name: string; completed_lessons: number;
-}
-
-export const enrollmentService = {
-  async getUserEnrollments(userId: string): Promise<ApiResponse<EnrollmentRecord[]>> {
-    return apiClient.get<EnrollmentRecord[]>('enrollments.php', { params: { user_id: userId } });
-  },
-  async getEnrollment(userId: string, courseId: string): Promise<ApiResponse<EnrollmentRecord | null>> {
-    return apiClient.get<EnrollmentRecord | null>('enrollments.php', { params: { user_id: userId, course_id: courseId } });
-  },
-  async enroll(courseId: string): Promise<ApiResponse<{ enrolled: boolean; already_enrolled: boolean }>> {
-    return apiClient.post('enrollments.php', { course_id: courseId });
-  },
-  async completeLesson(courseId: string, lessonId: string): Promise<ApiResponse<{ progress_percent: number; course_completed: boolean }>> {
-    return apiClient.post('enrollments.php', { course_id: courseId, lesson_id: lessonId }, { params: { action: 'complete_lesson' } });
-  },
-  async updateProgress(courseId: string, currentLessonId: string, progressPercent?: number): Promise<ApiResponse<null>> {
-    return apiClient.put('enrollments.php', {
-      course_id: courseId,
-      current_lesson_id: currentLessonId,
-      progress_percent: progressPercent,
-    });
-  },
-};
-
-// ============================================================================
-// 4. CERTIFICATES
-// ============================================================================
-export interface CertificateVerifyResult extends Certificate {
-  verification_code: string; issue_date: string;
-  course_title: string; student_name: string; instructor_name: string;
-}
-export interface IssueCertificateResult {
-  certificateId: string; credentialId: string; verificationCode: string;
-  verificationUrl: string; already_issued: boolean;
-}
-
-export const certificateService = {
-  async verify(code: string): Promise<ApiResponse<CertificateVerifyResult>> {
-    return apiClient.get<CertificateVerifyResult>('certificates.php', { params: { code } });
-  },
-  async getUserCertificates(userId: string): Promise<ApiResponse<Certificate[]>> {
-    return apiClient.get<Certificate[]>('certificates.php', { params: { user_id: userId } });
-  },
-  async issue(courseId: string, userId?: string): Promise<ApiResponse<IssueCertificateResult>> {
-    return apiClient.post<IssueCertificateResult>('certificates.php', { course_id: courseId, user_id: userId });
-  },
-};
-
-// ============================================================================
-// 5. QUIZZES
-// ============================================================================
-export interface QuizQuestion {
-  id: string; question: string; options: string[]; order_index: number;
-}
-export interface QuizData {
-  id: string; title: string; duration_minutes: number; passing_score: number;
-  questions: QuizQuestion[];
-}
-export interface QuizSubmitResult {
-  score: number; passed: boolean; passing_score: number;
-  correct: number; total: number;
-  results: Array<{
-    question_id: string; question: string; options: string[];
-    your_answer: string | null; correct_answer: string | null;
-    is_correct: boolean; explanation: string;
-  }>;
-}
-export interface QuizAnswerPayload {
-  question_id: string;
-  selected_index: number;
-}
-
-export const quizService = {
-  async getQuiz(quizId: string): Promise<ApiResponse<QuizData>> {
-    return apiClient.get<QuizData>('quizzes.php', { params: { quiz_id: quizId } });
-  },
-  async getCourseQuizzes(courseId: string): Promise<ApiResponse<Array<{ id: string; title: string; duration_minutes: number; passing_score: number }>>> {
-    return apiClient.get('quizzes.php', { params: { course_id: courseId } });
-  },
-  async submit(quizId: string, answers: QuizAnswerPayload[]): Promise<ApiResponse<QuizSubmitResult>> {
-    return apiClient.post<QuizSubmitResult>('quizzes.php', { quiz_id: quizId, answers }, { params: { action: 'submit' } });
-  },
-  async getHistory(userId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.get('quizzes.php', { params: { action: 'history', user_id: userId } });
-  },
-};
-
-// ============================================================================
-// 6. ASSIGNMENTS
-// ============================================================================
-export interface AssignmentSubmission {
-  id: number; assignment_id: string; user_id: string;
-  status: string; github_url?: string; submitted_file?: string;
-  grade?: string; feedback?: string;
-  submitted_at: string; reviewed_at?: string;
-}
-
-export const assignmentService = {
-  async getCourseAssignments(courseId: string, userId?: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.get('assignments.php', { params: { course_id: courseId, user_id: userId } });
-  },
-  async getUserAssignments(userId: string): Promise<ApiResponse<unknown[]>> {
-    return apiClient.get('assignments.php', { params: { user_id: userId } });
-  },
-  async submit(assignmentId: string, payload: { github_url?: string; submitted_file?: string; notes?: string }): Promise<ApiResponse<{ submission_id: number }>> {
-    return apiClient.post('assignments.php', { assignment_id: assignmentId, ...payload }, { params: { action: 'submit' } });
-  },
-  async grade(submissionId: number, grade: string, feedback: string, status?: string): Promise<ApiResponse<null>> {
-    return apiClient.put('assignments.php', { submission_id: submissionId, grade, feedback, status }, { params: { action: 'grade' } });
-  },
-};
-
-// ============================================================================
 // 7. DISCUSSIONS
 // ============================================================================
 export interface DiscussionListParams {
@@ -422,8 +261,8 @@ export const newsletterService = {
   async subscribe(email: string, name?: string): Promise<ApiResponse<unknown>> {
     return apiClient.post('newsletter.php', { email, name });
   },
-  async unsubscribe(email: string): Promise<ApiResponse<unknown>> {
-    return apiClient.delete('newsletter.php', { params: { email } });
+  async unsubscribe(email: string, token?: string): Promise<ApiResponse<unknown>> {
+    return apiClient.delete('newsletter.php', { params: { email, token } });
   },
 };
 
@@ -442,11 +281,6 @@ export const healthService = {
 export const api = {
   client:       apiClient,
   auth:         authService,
-  courses:      courseService,
-  enrollments:  enrollmentService,
-  certificates: certificateService,
-  quizzes:      quizService,
-  assignments:  assignmentService,
   discussions:  discussionService,
   notifications:notificationService,
   contact:      contactService,

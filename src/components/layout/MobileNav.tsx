@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useLms } from '../../context/LmsContext';
 import { 
   Home, 
-  BookOpen, 
   FolderGit2, 
   StickyNote, 
   LayoutGrid, 
@@ -19,7 +18,6 @@ import {
   Sliders, 
   ChevronRight,
   Flame,
-  Award,
   Sun,
   Moon,
   Cloud,
@@ -56,17 +54,17 @@ export const MobileNav: React.FC = () => {
       isActive: currentView === 'landing'
     },
     { 
-      id: 'courses', 
-      label: 'Courses', 
-      icon: BookOpen,
-      isActive: currentView === 'courses' || currentView === 'course-detail' || currentView === 'learning-interface'
+      id: 'learning-paths', 
+      label: 'Roadmaps', 
+      icon: Sparkles,
+      isActive: currentView === 'learning-paths'
     },
     { 
       id: 'projects', 
       label: 'Projects', 
       icon: FolderGit2,
       badge: 'New',
-      isActive: currentView === 'projects' || currentView === 'assignment'
+      isActive: currentView === 'projects'
     },
     { 
       id: 'notes', 
@@ -78,7 +76,7 @@ export const MobileNav: React.FC = () => {
       id: 'menu', 
       label: 'Menu', 
       icon: LayoutGrid,
-      isActive: bottomSheetOpen || ['tools', 'blog', 'resources', 'student-dashboard', 'learning-paths', 'community', 'certificate', 'settings', 'student-profile'].includes(currentView)
+      isActive: bottomSheetOpen || ['tools', 'blog', 'resources', 'student-dashboard', 'community', 'settings', 'student-profile'].includes(currentView)
     },
   ];
 
@@ -119,14 +117,14 @@ export const MobileNav: React.FC = () => {
     {
       id: 'learning-paths',
       label: 'Learning Paths',
-      desc: 'Curated multi-course tracks',
+      desc: 'Step-by-step career tracks',
       icon: Sparkles,
       color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
     },
     {
       id: 'student-dashboard',
       label: 'Learning Dashboard',
-      desc: 'Enrolled courses & metrics',
+      desc: 'Your learning hub',
       icon: GraduationCap,
       color: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
     },
@@ -136,13 +134,6 @@ export const MobileNav: React.FC = () => {
       desc: 'Discussions & peer review',
       icon: User,
       color: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
-    },
-    {
-      id: 'certificate',
-      label: 'Certificates',
-      desc: 'Verified graduation credentials',
-      icon: Award,
-      color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
     },
     {
       id: 'student-profile',
@@ -360,7 +351,7 @@ export const MobileNav: React.FC = () => {
       {/* Fixed Material Design 3 Bottom Navigation Bar */}
       <nav 
         aria-label="Mobile Bottom Navigation" 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-2xl border-t border-neutral-200/80 dark:border-neutral-800 px-3 pt-1.5 pb-2 flex items-center justify-around shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#004741]/95 backdrop-blur-2xl border-t border-[#F0EDE4]/15 px-3 pt-1.5 pb-2 flex items-center justify-around shadow-[0_-4px_24px_rgba(0,0,0,0.3)] text-[#F0EDE4]"
       >
         {mainNavItems.map((item) => {
           const Icon = item.icon;
@@ -376,23 +367,23 @@ export const MobileNav: React.FC = () => {
               <div 
                 className={`relative w-14 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isActive
-                    ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-xs'
-                    : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900'
+                    ? 'bg-[#F0EDE4] text-[#004741] shadow-xs'
+                    : 'text-[#F0EDE4]/70 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
                 }`}
               >
                 <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-105' : ''}`} />
                 
                 {/* Optional Badge on icon pill */}
                 {item.badge && !isActive && (
-                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-neutral-950" />
+                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#004741]" />
                 )}
               </div>
 
               {/* Material Bottom Tab Label */}
               <span className={`text-[10px] tracking-tight transition-colors leading-none ${
                 isActive
-                  ? 'text-neutral-950 dark:text-white font-bold'
-                  : 'text-neutral-500 dark:text-neutral-400 font-medium'
+                  ? 'text-[#F0EDE4] font-bold'
+                  : 'text-[#F0EDE4]/65 font-medium'
               }`}>
                 {item.label}
               </span>

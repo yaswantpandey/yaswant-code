@@ -15,13 +15,13 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   ...props
 }) => {
   const intensityMap = {
-    subtle: 'bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md border border-neutral-200/60 dark:border-neutral-800/60',
-    medium: 'bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl border border-neutral-200/80 dark:border-neutral-800 shadow-[0_4px_24px_rgba(0,0,0,0.04)] dark:shadow-[0_4px_24px_rgba(0,0,0,0.3)]',
-    high: 'bg-white/95 dark:bg-neutral-950/90 backdrop-blur-2xl border border-neutral-200 dark:border-neutral-750 shadow-xl'
+    subtle: 'bg-[#003832]/60 backdrop-blur-md border border-[#F0EDE4]/10 text-[#F0EDE4]',
+    medium: 'bg-[#003d37]/80 backdrop-blur-xl border border-[#F0EDE4]/15 shadow-[0_4px_24px_rgba(0,0,0,0.3)] text-[#F0EDE4]',
+    high: 'bg-[#00433d]/90 backdrop-blur-2xl border border-[#F0EDE4]/20 shadow-xl text-[#F0EDE4]'
   };
 
   const hoverClasses = hoverEffect 
-    ? 'transition-all duration-300 hover:border-neutral-400 dark:hover:border-neutral-700 hover:shadow-lg hover:-translate-y-0.5' 
+    ? 'transition-all duration-300 hover:border-[#F0EDE4]/35 hover:shadow-lg hover:-translate-y-0.5' 
     : '';
 
   return (

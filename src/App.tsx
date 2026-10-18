@@ -13,13 +13,7 @@ import { isPrivateView } from './services/router';
 const AdminDashboardPage   = React.lazy(() => import('./views/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
 const AdminAuthGate        = React.lazy(() => import('./views/AdminAuthGate').then(m => ({ default: m.AdminAuthGate })));
 import { LandingPage } from './views/LandingPage';
-const CourseDiscoveryPage  = React.lazy(() => import('./views/CourseDiscoveryPage').then(m => ({ default: m.CourseDiscoveryPage })));
-const CourseDetailsPage    = React.lazy(() => import('./views/CourseDetailsPage').then(m => ({ default: m.CourseDetailsPage })));
 const StudentDashboardPage = React.lazy(() => import('./views/StudentDashboardPage').then(m => ({ default: m.StudentDashboardPage })));
-const CourseLearningPage   = React.lazy(() => import('./views/CourseLearningPage').then(m => ({ default: m.CourseLearningPage })));
-const QuizPage             = React.lazy(() => import('./views/QuizPage').then(m => ({ default: m.QuizPage })));
-const AssignmentPage       = React.lazy(() => import('./views/AssignmentPage').then(m => ({ default: m.AssignmentPage })));
-const CertificatePage      = React.lazy(() => import('./views/CertificatePage').then(m => ({ default: m.CertificatePage })));
 const LearningPathsPage    = React.lazy(() => import('./views/LearningPathsPage').then(m => ({ default: m.LearningPathsPage })));
 const CommunityPage        = React.lazy(() => import('./views/CommunityPage').then(m => ({ default: m.CommunityPage })));
 const StudentProfilePage   = React.lazy(() => import('./views/StudentProfilePage').then(m => ({ default: m.StudentProfilePage })));
@@ -30,7 +24,6 @@ const NotesPage            = React.lazy(() => import('./views/NotesPage').then(m
 const ToolsPage            = React.lazy(() => import('./views/ToolsPage').then(m => ({ default: m.ToolsPage })));
 const ProjectsPage         = React.lazy(() => import('./views/ProjectsPage').then(m => ({ default: m.ProjectsPage })));
 const SearchModal          = React.lazy(() => import('./components/ui/SearchModal').then(m => ({ default: m.SearchModal })));
-const CertificateModal     = React.lazy(() => import('./components/ui/CertificateModal').then(m => ({ default: m.CertificateModal })));
 const AuthModal            = React.lazy(() => import('./components/ui/AuthModal').then(m => ({ default: m.AuthModal })));
 
 const ViewLoadingFallback: React.FC = () => (
@@ -49,7 +42,7 @@ const isPathOrHashAdmin = () => {
 };
 
 const AppShell: React.FC = () => {
-  const { currentView, setCurrentView, searchModalOpen, authModalOpen, certificateModal } = useLms();
+  const { currentView, setCurrentView, searchModalOpen, authModalOpen } = useLms();
 
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
     const user = tokenStorage.getUser<{ role?: string }>();
@@ -92,7 +85,7 @@ const AppShell: React.FC = () => {
     }
 
     return (
-      <div className="min-h-screen bg-neutral-50/50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-200">
+      <div className="min-h-screen bg-[#004741] text-[#F0EDE4] transition-colors duration-200">
         <React.Suspense fallback={<ViewLoadingFallback />}>
           <AdminDashboardPage />
         </React.Suspense>
@@ -106,20 +99,8 @@ const AppShell: React.FC = () => {
     switch (currentView) {
       case 'landing':
         return <LandingPage />;
-      case 'courses':
-        return <CourseDiscoveryPage />;
-      case 'course-detail':
-        return <CourseDetailsPage />;
       case 'student-dashboard':
         return <StudentDashboardPage />;
-      case 'learning-interface':
-        return <CourseLearningPage />;
-      case 'quiz':
-        return <QuizPage />;
-      case 'assignment':
-        return <AssignmentPage />;
-      case 'certificate':
-        return <CertificatePage />;
       case 'learning-paths':
         return <LearningPathsPage />;
       case 'community':
@@ -143,29 +124,25 @@ const AppShell: React.FC = () => {
     }
   };
 
-  const isLearningInterface = currentView === 'learning-interface';
-
   return (
-    <div className="min-h-screen flex flex-col bg-neutral-50/50 dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 transition-colors duration-200 selection:bg-neutral-900 selection:text-white dark:selection:bg-white dark:selection:text-neutral-950">
+    <div className="min-h-screen flex flex-col bg-[#004741] text-[#F0EDE4] transition-colors duration-200">
       {/* Sticky Global Student Navigation */}
       <Navbar />
 
       {/* Main Student Experience Area */}
-      <main className={`flex-1 ${isLearningInterface ? 'overflow-hidden' : 'pb-28 md:pb-12'}`}>
+      <main className="flex-1 pb-28 md:pb-12">
         <React.Suspense fallback={<ViewLoadingFallback />}>
           {renderStudentView()}
-          {/* Global Footer (hidden only on learning player for immersion) */}
-          {!isLearningInterface && <Footer />}
+          <Footer />
         </React.Suspense>
       </main>
 
       {/* Mobile-Friendly Thumb Navigation */}
-      {!isLearningInterface && <MobileNav />}
+      <MobileNav />
 
       {/* Modals & Notifications (Lazy-loaded on demand) */}
       <React.Suspense fallback={null}>
         {searchModalOpen && <SearchModal />}
-        {certificateModal && <CertificateModal />}
         {authModalOpen && <AuthModal />}
       </React.Suspense>
       <ToastContainer />

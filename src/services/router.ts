@@ -21,27 +21,17 @@ const BASE_URL = 'https://yaswant.co.in';
 const PRIVATE_VIEWS: ReadonlySet<ActiveView> = new Set([
   'admin-dashboard',
   'settings',
-  'quiz',
-  'assignment',
   'student-dashboard',
   'student-profile',
-  'certificate',
-  'learning-interface',
 ]);
 
 /**
- * Get page title for a given view, course, or roadmap track
+ * Get page title for a given view or roadmap track
  */
-export function getTitleForView(view: ActiveView, courseTitle?: string, roadmapSlug?: string): string {
+export function getTitleForView(view: ActiveView, roadmapSlug?: string): string {
   switch (view) {
     case 'landing':
-      return `${BRAND} — Full-Stack Engineering & AI Masterclasses`;
-    case 'courses':
-      return `Engineering Masterclasses & Online Courses | ${BRAND}`;
-    case 'course-detail':
-      return courseTitle ? `${courseTitle} | ${BRAND}` : `Course Details | ${BRAND}`;
-    case 'learning-interface':
-      return courseTitle ? `Learning: ${courseTitle} | ${BRAND}` : `Course Player | ${BRAND}`;
+      return `${BRAND} — Full-Stack Engineering & AI Roadmaps`;
     case 'notes':
       return `Study Notes & Architecture Whitepapers | ${BRAND}`;
     case 'tools':
@@ -74,30 +64,18 @@ export function getTitleForView(view: ActiveView, courseTitle?: string, roadmapS
       return `Free Developer Resources — Blueprints, Roadmaps & Cheat Sheets | ${BRAND}`;
     case 'community':
       return `Engineering Community & Peer Discussions | ${BRAND}`;
-    case 'quiz':
-      return `Technical Assessment Quiz | ${BRAND}`;
-    case 'assignment':
-      return `Capstone Project Assignment | ${BRAND}`;
-    case 'certificate':
-      return `Verifiable Credentials & Digital Certificates | ${BRAND}`;
     default:
       return `${BRAND} — Engineering Education`;
   }
 }
 
 /**
- * Get meta description for a given view, course, or roadmap track
+ * Get meta description for a given view or roadmap track
  */
-export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string, roadmapSlug?: string): string {
+export function getMetaDescriptionForView(view: ActiveView, roadmapSlug?: string): string {
   switch (view) {
     case 'landing':
-      return `Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native development from staff engineers. Earn verifiable credentials. Join 140k+ developers on ${BRAND}.`;
-    case 'courses':
-      return `Browse 197+ expert-authored engineering masterclasses in React 19, Next.js 15, AI/LLM, Rust, Kubernetes, and distributed systems. Start free on ${BRAND}.`;
-    case 'course-detail':
-      return courseTitle
-        ? `Enrol in ${courseTitle} on ${BRAND}. Production-grade curriculum authored by staff engineers. Verifiable digital certificate included.`
-        : `Explore this engineering masterclass on ${BRAND}. Learn from principal engineers with real-world production curriculum and earn a verifiable credential.`;
+      return `Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native development from staff engineers. Join 140k+ developers on ${BRAND}.`;
     case 'blog':
       return `Deep-dive technical articles on distributed systems, AI/LLM architecture, React 19, Rust, cloud-native DevOps, and frontend engineering. Written by staff engineers on ${BRAND}.`;
     case 'learning-paths': {
@@ -121,28 +99,18 @@ export function getMetaDescriptionForView(view: ActiveView, courseTitle?: string
     case 'community':
       return `Join the ${BRAND} engineering community. Ask architecture questions, review system designs, and collaborate with senior engineers and staff architects.`;
     case 'notes':
-      return `Your personal study notes and architecture whitepapers. Capture learnings from any course and access them anywhere on ${BRAND}.`;
+      return `Your personal study notes and architecture whitepapers. Capture your learnings and access them anywhere on ${BRAND}.`;
     default:
-      return `${BRAND} — The developer-first learning platform for serious software engineers. Master production systems and earn verifiable credentials.`;
+      return `${BRAND} — The developer-first learning platform for serious software engineers. Master production systems with roadmaps, projects, and tools.`;
   }
 }
 /**
- * Maps an ActiveView and optional course or roadmapSlug to a clean URL path
+ * Maps an ActiveView and optional roadmapSlug to a clean URL path
  */
-export function getPathForView(
-  view: ActiveView, 
-  course?: { id: string; title?: string } | null,
-  roadmapSlug?: string
-): string {
+export function getPathForView(view: ActiveView, roadmapSlug?: string): string {
   switch (view) {
     case 'landing':
       return '/';
-    case 'courses':
-      return '/courses';
-    case 'course-detail':
-      return course?.id ? `/courses/${course.id}` : '/courses';
-    case 'learning-interface':
-      return course?.id ? `/learn/${course.id}` : '/learn';
     case 'notes':
       return '/notes';
     case 'tools':
@@ -165,12 +133,6 @@ export function getPathForView(
       return '/resources';
     case 'community':
       return '/community';
-    case 'quiz':
-      return '/quiz';
-    case 'assignment':
-      return '/assignment';
-    case 'certificate':
-      return '/certificate';
     default:
       return '/';
   }
@@ -186,37 +148,12 @@ export function isPrivateView(view: ActiveView): boolean {
 /**
  * Inject the appropriate breadcrumb + page schema for a given view
  */
-function applySchemaForView(
-  view: ActiveView,
-  course?: { id: string; title?: string } | null,
-  roadmapSlug?: string
-): void {
+function applySchemaForView(view: ActiveView, roadmapSlug?: string): void {
   switch (view) {
     case 'landing': {
       // FAQ schema is injected by LandingPage.tsx useEffect — skip here
       // Just clean up any leftover page schema from previous routes
       removeSchema();
-      break;
-    }
-    case 'courses': {
-      injectSchema(
-        buildBreadcrumbSchema([
-          { name: 'Home', url: '/' },
-          { name: 'Courses', url: '/courses' },
-        ])
-      );
-      break;
-    }
-    case 'course-detail': {
-      if (course?.id) {
-        injectSchema(
-          buildBreadcrumbSchema([
-            { name: 'Home', url: '/' },
-            { name: 'Courses', url: '/courses' },
-            { name: course.title || 'Course', url: `/courses/${course.id}` },
-          ])
-        );
-      }
       break;
     }
     case 'blog': {
@@ -282,11 +219,10 @@ function applySchemaForView(
 }
 
 /**
- * Parses current window.location (pathname + hash) into an ActiveView, courseId, and roadmapSlug
+ * Parses current window.location (pathname + hash) into an ActiveView and roadmapSlug
  */
 export function parseCurrentLocation(): { 
   view: ActiveView; 
-  courseId?: string; 
   roadmapSlug?: string; 
   isHashRedirect?: boolean 
 } {
@@ -297,16 +233,11 @@ export function parseCurrentLocation(): {
   const pathname = window.location.pathname.toLowerCase().replace(/\/+$/, '') || '/';
   const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '');
 
-  // 1. Check Hash Fallback (e.g., #courses, #notes, #admin)
+  // 1. Check Hash Fallback (e.g., #notes, #admin)
   if (hash) {
     if (hash === 'admin') return { view: 'admin-dashboard', isHashRedirect: true };
     if (hash === 'notes') return { view: 'notes', isHashRedirect: true };
     if (hash === 'tools') return { view: 'tools', isHashRedirect: true };
-    if (hash === 'courses') return { view: 'courses', isHashRedirect: true };
-    if (hash.startsWith('course/') || hash.startsWith('courses/')) {
-      const parts = hash.split('/');
-      return { view: 'course-detail', courseId: parts[1], isHashRedirect: true };
-    }
     if (hash.startsWith('roadmaps/') || hash.startsWith('paths/')) {
       const parts = hash.split('/');
       return { view: 'learning-paths', roadmapSlug: parts[1], isHashRedirect: true };
@@ -321,31 +252,12 @@ export function parseCurrentLocation(): {
     if (hash === 'blog') return { view: 'blog', isHashRedirect: true };
     if (hash === 'resources') return { view: 'resources', isHashRedirect: true };
     if (hash === 'community') return { view: 'community', isHashRedirect: true };
-    if (hash === 'quiz') return { view: 'quiz', isHashRedirect: true };
-    if (hash === 'assignment') return { view: 'assignment', isHashRedirect: true };
-    if (hash === 'certificate') return { view: 'certificate', isHashRedirect: true };
     if (hash === 'settings') return { view: 'settings', isHashRedirect: true };
   }
 
   // 2. Clean Pathname Routing
   if (pathname.startsWith('/admin')) {
     return { view: 'admin-dashboard' };
-  }
-
-  if (pathname.startsWith('/courses/') || pathname.startsWith('/course/')) {
-    const parts = pathname.split('/').filter(Boolean);
-    const courseId = parts[1];
-    return { view: 'course-detail', courseId };
-  }
-
-  if (pathname === '/courses') {
-    return { view: 'courses' };
-  }
-
-  if (pathname.startsWith('/learn/') || pathname === '/learn') {
-    const parts = pathname.split('/').filter(Boolean);
-    const courseId = parts[1];
-    return { view: 'learning-interface', courseId };
   }
 
   if (pathname === '/notes') {
@@ -395,18 +307,6 @@ export function parseCurrentLocation(): {
     return { view: 'resources' };
   }
 
-  if (pathname === '/quiz') {
-    return { view: 'quiz' };
-  }
-
-  if (pathname === '/assignment') {
-    return { view: 'assignment' };
-  }
-
-  if (pathname === '/certificate') {
-    return { view: 'certificate' };
-  }
-
   if (pathname === '/settings') {
     return { view: 'settings' };
   }
@@ -420,31 +320,30 @@ export function parseCurrentLocation(): {
  */
 export function syncUrlWithView(
   view: ActiveView,
-  course?: { id: string; title?: string } | null,
   replace: boolean = false,
   roadmapSlug?: string
 ): void {
   if (typeof window === 'undefined') return;
 
-  const targetPath = getPathForView(view, course, roadmapSlug);
+  const targetPath = getPathForView(view, roadmapSlug);
   const currentPath = window.location.pathname;
-  const title = getTitleForView(view, course?.title, roadmapSlug);
-  const description = getMetaDescriptionForView(view, course?.title, roadmapSlug);
+  const title = getTitleForView(view, roadmapSlug);
+  const description = getMetaDescriptionForView(view, roadmapSlug);
   const canonicalUrl = targetPath === '/' ? BASE_URL + '/' : BASE_URL + targetPath;
   const ogImage = 'https://yaswant.co.in/og-image.svg';
 
   // ── 1. Update browser history ──────────────────────────────────────────
   if (window.location.hash) {
     try {
-      window.history.replaceState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
+      window.history.replaceState({ view, roadmapSlug }, '', targetPath);
     } catch {
       window.location.hash = '';
     }
   } else if (currentPath !== targetPath) {
     if (replace) {
-      window.history.replaceState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
+      window.history.replaceState({ view, roadmapSlug }, '', targetPath);
     } else {
-      window.history.pushState({ view, courseId: course?.id, roadmapSlug }, '', targetPath);
+      window.history.pushState({ view, roadmapSlug }, '', targetPath);
     }
   }
 
@@ -457,7 +356,7 @@ export function syncUrlWithView(
     description,
     url: canonicalUrl,
     image: ogImage,
-    type: view === 'course-detail' ? 'article' : 'website',
+    type: 'website',
   });
 
   // ── 3. Robots directive: noindex for private routes ────────────────────
@@ -468,5 +367,5 @@ export function syncUrlWithView(
   }
 
   // ── 4. Inject page-level JSON-LD schema ────────────────────────────────
-  applySchemaForView(view, course, roadmapSlug);
+  applySchemaForView(view, roadmapSlug);
 }

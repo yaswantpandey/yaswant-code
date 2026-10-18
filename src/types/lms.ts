@@ -2,14 +2,8 @@ export type RoleType = 'student' | 'admin';
 
 export type ActiveView = 
   | 'landing'
-  | 'courses'
-  | 'course-detail'
-  | 'learning-interface'
-  | 'quiz'
-  | 'assignment'
   | 'student-dashboard'
   | 'learning-paths'
-  | 'certificate'
   | 'community'
   | 'student-profile'
   | 'admin-dashboard'
@@ -19,37 +13,6 @@ export type ActiveView =
   | 'notes'
   | 'tools'
   | 'projects';
-
-export interface Lesson {
-  id: string;
-  title: string;
-  duration: string; // e.g. "14:20"
-  type: 'video' | 'quiz' | 'assignment' | 'reading';
-  completed: boolean;
-  locked: boolean;
-  previewAvailable?: boolean;
-  videoUrl?: string;
-  driveUrl?: string;
-  description?: string;
-  codeSnippet?: string;
-  codeLanguage?: string;
-  resources?: { name: string; size: string; url: string }[];
-  transcript?: { time: string; text: string }[];
-}
-
-export interface Chapter {
-  id: string;
-  title: string;
-  duration: string;
-  lessons: Lesson[];
-}
-
-export interface Module {
-  id: string;
-  title: string;
-  duration: string;
-  chapters: Chapter[];
-}
 
 export interface Instructor {
   id: string;
@@ -69,108 +32,6 @@ export interface Instructor {
     website?: string;
   };
   achievements?: string[];
-}
-
-export interface Course {
-  id: string;
-  title: string;
-  tagline: string;
-  description: string;
-  thumbnail: string;
-  instructor: Instructor;
-  category: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced' | 'All Levels';
-  rating: number;
-  reviewsCount: number;
-  studentsCount: number;
-  durationHours: number;
-  lessonsCount: number;
-  price: number;
-  originalPrice?: number;
-  discountPercentage?: number;
-  isBestseller?: boolean;
-  isFeatured?: boolean;
-  language: string;
-  lastUpdated: string;
-  hasCertificate: boolean;
-  enrolled?: boolean;
-  progressPercent?: number;
-  currentLessonId?: string;
-  whatYouWillLearn: string[];
-  requirements: string[];
-  modules: Module[];
-  skills: string[];
-  projectsCount: number;
-  driveUrl?: string;
-}
-
-export interface QuizQuestion {
-  id: string;
-  question: string;
-  options: string[];
-  correctOptionIndex: number;
-  explanation: string;
-}
-
-export interface Quiz {
-  id: string;
-  courseId: string;
-  lessonId: string;
-  title: string;
-  durationMinutes: number;
-  questions: QuizQuestion[];
-  passingScore: number;
-}
-
-export interface Assignment {
-  id: string;
-  courseId: string;
-  title: string;
-  description: string;
-  deadline: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  requirements: string[];
-  instructions: string[];
-  status: 'Not Started' | 'In Progress' | 'Submitted' | 'Under Review' | 'Completed' | 'Needs Revision';
-  submittedDate?: string;
-  grade?: string;
-  feedback?: string;
-  githubUrl?: string;
-  submittedFile?: string;
-}
-
-export interface Certificate {
-  id: string;
-  courseId: string;
-  courseTitle: string;
-  studentName: string;
-  instructorName: string;
-  issueDate: string;
-  credentialId: string;
-  skillsAcquired: string[];
-  grade: string;
-  verificationUrl: string;
-  thumbnailUrl: string;
-}
-
-export interface LearningPath {
-  id: string;
-  title: string;
-  description: string;
-  iconName: string;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  estimatedDuration: string;
-  coursesCount: number;
-  skillsCovered: string[];
-  progressPercent: number;
-  isRecommended?: boolean;
-  careerRoles: string[];
-  milestones: {
-    title: string;
-    level: 'Beginner' | 'Intermediate' | 'Advanced' | 'Capstone' | 'Certification';
-    courses: string[];
-    description: string;
-  }[];
 }
 
 export interface DiscussionThread {

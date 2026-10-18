@@ -9,11 +9,6 @@
  *   POST ?action=create_user       — Create a new user (student/admin)
  *   POST ?action=update_user       — Update user role, status, details or password
  *   POST ?action=delete_user       — Delete user
- *   GET  ?action=courses           — List all courses with metrics & status
- *   POST ?action=create_course     — Create a new course
- *   POST ?action=update_course     — Update course details
- *   POST ?action=toggle_course     — Toggle is_featured, is_bestseller, is_deleted
- *   POST ?action=delete_course     — Permanently delete or archive course
  *   GET  ?action=notes             — List all study notes
  *   POST ?action=create_note       — Create a study note
  *   POST ?action=update_note       — Update a study note
@@ -80,7 +75,8 @@ function verify_admin_access(): array
 
         return $user;
     } catch (Throwable $e) {
-        fail('Authentication check failed: ' . $e->getMessage(), 500);
+        error_log('Admin auth check failed: ' . $e->getMessage());
+        fail('Authentication check failed.', 500);
     }
 }
 
@@ -195,23 +191,6 @@ function ensure_extended_tables(PDO $pdo): void
         ");
     }
 
-    // Ensure drive_url column exists on courses and lessons
-    try {
-        if ($driver === 'mysql') {
-            $pdo->exec("ALTER TABLE `courses` ADD COLUMN `drive_url` VARCHAR(500) NULL");
-        } else {
-            $pdo->exec("ALTER TABLE courses ADD COLUMN drive_url TEXT");
-        }
-    } catch (Throwable $e) {}
-
-    try {
-        if ($driver === 'mysql') {
-            $pdo->exec("ALTER TABLE `lessons` ADD COLUMN `drive_url` VARCHAR(500) NULL");
-        } else {
-            $pdo->exec("ALTER TABLE lessons ADD COLUMN drive_url TEXT");
-        }
-    } catch (Throwable $e) {}
-
     // Seed default settings if empty
     try {
         $settingsCount = (int)$pdo->query("SELECT COUNT(*) FROM site_settings")->fetchColumn();
@@ -284,12 +263,6 @@ if ($method === 'GET' && $action === 'overview') {
             'admins'      => 0,
             'active'      => 0,
         ],
-        'courses' => [
-            'total'      => 0,
-            'published'  => 0,
-            'featured'   => 0,
-            'bestseller' => 0,
-        ],
         'notes' => [
             'total'      => 0,
             'pdf'        => 0,
@@ -300,10 +273,6 @@ if ($method === 'GET' && $action === 'overview') {
             'zip'        => 0,
             'drive'      => 0,
         ],
-        'enrollments' => [
-            'total'     => 0,
-            'completed' => 0,
-        ],
         'inquiries' => [
             'total'  => 0,
             'recent' => [],
@@ -311,17 +280,6 @@ if ($method === 'GET' && $action === 'overview') {
         'subscribers' => [
             'total'  => 0,
             'active' => 0,
-        ],
-        'quizzes' => [
-            'total'    => 0,
-            'attempts' => 0,
-        ],
-        'assignments' => [
-            'total'       => 0,
-            'submissions' => 0,
-        ],
-        'certificates' => [
-            'total' => 0,
         ],
         'discussions' => [
             'total'      => 0,
@@ -345,13 +303,6 @@ if ($method === 'GET' && $action === 'overview') {
     } catch (Throwable $e) {}
 
     try {
-        $stats['courses']['total']      = (int)$pdo->query("SELECT COUNT(*) FROM courses")->fetchColumn();
-        $stats['courses']['published']  = (int)$pdo->query("SELECT COUNT(*) FROM courses WHERE (is_deleted = 0 OR is_deleted IS NULL)")->fetchColumn();
-        $stats['courses']['featured']   = (int)$pdo->query("SELECT COUNT(*) FROM courses WHERE is_featured = 1 AND (is_deleted = 0 OR is_deleted IS NULL)")->fetchColumn();
-        $stats['courses']['bestseller'] = (int)$pdo->query("SELECT COUNT(*) FROM courses WHERE is_bestseller = 1 AND (is_deleted = 0 OR is_deleted IS NULL)")->fetchColumn();
-    } catch (Throwable $e) {}
-
-    try {
         $stats['notes']['total'] = (int)$pdo->query("SELECT COUNT(*) FROM study_notes")->fetchColumn();
         $stats['notes']['pdf']   = (int)$pdo->query("SELECT COUNT(*) FROM study_notes WHERE resource_type = 'pdf'")->fetchColumn();
         $stats['notes']['drive'] = (int)$pdo->query("SELECT COUNT(*) FROM study_notes WHERE resource_type != 'pdf'")->fetchColumn();
@@ -364,11 +315,6 @@ if ($method === 'GET' && $action === 'overview') {
     } catch (Throwable $e) {}
 
     try {
-        $stats['enrollments']['total']     = (int)$pdo->query("SELECT COUNT(*) FROM enrollments")->fetchColumn();
-        $stats['enrollments']['completed'] = (int)$pdo->query("SELECT COUNT(*) FROM enrollments WHERE progress_percent >= 100 OR completed_at IS NOT NULL")->fetchColumn();
-    } catch (Throwable $e) {}
-
-    try {
         $stats['inquiries']['total'] = (int)$pdo->query("SELECT COUNT(*) FROM inquiries")->fetchColumn();
         $inqStmt = $pdo->query("SELECT id, name, email, subject, message, course, created_at FROM inquiries ORDER BY created_at DESC LIMIT 5");
         $stats['inquiries']['recent'] = $inqStmt->fetchAll();
@@ -377,20 +323,6 @@ if ($method === 'GET' && $action === 'overview') {
     try {
         $stats['subscribers']['total']  = (int)$pdo->query("SELECT COUNT(*) FROM subscribers")->fetchColumn();
         $stats['subscribers']['active'] = (int)$pdo->query("SELECT COUNT(*) FROM subscribers WHERE is_active = 1")->fetchColumn();
-    } catch (Throwable $e) {}
-
-    try {
-        $stats['quizzes']['total']    = (int)$pdo->query("SELECT COUNT(*) FROM quizzes")->fetchColumn();
-        $stats['quizzes']['attempts'] = (int)$pdo->query("SELECT COUNT(*) FROM quiz_attempts")->fetchColumn();
-    } catch (Throwable $e) {}
-
-    try {
-        $stats['assignments']['total']       = (int)$pdo->query("SELECT COUNT(*) FROM assignments")->fetchColumn();
-        $stats['assignments']['submissions'] = (int)$pdo->query("SELECT COUNT(*) FROM assignment_submissions")->fetchColumn();
-    } catch (Throwable $e) {}
-
-    try {
-        $stats['certificates']['total'] = (int)$pdo->query("SELECT COUNT(*) FROM certificates")->fetchColumn();
     } catch (Throwable $e) {}
 
     try {
@@ -445,8 +377,7 @@ if ($method === 'GET' && $action === 'users') {
     $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
     $sql = "
         SELECT u.id, u.name, u.email, u.role, u.avatar, u.title, u.bio,
-               u.rating, u.reviews_count, u.students_count, u.is_active, u.created_at,
-               (SELECT COUNT(*) FROM enrollments e WHERE e.user_id = u.id) AS enrolled_count
+               u.rating, u.reviews_count, u.students_count, u.is_active, u.created_at
         FROM users u
         WHERE {$whereSql}
         ORDER BY u.created_at DESC
@@ -470,7 +401,6 @@ if ($method === 'GET' && $action === 'users') {
             'studentsCount'  => (int)($u['students_count'] ?? 0),
             'isActive'       => (bool)($u['is_active'] ?? 1),
             'createdAt'      => $u['created_at'],
-            'enrolledCount'  => (int)($u['enrolled_count'] ?? 0),
         ];
     }, $users);
 
@@ -570,6 +500,11 @@ if ($method === 'POST' && $action === 'update_user') {
     $sql = 'UPDATE users SET ' . implode(', ', $updates) . ' WHERE id = ?';
     $pdo->prepare($sql)->execute($params);
 
+    // Revoke existing sessions on password reset, deactivation, or role change
+    if (!empty($input['password']) || isset($input['role']) || (isset($input['isActive']) && !$input['isActive'])) {
+        $pdo->prepare('DELETE FROM user_sessions WHERE user_id = ?')->execute([$userId]);
+    }
+
     ok(['id' => $userId], 'User record updated successfully');
 }
 
@@ -595,186 +530,6 @@ if ($method === 'POST' && $action === 'delete_user') {
 
     $pdo->prepare('DELETE FROM users WHERE id = ?')->execute([$userId]);
     ok(['id' => $userId], 'User deleted successfully');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 6. GET ?action=courses — Course Catalog
-// ─────────────────────────────────────────────────────────────────────────────
-if ($method === 'GET' && $action === 'courses') {
-    $sql = "
-        SELECT c.id, c.title, c.tagline, c.description, c.thumbnail, c.category, c.difficulty,
-               c.rating, c.reviews_count, c.students_count, c.duration_hours, c.lessons_count,
-               c.price, c.original_price, c.discount_percentage,
-               c.is_bestseller, c.is_featured, c.is_deleted, c.language, c.created_at, c.drive_url,
-               u.id AS instructor_id, u.name AS instructor_name, u.email AS instructor_email
-        FROM courses c
-        LEFT JOIN users u ON c.instructor_id = u.id
-        ORDER BY c.created_at DESC
-    ";
-    $stmt = $pdo->query($sql);
-    $courses = $stmt->fetchAll();
-
-    $courses = array_map(function($c) {
-        return [
-            'id'             => $c['id'],
-            'title'          => $c['title'],
-            'tagline'        => $c['tagline'] ?? '',
-            'description'    => $c['description'] ?? '',
-            'thumbnail'      => $c['thumbnail'],
-            'category'       => $c['category'],
-            'difficulty'     => $c['difficulty'],
-            'rating'         => (float)$c['rating'],
-            'reviewsCount'   => (int)$c['reviews_count'],
-            'studentsCount'  => (int)$c['students_count'],
-            'durationHours'  => (int)$c['duration_hours'],
-            'lessonsCount'   => (int)$c['lessons_count'],
-            'price'          => (float)$c['price'],
-            'originalPrice'  => $c['original_price'] ? (float)$c['original_price'] : null,
-            'isBestseller'   => (bool)$c['is_bestseller'],
-            'isFeatured'     => (bool)$c['is_featured'],
-            'isDeleted'      => (bool)$c['is_deleted'],
-            'driveUrl'       => $c['drive_url'] ?? '',
-            'createdAt'      => $c['created_at'],
-            'instructor'     => [
-                'id'    => $c['instructor_id'] ?? '',
-                'name'  => $c['instructor_name'] ?? 'Staff Mentor',
-                'email' => $c['instructor_email'] ?? '',
-            ]
-        ];
-    }, $courses);
-
-    ok($courses, 'Courses loaded');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 7. POST ?action=create_course — Admin Create Course
-// ─────────────────────────────────────────────────────────────────────────────
-if ($method === 'POST' && $action === 'create_course') {
-    $input = get_json_input();
-
-    $title = str_input($input, 'title');
-    if (!$title) fail('Course title is required.', 422);
-
-    $id = generate_id('course');
-    $instructorId = $currentAdmin['id'];
-    $price = isset($input['price']) ? (float)$input['price'] : 0.00;
-    $driveUrl = str_input($input, 'drive_url') ?: (str_input($input, 'driveUrl') ?: null);
-
-    $stmt = $pdo->prepare('
-        INSERT INTO courses
-          (id, instructor_id, title, tagline, description, thumbnail, category,
-           difficulty, price, original_price, discount_percentage, duration_hours, lessons_count, language, is_featured, is_bestseller, drive_url)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ');
-    $stmt->execute([
-        $id,
-        $instructorId,
-        $title,
-        str_input($input, 'tagline'),
-        str_input($input, 'description'),
-        str_input($input, 'thumbnail') ?: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop',
-        str_input($input, 'category') ?: 'General',
-        in_array($input['difficulty'] ?? '', ['Beginner','Intermediate','Advanced','All Levels']) ? $input['difficulty'] : 'Beginner',
-        $price,
-        isset($input['original_price']) ? (float)$input['original_price'] : null,
-        isset($input['discount_percentage']) ? (int)$input['discount_percentage'] : 0,
-        int_input($input, 'duration_hours', 10),
-        int_input($input, 'lessons_count', 15),
-        str_input($input, 'language') ?: 'English',
-        !empty($input['is_featured']) ? 1 : 0,
-        !empty($input['is_bestseller']) ? 1 : 0,
-        $driveUrl
-    ]);
-
-    ok(['id' => $id], 'Course created successfully', 201);
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 8. POST ?action=update_course — Admin Update Course
-// ─────────────────────────────────────────────────────────────────────────────
-if ($method === 'POST' && $action === 'update_course') {
-    $input = get_json_input();
-    $id = str_input($input, 'id');
-    if (!$id) fail('Course ID is required.', 422);
-
-    if (isset($input['driveUrl']) && !isset($input['drive_url'])) {
-        $input['drive_url'] = $input['driveUrl'];
-    }
-
-    $allowed = ['title', 'tagline', 'description', 'thumbnail', 'category', 'difficulty',
-                'price', 'original_price', 'discount_percentage', 'duration_hours',
-                'lessons_count', 'language', 'is_featured', 'is_bestseller', 'is_deleted',
-                'drive_url'];
-    $sets = [];
-    $vals = [];
-
-    foreach ($allowed as $f) {
-        if (array_key_exists($f, $input)) {
-            $sets[] = "{$f} = ?";
-            if (in_array($f, ['is_featured', 'is_bestseller', 'is_deleted'], true)) {
-                $vals[] = $input[$f] ? 1 : 0;
-            } elseif (in_array($f, ['price', 'original_price'], true)) {
-                $vals[] = $input[$f] !== null ? (float)$input[$f] : null;
-            } elseif (in_array($f, ['duration_hours', 'lessons_count', 'discount_percentage'], true)) {
-                $vals[] = (int)$input[$f];
-            } else {
-                $vals[] = trim((string)$input[$f]);
-            }
-        }
-    }
-
-    if (empty($sets)) fail('No course fields to update.', 422);
-
-    $vals[] = $id;
-    $sql = "UPDATE courses SET " . implode(', ', $sets) . " WHERE id = ?";
-    $pdo->prepare($sql)->execute($vals);
-
-    ok(['id' => $id], 'Course updated successfully');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 9. POST ?action=toggle_course — Toggle Course Status
-// ─────────────────────────────────────────────────────────────────────────────
-if ($method === 'POST' && $action === 'toggle_course') {
-    $input    = get_json_input();
-    $courseId = str_input($input, 'id');
-    $field    = str_input($input, 'field');
-    $value    = (bool)($input['value'] ?? false);
-
-    if (!$courseId) fail('Course ID is required.', 422);
-
-    $columnMap = [
-        'featured'   => 'is_featured',
-        'bestseller' => 'is_bestseller',
-        'deleted'    => 'is_deleted',
-    ];
-
-    if (!isset($columnMap[$field])) fail('Invalid toggle field.', 422);
-    $column = $columnMap[$field];
-
-    $stmt = $pdo->prepare("UPDATE courses SET {$column} = ? WHERE id = ?");
-    $stmt->execute([$value ? 1 : 0, $courseId]);
-
-    ok(['id' => $courseId, 'field' => $field, 'value' => $value], 'Course status updated');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// 10. POST ?action=delete_course — Delete or Archive Course
-// ─────────────────────────────────────────────────────────────────────────────
-if ($method === 'POST' && $action === 'delete_course') {
-    $input    = get_json_input();
-    $courseId = str_input($input, 'id');
-    $hard     = !empty($input['hard']);
-
-    if (!$courseId) fail('Course ID is required.', 422);
-
-    if ($hard) {
-        $pdo->prepare('DELETE FROM courses WHERE id = ?')->execute([$courseId]);
-        ok(['id' => $courseId], 'Course permanently deleted');
-    } else {
-        $pdo->prepare('UPDATE courses SET is_deleted = 1 WHERE id = ?')->execute([$courseId]);
-        ok(['id' => $courseId], 'Course archived');
-    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1727,367 +1482,6 @@ if ($method === 'POST' && $action === 'delete_workspace_link') {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// QUIZZES & QUESTIONS — Quiz Engine Admin CRUD
-// ─────────────────────────────────────────────────────────────────────────────
-if ($action === 'quizzes') {
-    $stmt = $pdo->query("
-        SELECT q.*, c.title AS course_title,
-               (SELECT COUNT(*) FROM quiz_questions qq WHERE qq.quiz_id = q.id) AS questions_count,
-               (SELECT COUNT(*) FROM quiz_attempts qa WHERE qa.quiz_id = q.id) AS attempts_count,
-               (SELECT ROUND(AVG(score), 1) FROM quiz_attempts qa WHERE qa.quiz_id = q.id) AS avg_score
-        FROM quizzes q
-        LEFT JOIN courses c ON q.course_id = c.id
-        ORDER BY q.title ASC
-    ");
-    $quizzes = array_map(function($q) {
-        return [
-            'id'              => $q['id'],
-            'courseId'        => $q['course_id'],
-            'courseTitle'     => $q['course_title'] ?? 'General',
-            'lessonId'        => $q['lesson_id'] ?? '',
-            'title'           => $q['title'],
-            'durationMinutes' => (int)($q['duration_minutes'] ?? 20),
-            'passingScore'    => (int)($q['passing_score'] ?? 80),
-            'questionsCount'  => (int)($q['questions_count'] ?? 0),
-            'attemptsCount'   => (int)($q['attempts_count'] ?? 0),
-            'avgScore'        => $q['avg_score'] !== null ? (float)$q['avg_score'] : null,
-        ];
-    }, $stmt->fetchAll());
-    ok($quizzes, 'Quizzes loaded');
-}
-
-if ($method === 'POST' && $action === 'create_quiz') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['title'])) fail('Quiz title is required.', 400);
-    if (empty($b['courseId'])) fail('Course ID is required.', 400);
-
-    $id = 'quiz-' . uniqid();
-    $lessonId = !empty($b['lessonId']) ? $b['lessonId'] : ('lesson-' . uniqid());
-    $duration = (int)($b['durationMinutes'] ?? 20);
-    $passingScore = (int)($b['passingScore'] ?? 80);
-
-    $stmt = $pdo->prepare("INSERT INTO quizzes (id, course_id, lesson_id, title, duration_minutes, passing_score) VALUES (?,?,?,?,?,?)");
-    $stmt->execute([$id, $b['courseId'], $lessonId, $b['title'], $duration, $passingScore]);
-
-    ok(['id' => $id], 'Quiz created successfully');
-}
-
-if ($method === 'POST' && $action === 'update_quiz') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Quiz ID is required.', 400);
-
-    $stmt = $pdo->prepare("UPDATE quizzes SET course_id=?, title=?, duration_minutes=?, passing_score=? WHERE id=?");
-    $stmt->execute([
-        $b['courseId'],
-        $b['title'],
-        (int)($b['durationMinutes'] ?? 20),
-        (int)($b['passingScore'] ?? 80),
-        $b['id']
-    ]);
-
-    ok(['id' => $b['id']], 'Quiz updated successfully');
-}
-
-if ($method === 'POST' && $action === 'delete_quiz') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Quiz ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM quizzes WHERE id=?")->execute([$b['id']]);
-    ok([], 'Quiz deleted successfully');
-}
-
-if ($action === 'quiz_questions') {
-    $quizId = trim($_GET['quiz_id'] ?? '');
-    if (!$quizId) fail('Quiz ID is required.', 400);
-
-    $stmt = $pdo->prepare("SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY order_index ASC");
-    $stmt->execute([$quizId]);
-    $questions = array_map(function($qq) {
-        $options = json_decode($qq['options_json'] ?? '[]', true) ?: [];
-        return [
-            'id'                 => $qq['id'],
-            'quizId'             => $qq['quiz_id'],
-            'question'           => $qq['question'],
-            'options'            => $options,
-            'correctOptionIndex' => (int)$qq['correct_option_index'],
-            'explanation'        => $qq['explanation'] ?? '',
-            'orderIndex'         => (int)($qq['order_index'] ?? 0),
-        ];
-    }, $stmt->fetchAll());
-
-    ok($questions, 'Questions loaded');
-}
-
-if ($method === 'POST' && $action === 'create_quiz_question') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['quizId'])) fail('Quiz ID is required.', 400);
-    if (empty($b['question'])) fail('Question text is required.', 400);
-
-    $id = 'qq-' . uniqid();
-    $optionsJson = json_encode($b['options'] ?? [], JSON_UNESCAPED_UNICODE);
-    $correctIndex = (int)($b['correctOptionIndex'] ?? 0);
-    $explanation = $b['explanation'] ?? '';
-    $orderIndex = (int)($b['orderIndex'] ?? 0);
-
-    $stmt = $pdo->prepare("INSERT INTO quiz_questions (id, quiz_id, question, options_json, correct_option_index, explanation, order_index) VALUES (?,?,?,?,?,?,?)");
-    $stmt->execute([$id, $b['quizId'], $b['question'], $optionsJson, $correctIndex, $explanation, $orderIndex]);
-
-    ok(['id' => $id], 'Question created successfully');
-}
-
-if ($method === 'POST' && $action === 'update_quiz_question') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Question ID is required.', 400);
-
-    $optionsJson = json_encode($b['options'] ?? [], JSON_UNESCAPED_UNICODE);
-    $stmt = $pdo->prepare("UPDATE quiz_questions SET question=?, options_json=?, correct_option_index=?, explanation=?, order_index=? WHERE id=?");
-    $stmt->execute([
-        $b['question'] ?? '',
-        $optionsJson,
-        (int)($b['correctOptionIndex'] ?? 0),
-        $b['explanation'] ?? '',
-        (int)($b['orderIndex'] ?? 0),
-        $b['id']
-    ]);
-
-    ok(['id' => $b['id']], 'Question updated successfully');
-}
-
-if ($method === 'POST' && $action === 'delete_quiz_question') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Question ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM quiz_questions WHERE id=?")->execute([$b['id']]);
-    ok([], 'Question deleted successfully');
-}
-
-if ($action === 'quiz_attempts') {
-    $quizId = trim($_GET['quiz_id'] ?? '');
-    $sql = "
-        SELECT qa.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, q.title AS quiz_title
-        FROM quiz_attempts qa
-        LEFT JOIN users u ON qa.user_id = u.id
-        LEFT JOIN quizzes q ON qa.quiz_id = q.id
-    ";
-    $params = [];
-    if ($quizId) {
-        $sql .= " WHERE qa.quiz_id = ?";
-        $params[] = $quizId;
-    }
-    $sql .= " ORDER BY qa.attempted_at DESC LIMIT 100";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $attempts = array_map(function($a) {
-        return [
-            'id'          => $a['id'],
-            'userName'    => $a['user_name'] ?? 'Student',
-            'userEmail'   => $a['user_email'] ?? '',
-            'userAvatar'  => $a['user_avatar'] ?? '',
-            'quizTitle'   => $a['quiz_title'] ?? '',
-            'score'       => (int)$a['score'],
-            'passed'      => (bool)$a['passed'],
-            'attemptedAt' => $a['attempted_at']
-        ];
-    }, $stmt->fetchAll());
-
-    ok($attempts, 'Quiz attempts loaded');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ASSIGNMENTS & SUBMISSIONS — Project Evaluator CRUD
-// ─────────────────────────────────────────────────────────────────────────────
-if ($action === 'assignments') {
-    $stmt = $pdo->query("
-        SELECT a.*, c.title AS course_title,
-               (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id) AS submissions_count,
-               (SELECT COUNT(*) FROM assignment_submissions s WHERE s.assignment_id = a.id AND s.grade IS NOT NULL) AS graded_count
-        FROM assignments a
-        LEFT JOIN courses c ON a.course_id = c.id
-        ORDER BY a.title ASC
-    ");
-    $assignments = array_map(function($a) {
-        return [
-            'id'               => $a['id'],
-            'courseId'         => $a['course_id'],
-            'courseTitle'      => $a['course_title'] ?? 'General',
-            'title'            => $a['title'],
-            'description'      => $a['description'] ?? '',
-            'deadline'         => $a['deadline'] ?? '',
-            'difficulty'       => $a['difficulty'] ?? 'Intermediate',
-            'submissionsCount' => (int)($a['submissions_count'] ?? 0),
-            'gradedCount'      => (int)($a['graded_count'] ?? 0),
-        ];
-    }, $stmt->fetchAll());
-    ok($assignments, 'Assignments loaded');
-}
-
-if ($method === 'POST' && $action === 'create_assignment') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['title'])) fail('Assignment title is required.', 400);
-    if (empty($b['courseId'])) fail('Course ID is required.', 400);
-
-    $id = 'asg-' . uniqid();
-    $stmt = $pdo->prepare("INSERT INTO assignments (id, course_id, title, description, deadline, difficulty) VALUES (?,?,?,?,?,?)");
-    $stmt->execute([
-        $id,
-        $b['courseId'],
-        $b['title'],
-        $b['description'] ?? '',
-        $b['deadline'] ?? '14 Days from Enrollment',
-        $b['difficulty'] ?? 'Intermediate'
-    ]);
-
-    ok(['id' => $id], 'Assignment created successfully');
-}
-
-if ($method === 'POST' && $action === 'update_assignment') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Assignment ID is required.', 400);
-
-    $stmt = $pdo->prepare("UPDATE assignments SET course_id=?, title=?, description=?, deadline=?, difficulty=? WHERE id=?");
-    $stmt->execute([
-        $b['courseId'],
-        $b['title'],
-        $b['description'] ?? '',
-        $b['deadline'] ?? '14 Days from Enrollment',
-        $b['difficulty'] ?? 'Intermediate',
-        $b['id']
-    ]);
-
-    ok(['id' => $b['id']], 'Assignment updated successfully');
-}
-
-if ($method === 'POST' && $action === 'delete_assignment') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Assignment ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM assignments WHERE id=?")->execute([$b['id']]);
-    ok([], 'Assignment deleted successfully');
-}
-
-if ($action === 'assignment_submissions') {
-    $assignmentId = trim($_GET['assignment_id'] ?? '');
-    $sql = "
-        SELECT sub.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, a.title AS assignment_title, c.title AS course_title
-        FROM assignment_submissions sub
-        LEFT JOIN users u ON sub.user_id = u.id
-        LEFT JOIN assignments a ON sub.assignment_id = a.id
-        LEFT JOIN courses c ON a.course_id = c.id
-    ";
-    $params = [];
-    if ($assignmentId) {
-        $sql .= " WHERE sub.assignment_id = ?";
-        $params[] = $assignmentId;
-    }
-    $sql .= " ORDER BY sub.submitted_at DESC LIMIT 100";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $subs = array_map(function($s) {
-        return [
-            'id'              => (int)$s['id'],
-            'assignmentId'    => $s['assignment_id'],
-            'assignmentTitle' => $s['assignment_title'] ?? '',
-            'courseTitle'     => $s['course_title'] ?? '',
-            'userName'        => $s['user_name'] ?? 'Student',
-            'userEmail'       => $s['user_email'] ?? '',
-            'userAvatar'      => $s['user_avatar'] ?? '',
-            'status'          => $s['status'] ?? 'Submitted',
-            'githubUrl'       => $s['github_url'] ?? '',
-            'submittedFile'   => $s['submitted_file'] ?? '',
-            'grade'           => $s['grade'] ?? '',
-            'feedback'        => $s['feedback'] ?? '',
-            'submittedAt'     => $s['submitted_at'],
-            'reviewedAt'      => $s['reviewed_at'],
-        ];
-    }, $stmt->fetchAll());
-
-    ok($subs, 'Submissions loaded');
-}
-
-if ($method === 'POST' && $action === 'grade_submission') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Submission ID is required.', 400);
-
-    $grade = $b['grade'] ?? 'A';
-    $status = !empty($b['status']) ? $b['status'] : 'Completed';
-    $feedback = $b['feedback'] ?? 'Great implementation!';
-
-    $stmt = $pdo->prepare("UPDATE assignment_submissions SET grade=?, status=?, feedback=?, reviewed_at=NOW() WHERE id=?");
-    $stmt->execute([$grade, $status, $feedback, (int)$b['id']]);
-
-    ok(['id' => $b['id']], 'Submission graded successfully');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// CERTIFICATES & CREDENTIALS — Registry & Verification Issuance
-// ─────────────────────────────────────────────────────────────────────────────
-if ($action === 'certificates') {
-    $stmt = $pdo->query("
-        SELECT cert.*, u.name AS user_name, u.email AS user_email, u.avatar AS user_avatar, c.title AS course_title
-        FROM certificates cert
-        LEFT JOIN users u ON cert.user_id = u.id
-        LEFT JOIN courses c ON cert.course_id = c.id
-        ORDER BY cert.created_at DESC
-    ");
-    $certs = array_map(function($c) {
-        return [
-            'id'               => $c['id'],
-            'courseId'         => $c['course_id'],
-            'courseTitle'      => $c['course_title'] ?? 'Course Credential',
-            'userId'           => $c['user_id'],
-            'userName'         => $c['user_name'] ?? 'Student',
-            'userEmail'        => $c['user_email'] ?? '',
-            'userAvatar'       => $c['user_avatar'] ?? '',
-            'credentialId'     => $c['credential_id'],
-            'verificationCode' => $c['verification_code'],
-            'grade'            => $c['grade'] ?? 'A+',
-            'issueDate'        => $c['issue_date'],
-            'thumbnailUrl'     => $c['thumbnail_url'] ?? '',
-            'createdAt'        => $c['created_at'],
-        ];
-    }, $stmt->fetchAll());
-
-    ok($certs, 'Certificates loaded');
-}
-
-if ($method === 'POST' && $action === 'issue_certificate') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['userId'])) fail('Student User ID is required.', 400);
-    if (empty($b['courseId'])) fail('Course ID is required.', 400);
-
-    $id = 'cert-' . uniqid();
-    $year = date('Y');
-    $credentialId = 'CRED-' . strtoupper(substr(uniqid(), -8));
-    $verificationCode = !empty($b['verificationCode']) 
-        ? trim($b['verificationCode']) 
-        : ('CERT-YASWANT-' . $year . '-' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6)));
-    $grade = $b['grade'] ?? 'Distinction';
-    $issueDate = !empty($b['issueDate']) ? $b['issueDate'] : date('Y-m-d');
-    $thumbnail = !empty($b['thumbnailUrl']) 
-        ? $b['thumbnailUrl'] 
-        : 'https://images.unsplash.com/photo-1607344645866-009c320c5ab8?w=800&auto=format&fit=crop&q=80';
-
-    $stmt = $pdo->prepare("INSERT INTO certificates (id, course_id, user_id, credential_id, grade, issue_date, thumbnail_url, verification_code) VALUES (?,?,?,?,?,?,?,?)");
-    $stmt->execute([$id, $b['courseId'], $b['userId'], $credentialId, $grade, $issueDate, $thumbnail, $verificationCode]);
-
-    ok([
-        'id'               => $id,
-        'credentialId'     => $credentialId,
-        'verificationCode' => $verificationCode
-    ], 'Certificate issued successfully');
-}
-
-if ($method === 'POST' && $action === 'revoke_certificate') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Certificate ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM certificates WHERE id=?")->execute([$b['id']]);
-    ok([], 'Certificate revoked successfully');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // DISCUSSIONS & COMMUNITY FORUM MODERATION
 // ─────────────────────────────────────────────────────────────────────────────
 if ($action === 'discussions') {
@@ -2175,148 +1569,6 @@ if ($method === 'POST' && $action === 'delete_discussion_reply') {
 
     $pdo->prepare("DELETE FROM discussion_replies WHERE id=?")->execute([$b['id']]);
     ok([], 'Reply deleted');
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// COURSE CURRICULUM BUILDER — Modules & Lessons Management
-// ─────────────────────────────────────────────────────────────────────────────
-if ($action === 'course_curriculum') {
-    $courseId = trim($_GET['course_id'] ?? '');
-    if (!$courseId) fail('Course ID is required.', 400);
-
-    // Fetch modules
-    $mStmt = $pdo->prepare("SELECT * FROM modules WHERE course_id = ? ORDER BY order_index ASC");
-    $mStmt->execute([$courseId]);
-    $modules = $mStmt->fetchAll();
-
-    $curriculum = [];
-    foreach ($modules as $m) {
-        $cStmt = $pdo->prepare("SELECT * FROM chapters WHERE module_id = ? ORDER BY order_index ASC");
-        $cStmt->execute([$m['id']]);
-        $chapters = $cStmt->fetchAll();
-
-        $chaptersWithLessons = [];
-        foreach ($chapters as $ch) {
-            $lStmt = $pdo->prepare("SELECT * FROM lessons WHERE chapter_id = ? ORDER BY order_index ASC");
-            $lStmt->execute([$ch['id']]);
-            $lessons = $lStmt->fetchAll();
-
-            $chaptersWithLessons[] = [
-                'id'         => $ch['id'],
-                'moduleId'   => $ch['module_id'],
-                'title'      => $ch['title'],
-                'duration'   => $ch['duration'],
-                'orderIndex' => (int)$ch['order_index'],
-                'lessons'    => array_map(function($l) {
-                    return [
-                        'id'               => $l['id'],
-                        'chapterId'        => $l['chapter_id'],
-                        'title'            => $l['title'],
-                        'duration'         => $l['duration'],
-                        'type'             => $l['type'] ?? 'video',
-                        'videoUrl'         => $l['video_url'] ?? '',
-                        'previewAvailable' => (bool)($l['preview_available'] ?? 0),
-                        'description'      => $l['description'] ?? '',
-                        'codeSnippet'      => $l['code_snippet'] ?? '',
-                        'codeLanguage'     => $l['code_language'] ?? 'typescript',
-                        'orderIndex'       => (int)$l['order_index'],
-                        'driveUrl'         => $l['drive_url'] ?? '',
-                    ];
-                }, $lessons)
-            ];
-        }
-
-        $curriculum[] = [
-            'id'         => $m['id'],
-            'courseId'   => $m['course_id'],
-            'title'      => $m['title'],
-            'duration'   => $m['duration'],
-            'orderIndex' => (int)$m['order_index'],
-            'chapters'   => $chaptersWithLessons,
-        ];
-    }
-
-    ok($curriculum, 'Curriculum loaded');
-}
-
-if ($method === 'POST' && $action === 'create_module') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['courseId']) || empty($b['title'])) fail('Course ID and Module title required.', 400);
-
-    $id = 'mod-' . uniqid();
-    $duration = $b['duration'] ?? '2h 30m';
-    $orderIndex = (int)($b['orderIndex'] ?? 0);
-
-    $stmt = $pdo->prepare("INSERT INTO modules (id, course_id, title, duration, order_index) VALUES (?,?,?,?,?)");
-    $stmt->execute([$id, $b['courseId'], $b['title'], $duration, $orderIndex]);
-
-    // Also auto-create a default chapter inside the module
-    $chId = 'ch-' . uniqid();
-    $pdo->prepare("INSERT INTO chapters (id, module_id, title, duration, order_index) VALUES (?,?,?,?,0)")
-        ->execute([$chId, $id, 'Core Concepts', $duration]);
-
-    ok(['id' => $id, 'chapterId' => $chId], 'Module created successfully');
-}
-
-if ($method === 'POST' && $action === 'delete_module') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Module ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM modules WHERE id=?")->execute([$b['id']]);
-    ok([], 'Module deleted successfully');
-}
-
-if ($method === 'POST' && $action === 'create_lesson') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['chapterId']) || empty($b['title'])) fail('Chapter ID and Lesson title required.', 400);
-
-    $id = 'les-' . uniqid();
-    $duration = $b['duration'] ?? '15:00';
-    $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
-    $videoUrl = $b['videoUrl'] ?? '';
-    $driveUrl = $b['driveUrl'] ?? ($b['drive_url'] ?? '');
-    $previewAvailable = !empty($b['previewAvailable']) ? 1 : 0;
-    $description = $b['description'] ?? '';
-    $codeSnippet = $b['codeSnippet'] ?? '';
-    $codeLanguage = $b['codeLanguage'] ?? 'typescript';
-    $orderIndex = (int)($b['orderIndex'] ?? 0);
-
-    $stmt = $pdo->prepare("INSERT INTO lessons (id, chapter_id, title, duration, type, video_url, preview_available, description, code_snippet, code_language, order_index, drive_url) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)");
-    $stmt->execute([$id, $b['chapterId'], $b['title'], $duration, $type, $videoUrl, $previewAvailable, $description, $codeSnippet, $codeLanguage, $orderIndex, $driveUrl]);
-
-    ok(['id' => $id], 'Lesson created successfully');
-}
-
-if ($method === 'POST' && $action === 'update_lesson') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Lesson ID is required.', 400);
-
-    $type = in_array($b['type'] ?? '', ['video','quiz','assignment','reading']) ? $b['type'] : 'video';
-    $driveUrl = $b['driveUrl'] ?? ($b['drive_url'] ?? '');
-    $stmt = $pdo->prepare("UPDATE lessons SET title=?, duration=?, type=?, video_url=?, preview_available=?, description=?, code_snippet=?, code_language=?, order_index=?, drive_url=? WHERE id=?");
-    $stmt->execute([
-        $b['title'] ?? '',
-        $b['duration'] ?? '15:00',
-        $type,
-        $b['videoUrl'] ?? '',
-        !empty($b['previewAvailable']) ? 1 : 0,
-        $b['description'] ?? '',
-        $b['codeSnippet'] ?? '',
-        $b['codeLanguage'] ?? 'typescript',
-        (int)($b['orderIndex'] ?? 0),
-        $driveUrl,
-        $b['id']
-    ]);
-
-    ok(['id' => $b['id']], 'Lesson updated successfully');
-}
-
-if ($method === 'POST' && $action === 'delete_lesson') {
-    $b = json_decode(file_get_contents('php://input'), true) ?? [];
-    if (empty($b['id'])) fail('Lesson ID is required.', 400);
-
-    $pdo->prepare("DELETE FROM lessons WHERE id=?")->execute([$b['id']]);
-    ok([], 'Lesson deleted successfully');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

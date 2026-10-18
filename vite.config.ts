@@ -1,9 +1,10 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import {defineConfig} from 'vite';
+import {defineConfig, loadEnv} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
@@ -15,7 +16,8 @@ export default defineConfig(() => {
       port: 3000,
       proxy: {
         '/api': {
-          target: 'http://127.0.0.1',
+          // Local PHP server for /api (e.g. `php -S 127.0.0.1:8000 -t public`)
+          target: env.API_PROXY_TARGET || 'http://127.0.0.1',
           changeOrigin: true,
         },
       },

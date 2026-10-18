@@ -139,7 +139,7 @@ export const AuthModal: React.FC = () => {
               {authModalMode === 'forgot' && 'Reset your password'}
             </h3>
             <p className="text-xs text-neutral-500 mt-1">
-              {authModalMode === 'login' && 'Access interactive courses, projects, and certifications.'}
+              {authModalMode === 'login' && 'Access roadmaps, projects, notes, and developer tools.'}
               {authModalMode === 'signup' && 'Join 140,000+ engineers mastering production architectures.'}
               {authModalMode === 'forgot' && "Enter your email address and we'll send a recovery link."}
             </p>

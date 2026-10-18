@@ -12,7 +12,6 @@ import {
   doc, 
   getDoc, 
   setDoc, 
-  updateDoc, 
   serverTimestamp 
 } from 'firebase/firestore';
 import { auth, db, googleAuthProvider } from '../lib/firebase';
@@ -124,6 +123,9 @@ export async function signInWithEmail(
     const snap = await withTimeout(getDoc(userDocRef), 2000);
     if (snap && snap.exists()) {
       profile = { ...profile, ...snap.data() } as UserProfile;
+      // Never trust a role stored in the user-writable profile doc; only the server-set custom claim
+      const claims = (await user.getIdTokenResult()).claims;
+      profile.role = claims.role === 'admin' ? 'admin' : 'student';
     } else {
       await withTimeout(setDoc(userDocRef, {
         ...profile,
@@ -173,6 +175,9 @@ export async function signInWithGoogle(): Promise<{ user: FirebaseUser; profile:
     const snap = await withTimeout(getDoc(userDocRef), 2000);
     if (snap && snap.exists()) {
       profile = { ...profile, ...snap.data() } as UserProfile;
+      // Never trust a role stored in the user-writable profile doc; only the server-set custom claim
+      const claims = (await user.getIdTokenResult()).claims;
+      profile.role = claims.role === 'admin' ? 'admin' : 'student';
     } else {
       await withTimeout(setDoc(userDocRef, {
         ...profile,
@@ -234,42 +239,4 @@ export function onAuthUpdate(callback: (user: FirebaseUser | null) => void) {
     }
     callback(user);
   });
-}
-
-/**
- * Persist course enrollment to Firestore
- */
-export async function syncCourseEnrollment(courseId: string, courseTitle: string) {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return;
-  try {
-    const enrollmentRef = doc(db, 'users', currentUser.uid, 'enrollments', courseId);
-    await withTimeout(setDoc(enrollmentRef, {
-      courseId,
-      courseTitle,
-      enrolledAt: serverTimestamp(),
-      progress: 5,
-      completed: false
-    }, { merge: true }), 2500);
-  } catch (err) {
-    console.warn('Enrollment sync warning:', err);
-  }
-}
-
-/**
- * Persist lesson progress to Firestore
- */
-export async function syncLessonProgress(courseId: string, progressPercent: number) {
-  const currentUser = auth.currentUser;
-  if (!currentUser) return;
-  try {
-    const enrollmentRef = doc(db, 'users', currentUser.uid, 'enrollments', courseId);
-    await withTimeout(updateDoc(enrollmentRef, {
-      progress: progressPercent,
-      lastActive: serverTimestamp(),
-      completed: progressPercent >= 100
-    }), 2500);
-  } catch (err) {
-    console.warn('Progress sync warning:', err);
-  }
 }

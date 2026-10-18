@@ -200,12 +200,17 @@ if ($method === 'PUT') {
             fail('Only the discussion author can accept an answer.', 403);
         }
 
+        // Reply must belong to this discussion
+        $rChk = $pdo->prepare('SELECT 1 FROM discussion_replies WHERE id = ? AND discussion_id = ?');
+        $rChk->execute([$replyId, $discussionId]);
+        if (!$rChk->fetchColumn()) fail('Reply not found in this discussion.', 404);
+
         // Unaccept previous
         $pdo->prepare('UPDATE discussion_replies SET is_accepted = 0 WHERE discussion_id = ?')
             ->execute([$discussionId]);
         // Accept new
-        $pdo->prepare('UPDATE discussion_replies SET is_accepted = 1 WHERE id = ?')
-            ->execute([$replyId]);
+        $pdo->prepare('UPDATE discussion_replies SET is_accepted = 1 WHERE id = ? AND discussion_id = ?')
+            ->execute([$replyId, $discussionId]);
         // Mark discussion as having accepted answer
         $pdo->prepare('UPDATE discussions SET has_accepted_answer = 1 WHERE id = ?')
             ->execute([$discussionId]);
@@ -219,6 +224,20 @@ if ($method === 'PUT') {
         $targetId   = str_input($input, 'id');
 
         if (!$targetId) fail('id is required.', 422);
+
+        // One vote per user per target
+        $pdo->exec('CREATE TABLE IF NOT EXISTS discussion_votes (
+            user_id VARCHAR(64) NOT NULL,
+            target_type VARCHAR(16) NOT NULL,
+            target_id VARCHAR(64) NOT NULL,
+            PRIMARY KEY (user_id, target_type, target_id)
+        )');
+        try {
+            $pdo->prepare('INSERT INTO discussion_votes (user_id, target_type, target_id) VALUES (?, ?, ?)')
+                ->execute([$user['id'], $targetType, $targetId]);
+        } catch (PDOException $e) {
+            ok(null, 'Already upvoted');
+        }
 
         if ($targetType === 'discussion') {
             $pdo->prepare('UPDATE discussions SET upvotes = upvotes + 1 WHERE id = ?')->execute([$targetId]);

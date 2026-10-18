@@ -552,7 +552,7 @@ json_response([
         '2. Update DB credentials in public/api/config.php (or Hostinger env vars)',
         '3. Deploy your Vite build output to public_html/',
         '4. Test auth at POST /api/auth.php?action=login with: {"email":"alex.mercer@yaswantcode.edu","password":"Password123!"}',
-        '5. Browse courses at GET /api/courses.php',
+        '5. Browse roadmaps at GET /api/roadmaps.php',
     ],
     'demo_credentials' => [
         'student'    => ['email' => 'alex.mercer@yaswantcode.edu',   'password' => 'Password123!', 'role' => 'student'],

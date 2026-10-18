@@ -134,56 +134,6 @@ export function buildFAQSchema(faqs: FaqItem[]): object {
   };
 }
 
-export interface CourseSchemaData {
-  id: string;
-  title: string;
-  description: string;
-  instructor?: { name: string };
-  price?: number;
-  difficulty?: string;
-  durationHours?: number;
-  category?: string;
-  thumbnail?: string;
-}
-
-/** Build Course schema for a course detail page */
-export function buildCourseSchema(course: CourseSchemaData): object {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Course',
-    name: course.title,
-    description: course.description,
-    url: `${BASE_URL}/courses/${course.id}`,
-    image: course.thumbnail,
-    provider: {
-      '@type': 'Organization',
-      name: BRAND,
-      sameAs: BASE_URL,
-    },
-    ...(course.instructor && {
-      instructor: {
-        '@type': 'Person',
-        name: course.instructor.name,
-      },
-    }),
-    ...(course.price !== undefined && {
-      offers: {
-        '@type': 'Offer',
-        price: course.price,
-        priceCurrency: 'USD',
-        availability: 'https://schema.org/InStock',
-        url: `${BASE_URL}/courses/${course.id}`,
-      },
-    }),
-    ...(course.difficulty && {
-      educationalLevel: course.difficulty,
-    }),
-    ...(course.durationHours && {
-      timeRequired: `PT${course.durationHours}H`,
-    }),
-  };
-}
-
 export interface ArticleSchemaData {
   id: string;
   title: string;
@@ -321,7 +271,7 @@ export const ORGANIZATION_SCHEMA = {
   },
   image: `${BASE_URL}/og-image.svg`,
   description:
-    'Yaswant Code is a developer-first online learning platform for serious software engineers. Master full-stack architecture, AI/LLM engineering, distributed systems, and cloud-native development through production-grade courses.',
+    'Yaswant Code is a developer-first online learning platform for serious software engineers. Master full-stack architecture, AI/LLM engineering, distributed systems, and cloud-native development through step-by-step roadmaps, production-grade projects, study notes and developer tools.',
   foundingDate: '2024',
   founder: {
     '@type': 'Person',
@@ -349,14 +299,6 @@ export const WEBSITE_SCHEMA = {
   name: BRAND,
   url: BASE_URL,
   description:
-    'Full-Stack Engineering & AI Masterclasses — learn from principal engineers and earn verifiable credentials.',
+    'Full-Stack Engineering & AI — career roadmaps, hands-on projects, study notes and developer tools.',
   publisher: { '@id': `${BASE_URL}/#organization` },
-  potentialAction: {
-    '@type': 'SearchAction',
-    target: {
-      '@type': 'EntryPoint',
-      urlTemplate: `${BASE_URL}/courses?q={search_term_string}`,
-    },
-    'query-input': 'required name=search_term_string',
-  },
 };

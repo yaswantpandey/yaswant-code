@@ -60,7 +60,7 @@ if ($pdo) {
         $dbStatus['tables'] = $tables;
 
         // Row counts for key tables
-        $keyTables = ['users','courses','enrollments','certificates','discussions'];
+        $keyTables = ['users','discussions'];
         foreach ($keyTables as $tbl) {
             if (in_array($tbl, $tables, true)) {
                 $count = $pdo->query("SELECT COUNT(*) FROM `{$tbl}`")->fetchColumn();
@@ -120,11 +120,6 @@ json_response([
     ],
     'api_endpoints' => [
         '/api/auth.php'          => 'Authentication (register, login, profile)',
-        '/api/courses.php'       => 'Course catalog & curriculum',
-        '/api/enrollments.php'   => 'Enrollment & progress tracking',
-        '/api/certificates.php'  => 'Certificate issuance & verification',
-        '/api/quizzes.php'       => 'Quiz engine',
-        '/api/assignments.php'   => 'Assignment submission & grading',
         '/api/discussions.php'   => 'Community discussions',
         '/api/notifications.php' => 'User notifications',
         '/api/contact.php'       => 'Contact form',

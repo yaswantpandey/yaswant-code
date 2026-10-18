@@ -7,6 +7,9 @@
 header('Content-Type: application/json; charset=UTF-8');
 header('X-Content-Type-Options: nosniff');
 
+require_once __DIR__ . '/config.php';
+require_role('admin');
+
 $host = 'yaswant.co.in';
 $key = '495b30ababbd4d1cbcf4ea4d0c7fa3e4';
 $keyLocation = 'https://' . $host . '/' . $key . '.txt';
@@ -39,7 +42,11 @@ $inputData = json_decode($rawInput, true);
 
 $urlList = $defaultUrls;
 if ($inputData && !empty($inputData['urls']) && is_array($inputData['urls'])) {
-    $urlList = array_values(array_unique($inputData['urls']));
+    // Only submit URLs on our own host
+    $urlList = array_values(array_unique(array_filter($inputData['urls'], fn($u) =>
+        is_string($u) && parse_url($u, PHP_URL_SCHEME) === 'https' && parse_url($u, PHP_URL_HOST) === $host
+    )));
+    if (!$urlList) $urlList = $defaultUrls;
 }
 
 $payload = [

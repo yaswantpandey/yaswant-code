@@ -20,13 +20,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'light' || saved === 'dark' || saved === 'system') {
-        return saved;
+      if (saved === 'dark') {
+        return 'dark';
       }
+      localStorage.setItem(STORAGE_KEY, 'dark');
     } catch {
       // localStorage may be disabled or restricted in sandboxes
     }
-    return 'system';
+    return 'dark';
   });
 
   // Track system preference

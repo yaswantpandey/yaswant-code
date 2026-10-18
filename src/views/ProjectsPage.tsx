@@ -20,15 +20,14 @@ import {
   X,
   Code2,
   Cpu,
-  ShieldAlert,
-  GraduationCap
+  ShieldAlert
 } from 'lucide-react';
 import { GlassCard } from '../components/ui/GlassCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 
 export const ProjectsPage: React.FC = () => {
-  const { setCurrentView, addToast } = useLms();
+  const { addToast } = useLms();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -144,14 +143,6 @@ export const ProjectsPage: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          <Button 
-            variant="outline"
-            onClick={() => setCurrentView('assignment')}
-            className="flex items-center gap-2"
-          >
-            <GraduationCap className="w-4 h-4" />
-            <span>My Submissions</span>
-          </Button>
           <Button 
             variant="primary"
             onClick={() => setSubmitModalOpen(true)}
@@ -536,13 +527,13 @@ export const ProjectsPage: React.FC = () => {
                 <Button
                   variant="primary"
                   onClick={() => {
+                    setSubmitForm({ ...submitForm, title: activeProject.title });
                     setActiveProject(null);
-                    setCurrentView('assignment');
-                    addToast('Project Selected', `Loaded ${activeProject.title} into your assignment review workspace.`, 'info');
+                    setSubmitModalOpen(true);
                   }}
                   className="w-full sm:w-auto flex items-center justify-center gap-2"
                 >
-                  <span>Go to Submission Portal</span>
+                  <span>Submit This Project</span>
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>

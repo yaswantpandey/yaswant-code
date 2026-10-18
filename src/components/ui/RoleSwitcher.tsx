@@ -39,18 +39,12 @@ export const RoleSwitcher: React.FC = () => {
 
   const views: { id: ActiveView; label: string; icon: any; category: string }[] = [
     { id: 'landing', label: '1. Landing Page', icon: Compass, category: 'Public' },
-    { id: 'courses', label: '2. Course Discovery', icon: BookOpen, category: 'Public' },
-    { id: 'course-detail', label: '3. Course Details', icon: BookOpen, category: 'Public' },
     { id: 'blog', label: 'Engineering Blog', icon: FileText, category: 'Public' },
     { id: 'resources', label: 'Free Resources', icon: DownloadCloud, category: 'Public' },
     { id: 'notes', label: 'Study Notes & Pad', icon: Edit3, category: 'Learner' },
     { id: 'tools', label: 'Developer Tools', icon: Wrench, category: 'Learner' },
     { id: 'projects', label: 'Capstone Projects', icon: FolderGit2, category: 'Learner' },
     { id: 'student-dashboard', label: '4. Student Dashboard', icon: GraduationCap, category: 'Learner' },
-    { id: 'learning-interface', label: '5. Learning Player', icon: BookOpen, category: 'Learner' },
-    { id: 'quiz', label: '6. Quiz Interface', icon: HelpCircle, category: 'Learner' },
-    { id: 'assignment', label: '7. Assignment & Project', icon: Sliders, category: 'Learner' },
-    { id: 'certificate', label: '8. Certificate Verification', icon: ShieldCheck, category: 'Learner' },
     { id: 'learning-paths', label: '9. Learning Paths', icon: Sparkles, category: 'Learner' },
     { id: 'community', label: '11. Community Discussions', icon: Sparkles, category: 'Community' },
     { id: 'student-profile', label: '12. Public Student Profile', icon: GraduationCap, category: 'Community' },

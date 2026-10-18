@@ -109,6 +109,8 @@ if ($method === 'POST') {
     $type      = in_array($input['type'] ?? '', ['course','assignment','quiz','certificate','announcement','community'])
                  ? $input['type'] : 'announcement';
     $link      = str_input($input, 'link') ?: null;
+    // Only same-site relative paths or https links; blocks javascript:/data: URLs
+    if ($link && !preg_match('#^(/(?!/)|https://)#i', $link)) fail('link must be a relative path or https:// URL.', 422);
     $targetUserId = str_input($input, 'user_id');
     $broadcast = !empty($input['broadcast']); // send to all users
 
@@ -120,6 +122,15 @@ if ($method === 'POST') {
         $usersStmt = $pdo->query('SELECT id FROM users WHERE is_active = 1');
         $userIds   = $usersStmt->fetchAll(PDO::FETCH_COLUMN);
     } elseif ($targetUserId) {
+        // Instructors may only notify students enrolled in one of their courses
+        if ($user['role'] === 'instructor') {
+            $chk = $pdo->prepare('
+                SELECT 1 FROM enrollments e JOIN courses c ON e.course_id = c.id
+                WHERE e.user_id = ? AND c.instructor_id = ? LIMIT 1
+            ');
+            $chk->execute([$targetUserId, $user['id']]);
+            if (!$chk->fetchColumn()) fail('You can only notify students enrolled in your courses.', 403);
+        }
         $userIds = [$targetUserId];
     } else {
         fail('Provide user_id or set broadcast: true (admin only).', 422);

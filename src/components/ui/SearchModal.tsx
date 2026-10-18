@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { useLms } from '../../context/LmsContext';
 import { PRIMARY_INSTRUCTOR } from '../../config/brand';
+import { ALL_ROADMAP_TRACKS } from '../../data/fullstackRoadmap';
+import { syncUrlWithView } from '../../services/router';
 import { 
   Search, 
   X, 
-  BookOpen, 
   Sparkles, 
   User, 
   MessageSquare, 
@@ -22,13 +23,11 @@ export const SearchModal: React.FC = () => {
   const { 
     searchModalOpen, 
     setSearchModalOpen, 
-    setCurrentView, 
-    setSelectedCourse,
-    courses 
+    setCurrentView
   } = useLms();
 
   const [query, setQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'all' | 'courses' | 'paths' | 'projects' | 'articles' | 'resources'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'paths' | 'projects' | 'articles' | 'resources' | 'instructors' | 'discussions'>('all');
 
   const popularSearches = [
     'System Design & APIs',
@@ -50,14 +49,11 @@ export const SearchModal: React.FC = () => {
     if (!query.trim()) return null;
     const q = query.toLowerCase();
 
-    const currentCourses = courses || [];
-    const matchedCourses = currentCourses.filter(c => 
-      c.title.toLowerCase().includes(q) || 
-      c.description.toLowerCase().includes(q) ||
-      (c.skills && c.skills.some(s => s.toLowerCase().includes(q)))
+    const matchedPaths = ALL_ROADMAP_TRACKS.filter(t =>
+      t.title.toLowerCase().includes(q) ||
+      t.subtitle.toLowerCase().includes(q) ||
+      t.description.toLowerCase().includes(q)
     );
-
-    const matchedPaths: any[] = [];
 
     const instructorsList = [PRIMARY_INSTRUCTOR];
     const matchedInstructors = instructorsList.filter(i => 
@@ -66,16 +62,15 @@ export const SearchModal: React.FC = () => {
     );
 
     return {
-      courses: matchedCourses,
       paths: matchedPaths,
       instructors: matchedInstructors,
       discussions: [] as any[],
       articles: [] as any[],
       resources: [] as any[],
       projects: [] as any[],
-      totalCount: matchedCourses.length + matchedPaths.length + matchedInstructors.length
+      totalCount: matchedPaths.length + matchedInstructors.length
     };
-  }, [query, courses]);
+  }, [query]);
 
   if (!searchModalOpen) return null;
 
@@ -92,7 +87,7 @@ export const SearchModal: React.FC = () => {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search courses, lessons, instructors, discussions, or skills..."
+            placeholder="Search roadmaps, instructors, or skills..."
             className="w-full bg-transparent text-base text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none"
             autoFocus
           />
@@ -114,7 +109,7 @@ export const SearchModal: React.FC = () => {
 
         {/* Filter Pills */}
         <div className="flex items-center gap-1.5 px-5 py-2.5 bg-neutral-50 dark:bg-neutral-950/40 border-b border-neutral-200/60 dark:border-neutral-800/60 overflow-x-auto text-xs">
-          {(['all', 'courses', 'projects', 'paths', 'articles', 'resources', 'instructors', 'discussions'] as const).map((tab) => (
+          {(['all', 'projects', 'paths', 'articles', 'resources', 'instructors', 'discussions'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -187,38 +182,6 @@ export const SearchModal: React.FC = () => {
           ) : (
             /* Categorized search results */
             <div className="space-y-6">
-              {/* Courses */}
-              {(activeTab === 'all' || activeTab === 'courses') && results.courses.length > 0 && (
-                <div>
-                  <div className="text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5"><BookOpen className="w-3.5 h-3.5" /> Courses</span>
-                    <span>{results.courses.length}</span>
-                  </div>
-                  <div className="space-y-2">
-                    {results.courses.map((course) => (
-                      <div
-                        key={course.id}
-                        onClick={() => {
-                          setSelectedCourse(course);
-                          setCurrentView('course-detail');
-                          setSearchModalOpen(false);
-                        }}
-                        className="p-3 rounded-2xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 flex items-center justify-between gap-3 cursor-pointer transition-all"
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <img src={course.thumbnail} alt={course.title} width={48} height={48} loading="lazy" decoding="async" className="w-12 h-12 rounded-xl object-cover shrink-0" />
-                          <div className="min-w-0">
-                            <h4 className="text-sm font-semibold text-neutral-900 dark:text-white truncate">{course.title}</h4>
-                            <p className="text-xs text-neutral-500 truncate">{course.instructor.name} • {course.difficulty} • {course.durationHours} hrs</p>
-                          </div>
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-neutral-400 shrink-0" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Learning Paths */}
               {(activeTab === 'all' || activeTab === 'paths') && results.paths.length > 0 && (
                 <div>
@@ -232,15 +195,16 @@ export const SearchModal: React.FC = () => {
                         key={path.id}
                         onClick={() => {
                           setCurrentView('learning-paths');
+                          syncUrlWithView('learning-paths', true, path.slug);
                           setSearchModalOpen(false);
                         }}
                         className="p-3 rounded-2xl hover:bg-neutral-100 dark:hover:bg-neutral-800/80 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700 flex items-center justify-between gap-3 cursor-pointer transition-all"
                       >
                         <div>
                           <div className="text-sm font-semibold text-neutral-900 dark:text-white">{path.title}</div>
-                          <div className="text-xs text-neutral-500">{path.duration} • {path.overviewStats.phasesCount} Phases</div>
+                          <div className="text-xs text-neutral-500">{path.subtitle} • {path.stages.length} Stages</div>
                         </div>
-                        <Badge variant="purple" size="sm">{path.difficulty}</Badge>
+                        <Badge variant="purple" size="sm">{path.badge || 'Roadmap'}</Badge>
                       </div>
                     ))}
                   </div>

@@ -1135,7 +1135,7 @@ export const NotesPage: React.FC = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                    Course / Topic Tag
+                    Subject / Topic Tag
                   </label>
                   <input
                     type="text"

@@ -12,14 +12,6 @@
     <priority>1.0</priority>
   </url>
 
-  <!-- Course Discovery -->
-  <url>
-    <loc>https://yaswant.co.in/courses</loc>
-    <lastmod>2026-09-27</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-
   <!-- Engineering Blog -->
   <url>
     <loc>https://yaswant.co.in/blog</loc>

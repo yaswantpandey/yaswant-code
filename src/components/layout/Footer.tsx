@@ -9,7 +9,6 @@ import {
   BookOpen,
   FolderGit2,
   Map,
-  Award,
   Users,
   FileText,
   Wrench,
@@ -26,12 +25,6 @@ export const Footer: React.FC = () => {
       label: 'Platform & Learning',
       links: [
         {
-          title: 'All Courses',
-          href: '/courses',
-          icon: BookOpen,
-          onClick: (e) => { e.preventDefault(); setCurrentView('courses'); }
-        },
-        {
           title: 'Capstone Projects',
           href: '/projects',
           icon: FolderGit2,
@@ -42,12 +35,6 @@ export const Footer: React.FC = () => {
           href: '/roadmaps',
           icon: Map,
           onClick: (e) => { e.preventDefault(); setCurrentView('learning-paths'); }
-        },
-        {
-          title: 'Digital Credentials',
-          href: '/certificate',
-          icon: Award,
-          onClick: (e) => { e.preventDefault(); setCurrentView('certificate'); }
         },
         {
           title: 'Community Forums',

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useLms } from '../context/LmsContext';
-import { Certificate } from '../types/lms';
 import { 
   User, 
   MapPin, 
@@ -9,9 +8,6 @@ import {
   Twitter, 
   Linkedin, 
   Flame, 
-  Clock, 
-  BookOpen, 
-  Award, 
   CheckCircle2, 
   ExternalLink, 
   Code2, 
@@ -24,69 +20,18 @@ import { Button } from '../components/ui/Button';
 import { tokenStorage } from '../services/api';
 
 export const StudentProfilePage: React.FC = () => {
-  const { setCertificateModal, addToast, courses } = useLms();
-  const [activeTab, setActiveTab] = useState<'overview' | 'projects' | 'certificates'>('overview');
-  const [certificates, setCertificates] = useState<Certificate[]>([]);
-  const [dbEnrollments, setDbEnrollments] = useState<any[]>([]);
+  const { addToast } = useLms();
+  const [activeTab, setActiveTab] = useState<'overview' | 'projects'>('overview');
   const currentUser = tokenStorage.getUser<{ name?: string; email?: string; avatar?: string }>();
   const studentName = currentUser?.name || 'Student Engineer';
   const studentEmail = currentUser?.email || 'learner@yaswantcode.com';
   const avatarUrl = currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(studentName)}&background=6366f1&color=fff`;
 
-  useEffect(() => {
-    const token = tokenStorage.get();
-    const authHeaders: Record<string, string> = token ? { 'Authorization': `Bearer ${token}` } : {};
-
-    // 1. Fetch real certificates
-    fetch('/api/certificates.php', { headers: authHeaders })
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && Array.isArray(json.data)) {
-          setCertificates(json.data);
-        }
-      })
-      .catch(() => {});
-
-    // 2. Fetch real database enrollments
-    fetch('/api/enrollments.php', { headers: authHeaders })
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && Array.isArray(json.data)) {
-          setDbEnrollments(json.data);
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Compute real study hours and dynamic skills from real enrolled courses
-  const enrolledCourses = courses.filter(c => 
-    dbEnrollments.some(e => e.course_id === c.id) || c.enrolled
-  );
-
-  const totalStudyHours = dbEnrollments.length > 0
-    ? dbEnrollments.reduce((acc, enr) => {
-        const c = courses.find(item => item.id === enr.course_id);
-        const dur = c?.durationHours || Number(enr.duration_hours) || 20;
-        const prog = Number(enr.progress_percent) || 0;
-        return acc + (dur * prog / 100);
-      }, 0).toFixed(1)
-    : enrolledCourses.reduce((acc, c) => acc + (c.durationHours * (c.progressPercent || 0) / 100), 0).toFixed(1);
-
-  const dynamicSkills = Array.from(
-    new Set(enrolledCourses.flatMap(c => c.skills || []))
-  );
-
-  const skills = dynamicSkills.length > 0
-    ? dynamicSkills.map((name, i) => ({
-        name,
-        level: i % 2 === 0 ? 'Advanced' : 'Proficient',
-        verified: true
-      }))
-    : [
-        { name: 'Full-Stack JavaScript & TypeScript', level: 'Proficient', verified: true },
-        { name: 'React 19 & Next.js Ecosystem', level: 'Advanced', verified: true },
-        { name: 'Database Architecture & APIs', level: 'Proficient', verified: true }
-      ];
+  const skills = [
+    { name: 'Full-Stack JavaScript & TypeScript', level: 'Proficient', verified: true },
+    { name: 'React 19 & Next.js Ecosystem', level: 'Advanced', verified: true },
+    { name: 'Database Architecture & APIs', level: 'Proficient', verified: true }
+  ];
 
   const [projects, setProjects] = useState<any[]>([]);
 
@@ -138,15 +83,11 @@ export const StudentProfilePage: React.FC = () => {
 
             <div className="flex flex-wrap items-center gap-4 text-xs text-neutral-500 pt-1">
               <span className="flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-neutral-400" /> {enrolledCourses.length} Enrolled Course{enrolledCourses.length === 1 ? '' : 's'}
+                <Code2 className="w-3.5 h-3.5 text-neutral-400" /> {projects.length} Showcase Project{projects.length === 1 ? '' : 's'}
               </span>
               <span>•</span>
               <span className="flex items-center gap-1 font-semibold text-amber-500">
-                <Flame className="w-3.5 h-3.5 fill-current" /> {dbEnrollments.length > 0 ? `${dbEnrollments.length} Active Modules` : 'Active Learner'}
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-neutral-400" /> {totalStudyHours} Study Hours
+                <Flame className="w-3.5 h-3.5 fill-current" /> Active Learner
               </span>
             </div>
           </div>
@@ -166,7 +107,7 @@ export const StudentProfilePage: React.FC = () => {
 
       {/* Profile Tabs */}
       <div className="flex border-b border-neutral-200 dark:border-neutral-800 gap-8 text-xs sm:text-sm font-semibold">
-        {(['overview', 'projects', 'certificates'] as const).map((tab) => (
+        {(['overview', 'projects'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -186,10 +127,8 @@ export const StudentProfilePage: React.FC = () => {
 
       {/* Tab: Overview */}
       {activeTab === 'overview' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left 2 Cols: Verified Skills & Heatmap */}
-          <div className="lg:col-span-2 space-y-6">
+        <div>
+          <div className="space-y-6">
             <GlassCard className="p-6">
               <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400 mb-4 flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-emerald-500" /> Verified Engineering Proficiencies
@@ -213,7 +152,6 @@ export const StudentProfilePage: React.FC = () => {
                 <h3 className="text-sm font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-neutral-400" /> Study Activity Log (Last 90 Days)
                 </h3>
-                <span className="text-xs text-emerald-500 font-semibold">{totalStudyHours} hrs completed • {certificates.length} credentials</span>
               </div>
 
               {/* Heatmap grid */}
@@ -242,36 +180,6 @@ export const StudentProfilePage: React.FC = () => {
                 <span className="w-2.5 h-2.5 rounded-xs bg-emerald-600/70" />
                 <span className="w-2.5 h-2.5 rounded-xs bg-emerald-500" />
                 <span>More</span>
-              </div>
-            </GlassCard>
-          </div>
-
-          {/* Right Col: Quick Stats & Credentials */}
-          <div className="space-y-6">
-            <GlassCard className="p-6 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-                Verified Credentials ({certificates.length})
-              </h3>
-
-              <div className="space-y-3">
-                {certificates.length === 0 ? (
-                  <p className="text-xs text-neutral-400">No credentials yet.</p>
-                ) : (
-                  certificates.map((cert) => (
-                    <div
-                      key={cert.id}
-                      onClick={() => setCertificateModal(cert)}
-                      className="p-3.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 cursor-pointer hover:border-neutral-400 transition-colors"
-                    >
-                      <div className="text-xs font-bold text-neutral-900 dark:text-white line-clamp-1">
-                        {cert.courseTitle}
-                      </div>
-                      <span className="text-[10px] font-mono text-neutral-400">
-                        ID: {cert.credentialId}
-                      </span>
-                    </div>
-                  ))
-                )}
               </div>
             </GlassCard>
           </div>
@@ -320,34 +228,6 @@ export const StudentProfilePage: React.FC = () => {
               </div>
             </GlassCard>
           ))}
-        </div>
-      )}
-
-      {/* Tab: Certificates */}
-      {activeTab === 'certificates' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {certificates.length === 0 ? (
-            <div className="col-span-2 p-12 text-center rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-              <Award className="w-10 h-10 text-neutral-400 mx-auto mb-3 opacity-50" />
-              <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">No Certificates Earned Yet</h4>
-              <p className="text-xs text-neutral-500 max-w-sm mx-auto">
-                Complete all course modules to earn cryptographically verifiable credentials.
-              </p>
-            </div>
-          ) : (
-            certificates.map((cert) => (
-              <GlassCard key={cert.id} className="p-6 flex items-center justify-between gap-4">
-                <div>
-                  <Badge variant="success" size="sm" className="mb-2">Verified Honor</Badge>
-                  <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">{cert.courseTitle}</h4>
-                  <div className="text-xs text-neutral-400 font-mono">Issued {cert.issueDate} • {cert.credentialId}</div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setCertificateModal(cert)}>
-                  Inspect
-                </Button>
-              </GlassCard>
-            ))
-          )}
         </div>
       )}
 

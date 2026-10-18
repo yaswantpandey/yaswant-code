@@ -7,8 +7,6 @@ User-agent: *
 
 # ── Public pages: allow full indexing ──────────────────────────────────────
 Allow: /$
-Allow: /courses
-Allow: /courses/
 Allow: /blog
 Allow: /blog/
 Allow: /roadmaps
