@@ -146,14 +146,13 @@ export const LandingPage: React.FC = () => {
                   animate={{ opacity: 1 }}
                   transition={{ duration: 1.6, ease: 'easeOut' }}
                 >
-                  <HeroScene className="absolute inset-0 opacity-45 lg:opacity-100" />
+                  <HeroScene className="absolute inset-0 opacity-30 lg:opacity-50" />
                 </motion.div>
               </React.Suspense>
             )}
           </motion.div>
-          {/* Legibility veil on the text side */}
-          <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b lg:bg-gradient-to-r from-[#FFF9FA]/85 via-[#FFF9FA]/40 to-transparent pointer-events-none" />
-          <div aria-hidden className="absolute bottom-0 inset-x-0 h-40 -z-10 bg-gradient-to-t from-[#FFF9FA] to-transparent pointer-events-none" />
+          {/* Subtle bottom bleed into next section */}
+          <div aria-hidden className="absolute bottom-0 inset-x-0 h-24 -z-10 bg-gradient-to-t from-[#FFF9FA]/60 to-transparent pointer-events-none" />
 
           <motion.div style={{ y: heroY, opacity: heroFade }} className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -163,10 +162,12 @@ export const LandingPage: React.FC = () => {
               className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0"
             >
               <motion.a
-                variants={fadeUp}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.05 }}
                 href="/roadmaps"
                 onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
-                className="group inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#FD1843]/[0.06] border border-[#FD1843]/15 backdrop-blur-md text-xs font-semibold mb-7 max-w-full hover:border-[#FD1843]/35 transition-colors"
+                className="group inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#FD1843]/[0.08] border border-[#FD1843]/20 backdrop-blur-md text-xs font-semibold mb-7 max-w-full hover:border-[#FD1843]/40 transition-colors"
               >
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#FD1843] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#FFF9FA]">
                   <Sparkles className="w-3 h-3 text-[#FFF9FA] transition-transform duration-500 group-hover:rotate-180 group-hover:scale-125" /> New
@@ -175,52 +176,50 @@ export const LandingPage: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-[#110508]/60 shrink-0 transition-transform group-hover:translate-x-0.5" />
               </motion.a>
 
-              <h1 className="text-[2.6rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-6 break-words">
+              <h1 className="text-[2.6rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-6 break-words text-[#110508]">
                 <span className="lg:block">
                   {HEADLINE_TOP.map((w, i) => (
                     <React.Fragment key={w}>
-                    <span className="inline-block overflow-hidden align-bottom pb-1">
                       <motion.span
                         className="inline-block"
-                        initial={{ y: '110%', rotate: 4 }}
-                        animate={{ y: 0, rotate: 0 }}
-                        transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.15 + i * 0.07 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 + i * 0.07 }}
                       >
                         {w}
-                      </motion.span>
-                    </span>{' '}
+                      </motion.span>{' '}
                     </React.Fragment>
                   ))}
                 </span>
                 <span className="lg:block">
                   {HEADLINE_BOTTOM.map((w, i) => (
                     <React.Fragment key={w}>
-                    <span className="inline-block overflow-hidden align-bottom pb-1">
                       <motion.span
                         className={`inline-block ${w === 'of' ? '' : 'text-gradient-sand'}`}
-                        initial={{ y: '110%', rotate: 4 }}
-                        animate={{ y: 0, rotate: 0 }}
-                        transition={{ duration: 0.9, ease: EASE_OUT, delay: 0.45 + i * 0.07 }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.35 + i * 0.07 }}
                       >
                         {w}
-                      </motion.span>
-                    </span>{' '}
+                      </motion.span>{' '}
                     </React.Fragment>
                   ))}
                 </span>
               </h1>
 
               <motion.p
-                initial={{ y: 16 }}
-                animate={{ y: 0 }}
-                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.6 }}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.55 }}
                 className="text-base sm:text-lg text-[#110508]/75 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-9"
               >
                 A developer-first learning platform engineered for serious practitioners. Follow step-by-step roadmaps, build production-grade projects, and sharpen your skills with free notes and developer tools.
               </motion.p>
 
               <motion.div
-                variants={fadeUp}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.65 }}
                 className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full max-w-xs sm:max-w-none mx-auto lg:mx-0"
               >
                 {/* Real <a href> for crawler discoverability — SPA nav via onClick */}
@@ -252,7 +251,9 @@ export const LandingPage: React.FC = () => {
 
               {/* Trust Meta */}
               <motion.div
-                variants={fadeUp}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.8 }}
                 className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-9 text-xs text-[#110508]/70"
               >
                 {['140k+ Active Engineers', 'Hands-On Projects', 'Interactive In-Browser Labs'].map((t) => (
@@ -263,7 +264,11 @@ export const LandingPage: React.FC = () => {
               </motion.div>
 
               {/* E-E-A-T: Founder / About signal — visible to crawlers & AI engines */}
-              <motion.p variants={fadeUp} className="text-xs text-[#110508]/50 mt-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8, ease: EASE_OUT, delay: 1.0 }}
+                className="text-xs text-[#110508]/50 mt-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
                 Founded by <strong className="text-[#110508]/70">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
                 Every roadmap and project is designed around real-world systems used by top technology companies.
               </motion.p>
