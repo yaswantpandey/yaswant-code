@@ -61,6 +61,7 @@ import { GlassCard } from '../components/ui/GlassCard';
 import { BentoCard } from '../components/ui/BentoCard';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
+import { sendPushNotification } from '../services/notifications';
 
 // ── Types for Complete Website Administration ────────────────────────────────
 interface AdminOverview {
@@ -328,7 +329,7 @@ export const AdminDashboardPage: React.FC = () => {
   const { addToast, setCurrentView } = useLms();
   
   // Navigation tabs
-  const [activeTab, setActiveTab] = useState<'overview' | 'discussions' | 'notes' | 'tools' | 'projects' | 'roadmaps' | 'users' | 'settings' | 'inquiries' | 'subscribers' | 'database'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'discussions' | 'notes' | 'tools' | 'projects' | 'roadmaps' | 'users' | 'settings' | 'inquiries' | 'subscribers' | 'database' | 'notifications'>('overview');
   
   // Loading & sync state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -1276,6 +1277,7 @@ export const AdminDashboardPage: React.FC = () => {
           { id: 'settings', label: 'Settings', icon: SettingsIcon, count: null },
           { id: 'inquiries', label: 'Inquiries', icon: MessageSquare, count: inquiriesList.length },
           { id: 'subscribers', label: 'Newsletter', icon: Mail, count: subscribersList.length },
+          { id: 'notifications', label: 'Push Notify', icon: Radio, count: null },
           { id: 'database', label: 'DB Health', icon: Database, count: dbTables.length ? `${dbTables.length} tables` : null },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -2458,6 +2460,11 @@ export const AdminDashboardPage: React.FC = () => {
             </div>
           )}
         </GlassCard>
+      )}
+
+      {/* ── TAB: PUSH NOTIFICATIONS ─────────────────────────────────────── */}
+      {activeTab === 'notifications' && (
+        <PushNotificationsPanel />
       )}
 
       {/* ── TAB 9: DATABASE HEALTH & TABLES INSPECTOR ────────────────────── */}
@@ -4002,6 +4009,215 @@ export const AdminDashboardPage: React.FC = () => {
         </div>
       )}
 
+    </div>
+  );
+};
+
+// ── Push Notifications Panel ─────────────────────────────────────────────────
+const PushNotificationsPanel: React.FC = () => {
+  const { addToast } = useLms();
+  const [form, setForm] = React.useState({
+    title:   '',
+    body:    '',
+    link:    '/',
+    icon:    '/favicon.svg',
+  });
+  const [sending, setSending]         = React.useState(false);
+  const [stats, setStats]             = React.useState<{ total: number; last_30_days: number } | null>(null);
+  const [history, setHistory]         = React.useState<any[]>([]);
+  const [historyLoading, setHistLoad] = React.useState(true);
+
+  const QUICK_TEMPLATES = [
+    { label: 'New Blog Post',   title: '📝 New Blog Post',        body: 'A new article just dropped — check it out!',                   link: '/blog'      },
+    { label: 'New Note / PDF',  title: '📚 New Study Note',       body: 'Fresh study notes & PDFs are now available for download.',      link: '/notes'     },
+    { label: 'New Tool',        title: '🛠 New Developer Tool',    body: 'A brand-new dev tool has been added. Download it now!',         link: '/tools'     },
+    { label: 'New Roadmap',     title: '🗺 New Learning Roadmap',  body: 'A new engineering roadmap has been published. Start learning!', link: '/roadmaps'  },
+    { label: 'Announcement',    title: '📢 Announcement',         body: 'We have an important update for you.',                          link: '/'          },
+  ];
+
+  React.useEffect(() => {
+    const token = tokenStorage.get();
+    if (!token) return;
+    fetch('/api/notify.php?action=stats', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setStats(d.data); })
+      .catch(() => {});
+
+    fetch('/api/notify.php?action=history', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(d => { if (d.success) setHistory(d.data || []); })
+      .catch(() => {})
+      .finally(() => setHistLoad(false));
+  }, []);
+
+  const handleSend = async () => {
+    if (!form.title.trim() || !form.body.trim()) {
+      addToast('Missing fields', 'Title and message are required.', 'warning');
+      return;
+    }
+    setSending(true);
+    try {
+      const token = tokenStorage.get() ?? '';
+      const result = await sendPushNotification({ ...form, authToken: token });
+      if (result.success) {
+        addToast('Notification Sent', `Delivered to ${result.sent ?? 0} subscribers.`, 'success');
+        setForm(f => ({ ...f, title: '', body: '' }));
+        setHistory(h => [
+          { title: form.title, body: form.body, link: form.link, sent_count: result.sent ?? 0, sent_by: 'admin', sent_at: new Date().toISOString() },
+          ...h.slice(0, 19),
+        ]);
+        if (stats) setStats(s => s ? { ...s } : s);
+      } else {
+        addToast('Send Failed', result.message || 'Could not send notification.', 'warning');
+      }
+    } catch {
+      addToast('Network Error', 'Could not reach notification API.', 'warning');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-4">
+        <GlassCard className="p-5 text-center">
+          <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+            {stats ? stats.total : '—'}
+          </div>
+          <div className="text-xs text-neutral-500 mt-1 font-semibold uppercase tracking-wider">Total Subscribers</div>
+        </GlassCard>
+        <GlassCard className="p-5 text-center">
+          <div className="text-3xl font-black text-blue-600 dark:text-blue-400">
+            {stats ? stats.last_30_days : '—'}
+          </div>
+          <div className="text-xs text-neutral-500 mt-1 font-semibold uppercase tracking-wider">New (30 days)</div>
+        </GlassCard>
+      </div>
+
+      {/* Compose */}
+      <GlassCard className="p-6 space-y-5">
+        <div>
+          <h3 className="text-base font-bold text-neutral-900 dark:text-white flex items-center gap-2">
+            <Radio className="w-4 h-4 text-rose-500" />
+            Send Push Notification
+          </h3>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Delivered to all subscribed users instantly via Firebase Cloud Messaging.
+          </p>
+        </div>
+
+        {/* Quick Templates */}
+        <div>
+          <label className="block text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-2">
+            Quick Templates
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_TEMPLATES.map(tpl => (
+              <button
+                key={tpl.label}
+                onClick={() => setForm(f => ({ ...f, title: tpl.title, body: tpl.body, link: tpl.link }))}
+                className="text-[11px] px-3 py-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 hover:border-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+              >
+                {tpl.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              Title <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={form.title}
+              onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+              placeholder="e.g. 📝 New Blog Post Just Dropped!"
+              maxLength={100}
+              className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              Message <span className="text-rose-500">*</span>
+            </label>
+            <textarea
+              value={form.body}
+              onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
+              placeholder="e.g. Check out the new article on distributed systems..."
+              rows={3}
+              maxLength={200}
+              className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            />
+            <div className="text-right text-[10px] text-neutral-400 mt-0.5">{form.body.length}/200</div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
+              Deep Link (optional)
+            </label>
+            <input
+              type="text"
+              value={form.link}
+              onChange={e => setForm(f => ({ ...f, link: e.target.value }))}
+              placeholder="/blog or /tools"
+              className="w-full px-3 py-2 text-sm rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={handleSend}
+            disabled={sending || !form.title.trim() || !form.body.trim()}
+            icon={<Send className="w-3.5 h-3.5" />}
+          >
+            {sending ? 'Sending…' : `Send to ${stats?.total ?? 'all'} Subscribers`}
+          </Button>
+        </div>
+      </GlassCard>
+
+      {/* History */}
+      <GlassCard className="p-6">
+        <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-4 flex items-center gap-2">
+          <Activity className="w-4 h-4 text-indigo-500" />
+          Recent Notifications
+        </h3>
+        {historyLoading ? (
+          <div className="text-xs text-neutral-400 text-center py-4">Loading history…</div>
+        ) : history.length === 0 ? (
+          <div className="text-xs text-neutral-400 text-center py-4">No notifications sent yet.</div>
+        ) : (
+          <div className="space-y-3">
+            {history.map((n, i) => (
+              <div key={i} className="flex items-start gap-3 py-3 border-b border-neutral-100 dark:border-neutral-800 last:border-0">
+                <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-900/20 flex items-center justify-center shrink-0">
+                  <Radio className="w-3.5 h-3.5 text-rose-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-neutral-900 dark:text-white truncate">{n.title}</span>
+                    <span className="text-[10px] text-neutral-400 font-mono shrink-0">
+                      {n.sent_count} sent
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-0.5 truncate">{n.body}</p>
+                  <p className="text-[10px] text-neutral-400 mt-0.5 font-mono">
+                    {new Date(n.sent_at).toLocaleString()} · {n.sent_by || 'admin'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </GlassCard>
     </div>
   );
 };

@@ -32,6 +32,7 @@ import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { BrandLogo } from '../ui/BrandLogo';
+import { PushSubscribeButton } from '../ui/PushSubscribeButton';
 import { RoleType } from '../../types/lms';
 import { tokenStorage } from '../../services/api';
 
@@ -365,16 +366,19 @@ export const Navbar: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="pt-2 border-t border-neutral-100 dark:border-neutral-800 text-center">
-                    <button
-                      onClick={() => {
-                        setNotifDropdownOpen(false);
-                        setCurrentView('student-dashboard');
-                      }}
-                      className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white"
-                    >
-                      View All in Dashboard
-                    </button>
+                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
+                    <PushSubscribeButton />
+                    <div className="text-center">
+                      <button
+                        onClick={() => {
+                          setNotifDropdownOpen(false);
+                          setCurrentView('student-dashboard');
+                        }}
+                        className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white"
+                      >
+                        View All in Dashboard
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

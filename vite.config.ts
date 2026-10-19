@@ -16,7 +16,6 @@ export default defineConfig(({ mode }) => {
       port: 3000,
       proxy: {
         '/api': {
-          // Local PHP server for /api (e.g. `php -S 127.0.0.1:8000 -t public`)
           target: env.API_PROXY_TARGET || 'http://127.0.0.1',
           changeOrigin: true,
         },
@@ -26,33 +25,40 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'es2022',
-      cssCodeSplit: true,
+      cssCodeSplit: false,
       minify: 'esbuild',
       chunkSizeWarningLimit: 1000,
+      reportCompressedSize: false,
+      modulePreload: { polyfill: false },
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes('node_modules')) {
-              if (
-                id.includes('firebase') ||
-                id.includes('@firebase') ||
-                id.includes('re2js')
-              ) {
-                return 'vendor-firebase';
-              }
-              if (id.includes('lucide-react')) {
-                return 'vendor-icons';
-              }
-              if (id.includes('@google/genai')) {
-                return 'vendor-ai';
-              }
-              if (
-                id.includes('react') ||
-                id.includes('react-dom') ||
-                id.includes('scheduler')
-              ) {
-                return 'vendor-framework';
-              }
+            if (!id.includes('node_modules')) return;
+            if (
+              id.includes('firebase') ||
+              id.includes('@firebase') ||
+              id.includes('re2js')
+            ) {
+              return 'vendor-firebase';
+            }
+            if (id.includes('three')) {
+              return 'vendor-three';
+            }
+            if (id.includes('framer-motion') || id.includes('/motion/dist/')) {
+              return 'vendor-motion';
+            }
+            if (id.includes('lucide-react')) {
+              return 'vendor-icons';
+            }
+            if (id.includes('@google/genai')) {
+              return 'vendor-ai';
+            }
+            if (
+              id.includes('react-dom') ||
+              id.includes('/react/') ||
+              id.includes('scheduler')
+            ) {
+              return 'vendor-framework';
             }
           },
         },

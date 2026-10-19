@@ -4,7 +4,7 @@
  * Stale-While-Revalidate for fonts/images.
  */
 
-const CACHE_VERSION = 'v6';
+const CACHE_VERSION = 'v7';
 const STATIC_CACHE = `yaswant-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `yaswant-dynamic-${CACHE_VERSION}`;
 const FONT_CACHE = `yaswant-fonts-${CACHE_VERSION}`;

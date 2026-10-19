@@ -9,10 +9,14 @@ import { tokenStorage } from './services/api';
 import { setRobotsDirective } from './services/seo';
 import { isPrivateView } from './services/router';
 
-// Lazy-loaded Views for High-Performance Code-Splitting
+// LandingPage is eager — it is the first thing every visitor sees, so it must
+// be in the initial bundle. Making it lazy creates a Navbar+spinner mismatch
+// and a 3-hop waterfall (index → LandingPage → vendor-motion) before anything renders.
+import { LandingPage } from './views/LandingPage';
+
+// Lazy-loaded Views — pages users may never visit on a given session
 const AdminDashboardPage   = React.lazy(() => import('./views/AdminDashboardPage').then(m => ({ default: m.AdminDashboardPage })));
 const AdminAuthGate        = React.lazy(() => import('./views/AdminAuthGate').then(m => ({ default: m.AdminAuthGate })));
-import { LandingPage } from './views/LandingPage';
 const StudentDashboardPage = React.lazy(() => import('./views/StudentDashboardPage').then(m => ({ default: m.StudentDashboardPage })));
 const LearningPathsPage    = React.lazy(() => import('./views/LearningPathsPage').then(m => ({ default: m.LearningPathsPage })));
 const CommunityPage        = React.lazy(() => import('./views/CommunityPage').then(m => ({ default: m.CommunityPage })));

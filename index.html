@@ -159,6 +159,20 @@
     }
     </script>
 
+  <!-- ── Inline Critical CSS — prevents white flash & FOUC before full CSS loads ── -->
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{background:#004741;height:100%;scroll-behavior:smooth}
+    body{background:#004741;color:#F0EDE4;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;min-height:100vh}
+    #root{min-height:100vh;display:flex;flex-direction:column;background:#004741}
+  </style>
+
+  <!-- ── DNS Prefetch for external services ── -->
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+  <link rel="dns-prefetch" href="https://firebaseapp.com" />
+  <link rel="dns-prefetch" href="https://googleapis.com" />
+
   <!-- ── Resource Preconnects ── -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -172,22 +186,17 @@
     crossorigin
   />
 
-  <!-- ── Non-Render-Blocking Web Fonts (Preload + media swap) ── -->
-  <link
-    rel="preload"
-    as="style"
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=optional"
-  />
+  <!-- ── Non-Render-Blocking Web Fonts ── -->
   <link
     rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=optional"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
     media="print"
     onload="this.onload=null;this.media='all'"
   />
   <noscript>
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=optional"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
     />
   </noscript>
 
