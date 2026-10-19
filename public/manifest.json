@@ -1,0 +1,40 @@
+{
+  "name": "Yaswant Code — Full-Stack Engineering & AI",
+  "short_name": "Yaswant Code",
+  "description": "Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native architecture with step-by-step roadmaps.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#090d16",
+  "theme_color": "#004741",
+  "lang": "en-IN",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Roadmaps",
+      "url": "/roadmaps",
+      "description": "Browse engineering roadmaps"
+    },
+    {
+      "name": "Tools",
+      "url": "/tools",
+      "description": "Developer tools"
+    }
+  ]
+}
