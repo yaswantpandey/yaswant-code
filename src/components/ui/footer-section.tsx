@@ -72,22 +72,22 @@ export function Footer({
 	bottomContent,
 }: FooterProps = {}) {
 	return (
-		<footer className={`md:rounded-t-6xl relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t border-[#F0EDE4]/15 bg-[#003630]/75 px-6 py-12 lg:py-16 text-[#F0EDE4] ${className}`}>
-			<div className="bg-[#F0EDE4]/25 absolute top-0 right-1/2 left-1/2 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur" />
+		<footer className={`md:rounded-t-6xl relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t border-[#FD1843]/14 bg-[#FFF0F3]/90 px-6 py-12 lg:py-16 text-[#110508] ${className}`}>
+			<div className="bg-[#FD1843]/20 absolute top-0 right-1/2 left-1/2 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur" />
 
 			<div className="grid w-full gap-8 xl:grid-cols-3 xl:gap-8">
 				<AnimatedContainer className="space-y-4">
 					{brandLogo ? (
 						brandLogo
 					) : (
-						<FrameIcon className="size-8 text-[#F0EDE4]" />
+						<FrameIcon className="size-8 text-[#FD1843]" />
 					)}
 					{brandDescription && (
-						<p className="text-xs text-[#F0EDE4]/70 max-w-sm leading-relaxed">
+						<p className="text-xs text-[#110508]/65 max-w-sm leading-relaxed">
 							{brandDescription}
 						</p>
 					)}
-					<p className="text-[#F0EDE4]/60 text-sm">
+					<p className="text-[#110508]/55 text-sm">
 						© {new Date().getFullYear()} {brandName}. All rights reserved.
 					</p>
 				</AnimatedContainer>
@@ -96,16 +96,16 @@ export function Footer({
 					{sections.map((section, index) => (
 						<AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
 							<div className="mb-10 md:mb-0">
-								<h3 className="text-xs font-semibold uppercase tracking-wider text-[#F0EDE4]">
+								<h3 className="text-xs font-semibold uppercase tracking-wider text-[#110508]">
 									{section.label}
 								</h3>
-								<ul className="text-[#F0EDE4]/70 mt-4 space-y-2 text-sm">
+								<ul className="text-[#110508]/65 mt-4 space-y-2 text-sm">
 									{section.links.map((link) => (
 										<li key={link.title}>
 											<a
 												href={link.href}
 												onClick={link.onClick}
-												className="hover:text-[#F0EDE4] hover:translate-x-0.5 inline-flex items-center transition-all duration-200"
+												className="hover:text-[#FD1843] hover:translate-x-0.5 inline-flex items-center transition-all duration-200"
 											>
 												{link.icon && <link.icon className="me-1 size-4" />}
 												{link.title}
@@ -120,7 +120,7 @@ export function Footer({
 			</div>
 
 			{bottomContent && (
-				<div className="w-full mt-10 pt-6 border-t border-[#F0EDE4]/15">
+				<div className="w-full mt-10 pt-6 border-t border-[#FD1843]/14">
 					{bottomContent}
 				</div>
 			)}

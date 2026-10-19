@@ -89,7 +89,7 @@ const AppShell: React.FC = () => {
     }
 
     return (
-      <div className="min-h-screen bg-[#004741] text-[#F0EDE4] transition-colors duration-200">
+      <div className="min-h-screen bg-[#FFF9FA] text-[#110508] transition-colors duration-200">
         <React.Suspense fallback={<ViewLoadingFallback />}>
           <AdminDashboardPage />
         </React.Suspense>
@@ -129,7 +129,7 @@ const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#004741] text-[#F0EDE4] transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-[#FFF9FA] text-[#110508] transition-colors duration-200">
       {/* Sticky Global Student Navigation */}
       <Navbar />
 

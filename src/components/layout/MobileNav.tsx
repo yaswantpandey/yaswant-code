@@ -349,14 +349,14 @@ export const MobileNav: React.FC = () => {
       )}
 
       {/* Fixed Material Design 3 Bottom Navigation Bar */}
-      <nav 
-        aria-label="Mobile Bottom Navigation" 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#004741]/95 backdrop-blur-2xl border-t border-[#F0EDE4]/15 px-3 pt-1.5 pb-2 flex items-center justify-around shadow-[0_-4px_24px_rgba(0,0,0,0.3)] text-[#F0EDE4]"
+      <nav
+        aria-label="Mobile Bottom Navigation"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFF9FA]/95 backdrop-blur-2xl border-t border-[#FD1843]/12 px-3 pt-1.5 pb-2 flex items-center justify-around shadow-[0_-4px_24px_rgba(253,24,67,0.10)] text-[#110508]"
       >
         {mainNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.isActive;
-          
+
           return (
             <button
               key={item.id}
@@ -364,26 +364,26 @@ export const MobileNav: React.FC = () => {
               className="flex flex-col items-center gap-1 py-0.5 px-1 min-w-[56px] focus:outline-hidden transition-transform active:scale-95"
             >
               {/* Material Design 3 Active Indicator Pill */}
-              <div 
+              <div
                 className={`relative w-14 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#F0EDE4] text-[#004741] shadow-xs'
-                    : 'text-[#F0EDE4]/70 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
+                    ? 'bg-[#FD1843] text-[#FFF9FA] shadow-xs'
+                    : 'text-[#110508]/55 hover:text-[#FD1843] hover:bg-[#FD1843]/10'
                 }`}
               >
                 <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-105' : ''}`} />
-                
+
                 {/* Optional Badge on icon pill */}
                 {item.badge && !isActive && (
-                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-[#004741]" />
+                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-[#FD1843] ring-2 ring-[#FFF9FA]" />
                 )}
               </div>
 
               {/* Material Bottom Tab Label */}
               <span className={`text-[10px] tracking-tight transition-colors leading-none ${
                 isActive
-                  ? 'text-[#F0EDE4] font-bold'
-                  : 'text-[#F0EDE4]/65 font-medium'
+                  ? 'text-[#FD1843] font-bold'
+                  : 'text-[#110508]/50 font-medium'
               }`}>
                 {item.label}
               </span>

@@ -20,14 +20,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [theme, setThemeState] = useState<ThemeMode>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved === 'dark') {
-        return 'dark';
+      if (saved === 'light' || saved === 'dark' || saved === 'system') {
+        return saved as ThemeMode;
       }
-      localStorage.setItem(STORAGE_KEY, 'dark');
+      localStorage.setItem(STORAGE_KEY, 'light');
     } catch {
       // localStorage may be disabled or restricted in sandboxes
     }
-    return 'dark';
+    return 'light';
   });
 
   // Track system preference
@@ -35,7 +35,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    return true; // Fallback to dark if undetermined
+    return false; // Fallback to light if undetermined
   });
 
   // Listen to system preference changes

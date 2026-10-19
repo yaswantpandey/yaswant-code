@@ -85,10 +85,10 @@ void main(){
 }
 `;
 
-const SAND = new THREE.Color('#F0EDE4');
-const MINT = new THREE.Color('#5EEAD4');
-const AMBER = new THREE.Color('#F5C451');
-const DEEP = new THREE.Color('#00211e');
+const SAND = new THREE.Color('#FFF9FA');
+const MINT = new THREE.Color('#FD1843');
+const AMBER = new THREE.Color('#FF6B35');
+const DEEP = new THREE.Color('#C5102E');
 
 export const HeroScene: React.FC<{ className?: string }> = ({ className }) => {
   const mountRef = useRef<HTMLDivElement>(null);

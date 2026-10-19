@@ -49,12 +49,12 @@ const SectionHeading: React.FC<{ eyebrow: string; title: React.ReactNode; sub?: 
   center,
 }) => (
   <Reveal className={center ? 'text-center max-w-2xl mx-auto' : ''}>
-    <div className={`inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#F5C451] mb-3`}>
-      <span className="h-px w-6 bg-[#F5C451]/60" />
+    <div className={`inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#FD1843] mb-3`}>
+      <span className="h-px w-6 bg-[#FD1843]/60" />
       {eyebrow}
     </div>
     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">{title}</h2>
-    {sub && <p className="text-sm sm:text-base text-[#F0EDE4]/70 mt-3 leading-relaxed">{sub}</p>}
+    {sub && <p className="text-sm sm:text-base text-[#110508]/70 mt-3 leading-relaxed">{sub}</p>}
   </Reveal>
 );
 
@@ -117,7 +117,7 @@ export const LandingPage: React.FC = () => {
   // Spotlight that follows the cursor in the final CTA
   const ctaX = useMotionValue(50);
   const ctaY = useMotionValue(50);
-  const ctaGlow = useMotionTemplate`radial-gradient(600px circle at ${ctaX}% ${ctaY}%, rgba(245,196,81,0.22), transparent 55%)`;
+  const ctaGlow = useMotionTemplate`radial-gradient(600px circle at ${ctaX}% ${ctaY}%, rgba(253,24,67,0.15), transparent 55%)`;
 
   const tracksToShow = roadmaps.length > 0 ? roadmaps : ALL_ROADMAP_TRACKS.slice(0, 3);
 
@@ -125,7 +125,7 @@ export const LandingPage: React.FC = () => {
     <MotionConfig reducedMotion="user">
       <motion.div
         aria-hidden
-        className="fixed top-0 left-0 right-0 h-[2px] z-[60] origin-left bg-gradient-to-r from-[#5EEAD4] via-[#F5C451] to-[#F0EDE4]"
+        className="fixed top-0 left-0 right-0 h-[2px] z-[60] origin-left bg-gradient-to-r from-[#FD1843] via-[#FF6B35] to-[#FD1843]"
         style={{ scaleX: progress }}
       />
 
@@ -134,7 +134,7 @@ export const LandingPage: React.FC = () => {
         {/* 1. Hero — WebGL scene + kinetic type */}
         <section ref={heroRef} className="relative isolate min-h-[calc(100svh-4rem)] flex items-center pt-10 pb-20 sm:py-16">
           {/* Static gradient fallback (also the WebGL backdrop) */}
-          <div aria-hidden className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_45%,#006158_0%,#004741_45%,#00302b_100%)]" />
+          <div aria-hidden className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_45%,#FFE0E8_0%,#FFF0F3_45%,#FFF9FA_100%)]" />
           <div aria-hidden className="absolute inset-0 -z-20 grid-backdrop [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
 
           <motion.div aria-hidden className="absolute inset-0 -z-10" style={{ scale: sceneScale }}>
@@ -152,8 +152,8 @@ export const LandingPage: React.FC = () => {
             )}
           </motion.div>
           {/* Legibility veil on the text side */}
-          <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b lg:bg-gradient-to-r from-[#004741]/85 via-[#004741]/40 to-transparent pointer-events-none" />
-          <div aria-hidden className="absolute bottom-0 inset-x-0 h-40 -z-10 bg-gradient-to-t from-[#004741] to-transparent pointer-events-none" />
+          <div aria-hidden className="absolute inset-0 -z-10 bg-gradient-to-b lg:bg-gradient-to-r from-[#FFF9FA]/85 via-[#FFF9FA]/40 to-transparent pointer-events-none" />
+          <div aria-hidden className="absolute bottom-0 inset-x-0 h-40 -z-10 bg-gradient-to-t from-[#FFF9FA] to-transparent pointer-events-none" />
 
           <motion.div style={{ y: heroY, opacity: heroFade }} className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -166,13 +166,13 @@ export const LandingPage: React.FC = () => {
                 variants={fadeUp}
                 href="/roadmaps"
                 onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
-                className="group inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#F0EDE4]/[0.06] border border-[#F0EDE4]/15 backdrop-blur-md text-xs font-semibold mb-7 max-w-full hover:border-[#F0EDE4]/35 transition-colors"
+                className="group inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#FD1843]/[0.06] border border-[#FD1843]/15 backdrop-blur-md text-xs font-semibold mb-7 max-w-full hover:border-[#FD1843]/35 transition-colors"
               >
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#F5C451] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#004741]">
-                  <Sparkles className="w-3 h-3 text-[#004741] transition-transform duration-500 group-hover:rotate-180 group-hover:scale-125" /> New
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#FD1843] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#FFF9FA]">
+                  <Sparkles className="w-3 h-3 text-[#FFF9FA] transition-transform duration-500 group-hover:rotate-180 group-hover:scale-125" /> New
                 </span>
-                <span className="truncate text-[#F0EDE4]/90">2026 Roadmaps: Full Stack, Frontend, Backend & DevOps</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#F0EDE4]/60 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                <span className="truncate text-[#110508]/90">2026 Roadmaps: Full Stack, Frontend, Backend & DevOps</span>
+                <ChevronRight className="w-3.5 h-3.5 text-[#110508]/60 shrink-0 transition-transform group-hover:translate-x-0.5" />
               </motion.a>
 
               <h1 className="text-[2.6rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-6 break-words">
@@ -214,7 +214,7 @@ export const LandingPage: React.FC = () => {
                 initial={{ y: 16 }}
                 animate={{ y: 0 }}
                 transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.6 }}
-                className="text-base sm:text-lg text-[#F0EDE4]/75 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-9"
+                className="text-base sm:text-lg text-[#110508]/75 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-9"
               >
                 A developer-first learning platform engineered for serious practitioners. Follow step-by-step roadmaps, build production-grade projects, and sharpen your skills with free notes and developer tools.
               </motion.p>
@@ -253,18 +253,18 @@ export const LandingPage: React.FC = () => {
               {/* Trust Meta */}
               <motion.div
                 variants={fadeUp}
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-9 text-xs text-[#F0EDE4]/70"
+                className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-9 text-xs text-[#110508]/70"
               >
                 {['140k+ Active Engineers', 'Hands-On Projects', 'Interactive In-Browser Labs'].map((t) => (
                   <span key={t} className="flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-[#5EEAD4]" /> {t}
+                    <CheckCircle2 className="w-4 h-4 text-[#FD1843]" /> {t}
                   </span>
                 ))}
               </motion.div>
 
               {/* E-E-A-T: Founder / About signal — visible to crawlers & AI engines */}
-              <motion.p variants={fadeUp} className="text-xs text-[#F0EDE4]/50 mt-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Founded by <strong className="text-[#F0EDE4]/70">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
+              <motion.p variants={fadeUp} className="text-xs text-[#110508]/50 mt-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Founded by <strong className="text-[#110508]/70">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
                 Every roadmap and project is designed around real-world systems used by top technology companies.
               </motion.p>
             </motion.div>
@@ -273,9 +273,9 @@ export const LandingPage: React.FC = () => {
           {/* Floating proof chips orbiting the 3D core (desktop only) */}
           <div aria-hidden className="hidden lg:block absolute inset-y-0 right-0 w-1/2 pointer-events-none">
             {[
-              { icon: CheckCircle2, label: '142 tests passed', sub: 'CI · distributed-cache', pos: 'top-[22%] left-[8%]', color: 'text-[#5EEAD4]', d: 1.1, f: 6 },
-              { icon: BadgeCheck, label: 'Stage complete', sub: 'Full Stack · Stage 4', pos: 'bottom-[24%] right-[10%]', color: 'text-[#F5C451]', d: 1.3, f: 7.5 },
-              { icon: GitBranch, label: 'PR merged', sub: 'review by instructor', pos: 'top-[16%] right-[14%]', color: 'text-[#F0EDE4]', d: 1.5, f: 8 },
+              { icon: CheckCircle2, label: '142 tests passed', sub: 'CI · distributed-cache', pos: 'top-[22%] left-[8%]', color: 'text-[#FD1843]', d: 1.1, f: 6 },
+              { icon: BadgeCheck, label: 'Stage complete', sub: 'Full Stack · Stage 4', pos: 'bottom-[24%] right-[10%]', color: 'text-[#FF6B35]', d: 1.3, f: 7.5 },
+              { icon: GitBranch, label: 'PR merged', sub: 'review by instructor', pos: 'top-[16%] right-[14%]', color: 'text-[#110508]', d: 1.5, f: 8 },
             ].map(({ icon: Icon, label, sub, pos, color, d, f }) => (
               <motion.div
                 key={label}
@@ -287,14 +287,14 @@ export const LandingPage: React.FC = () => {
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: f, repeat: Infinity, ease: 'easeInOut' }}
-                  className="flex items-center gap-3 rounded-2xl border border-[#F0EDE4]/15 bg-[#00302b]/70 backdrop-blur-xl px-4 py-3 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.6)]"
+                  className="flex items-center gap-3 rounded-2xl border border-[#FD1843]/15 bg-white/80 backdrop-blur-xl px-4 py-3 shadow-[0_20px_50px_-15px_rgba(253,24,67,0.15)]"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F0EDE4]/[0.07]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FD1843]/[0.07]">
                     <Icon className={`w-4 h-4 ${color}`} />
                   </span>
                   <span className="leading-tight">
-                    <span className="block text-xs font-semibold text-[#F0EDE4]">{label}</span>
-                    <span className="block text-[10px] font-mono text-[#F0EDE4]/55">{sub}</span>
+                    <span className="block text-xs font-semibold text-[#110508]">{label}</span>
+                    <span className="block text-[10px] font-mono text-[#110508]/55">{sub}</span>
                   </span>
                 </motion.div>
               </motion.div>
@@ -304,15 +304,15 @@ export const LandingPage: React.FC = () => {
           {/* Scroll cue */}
           <motion.div
             aria-hidden
-            className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#F0EDE4]/50"
+            className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#110508]/50"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 2 }}
           >
             <MousePointer2 className="w-3.5 h-3.5" />
-            <span className="relative h-10 w-px overflow-hidden bg-[#F0EDE4]/15">
+            <span className="relative h-10 w-px overflow-hidden bg-[#FD1843]/15">
               <motion.span
-                className="absolute inset-x-0 top-0 h-4 bg-[#F5C451]"
+                className="absolute inset-x-0 top-0 h-4 bg-[#FD1843]"
                 animate={{ y: [-16, 40] }}
                 transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
               />
@@ -328,7 +328,7 @@ export const LandingPage: React.FC = () => {
               whileInView="show"
               viewport={{ once: true, margin: '-60px' }}
               variants={stagger(0.1)}
-              className="grid grid-cols-2 lg:grid-cols-4 rounded-3xl border border-[#F0EDE4]/12 bg-[#00302b]/60 backdrop-blur-xl overflow-hidden divide-x divide-y lg:divide-y-0 divide-[#F0EDE4]/10"
+              className="grid grid-cols-2 lg:grid-cols-4 rounded-3xl border border-[#FD1843]/12 bg-white/60 backdrop-blur-xl overflow-hidden divide-x divide-y lg:divide-y-0 divide-[#FD1843]/10"
             >
               {[
                 { node: <CountUp to={140} suffix="k+" />, label: 'Active engineers' },
@@ -338,7 +338,7 @@ export const LandingPage: React.FC = () => {
               ].map(({ node, label }) => (
                 <motion.div key={label} variants={fadeUp} className="p-6 sm:p-8 text-center">
                   <div className="text-3xl sm:text-5xl font-bold tracking-tight text-gradient-sand tabular-nums">{node}</div>
-                  <div className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-[#F0EDE4]/60">{label}</div>
+                  <div className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-[#110508]/60">{label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -346,9 +346,9 @@ export const LandingPage: React.FC = () => {
 
           <Marquee duration={45}>
             {TECH_STACK.map((t) => (
-              <span key={t} className="flex items-center gap-10 whitespace-nowrap text-lg sm:text-2xl font-semibold tracking-tight text-[#F0EDE4]/35">
+              <span key={t} className="flex items-center gap-10 whitespace-nowrap text-lg sm:text-2xl font-semibold tracking-tight text-[#110508]/35">
                 {t}
-                <Sparkles className="w-4 h-4 text-[#F5C451]/50" />
+                <Sparkles className="w-4 h-4 text-[#FD1843]/50" />
               </span>
             ))}
           </Marquee>
@@ -356,22 +356,22 @@ export const LandingPage: React.FC = () => {
 
         {/* 4. Trending Learning Paths */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="relative p-6 sm:p-14 rounded-3xl bg-[#00211e] border border-[#F0EDE4]/10 overflow-hidden">
+          <Reveal className="relative p-6 sm:p-14 rounded-3xl bg-[#FFF0F3] border border-[#FD1843]/10 overflow-hidden">
             <div aria-hidden className="absolute inset-0 grid-backdrop opacity-60 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
-            <div aria-hidden className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#5EEAD4]/10 blur-[120px]" />
-            <div aria-hidden className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#F5C451]/10 blur-[120px]" />
+            <div aria-hidden className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#FD1843]/10 blur-[120px]" />
+            <div aria-hidden className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#FF6B35]/10 blur-[120px]" />
             <div aria-hidden className="absolute top-0 inset-x-0 h-px overflow-hidden">
-              <div className="beam-line h-px w-1/4 bg-gradient-to-r from-transparent via-[#F5C451] to-transparent" />
+              <div className="beam-line h-px w-1/4 bg-gradient-to-r from-transparent via-[#FD1843] to-transparent" />
             </div>
 
             <div className="relative z-10 max-w-2xl mb-10 sm:mb-14">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F0EDE4]/10 text-xs font-semibold mb-5">
-                <Sparkles className="w-3.5 h-3.5 text-[#F5C451]" /> Structured Career Roadmaps
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FD1843]/10 text-xs font-semibold mb-5">
+                <Sparkles className="w-3.5 h-3.5 text-[#FD1843]" /> Structured Career Roadmaps
               </div>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
                 Go From Mid-Level to <span className="text-gradient-sand">Staff Engineer.</span>
               </h2>
-              <p className="text-sm text-[#F0EDE4]/65 leading-relaxed">
+              <p className="text-sm text-[#110508]/65 leading-relaxed">
                 Step-by-step sequential learning roadmaps vetted by Silicon Valley hiring managers. Master theoretical computer science and production execution.
               </p>
             </div>
@@ -386,7 +386,7 @@ export const LandingPage: React.FC = () => {
               {/* Connector line tying the roadmap cards into a path */}
               <motion.div
                 aria-hidden
-                className="hidden md:block absolute top-9 left-[8%] right-[8%] h-px origin-left bg-gradient-to-r from-[#5EEAD4]/60 via-[#F5C451]/60 to-[#F0EDE4]/20"
+                className="hidden md:block absolute top-9 left-[8%] right-[8%] h-px origin-left bg-gradient-to-r from-[#FD1843]/60 via-[#FF6B35]/60 to-[#FD1843]/20"
                 variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 1.4, ease: EASE_OUT } } }}
               />
               {tracksToShow.map((path, i) => (
@@ -395,11 +395,11 @@ export const LandingPage: React.FC = () => {
                   variants={fadeUp}
                   max={6}
                   onClick={() => setCurrentView('learning-paths')}
-                  className="p-6 flex flex-col justify-between bg-[#003a34]/80"
+                  className="p-6 flex flex-col justify-between bg-white/80"
                 >
                   <div className="relative">
                     <div className="flex items-center justify-between mb-5">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#F5C451]/50 bg-[#00211e] font-mono text-[11px] text-[#F5C451]">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#FD1843]/50 bg-[#FFF0F3] font-mono text-[11px] text-[#FD1843]">
                         {i + 1}
                       </span>
                       <Badge variant="purple" size="sm">{path.badge || '2026 Edition'}</Badge>
@@ -407,14 +407,14 @@ export const LandingPage: React.FC = () => {
                     <h3 className="text-lg font-bold mb-2 transition-colors group-hover:text-yellow-300">
                       {path.title}
                     </h3>
-                    <p className="text-xs text-[#F0EDE4]/60 line-clamp-3 mb-5 leading-relaxed">
+                    <p className="text-xs text-[#110508]/60 line-clamp-3 mb-5 leading-relaxed">
                       {path.subtitle || path.description}
                     </p>
                   </div>
 
-                  <div className="relative pt-4 border-t border-[#F0EDE4]/10 flex items-center justify-between text-xs">
-                    <span className="text-[#F0EDE4]/55">{path.stages ? `${path.stages.length} Sequential Stages` : 'Curated Track'}</span>
-                    <span className="font-semibold inline-flex items-center gap-1.5 text-[#F5C451]">
+                  <div className="relative pt-4 border-t border-[#FD1843]/10 flex items-center justify-between text-xs">
+                    <span className="text-[#110508]/55">{path.stages ? `${path.stages.length} Sequential Stages` : 'Curated Track'}</span>
+                    <span className="font-semibold inline-flex items-center gap-1.5 text-[#FD1843]">
                       <Route className="w-3.5 h-3.5 transition-transform duration-500 group-hover:-rotate-12 group-hover:scale-125" />
                       View Roadmap
                       <ChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
@@ -448,7 +448,7 @@ export const LandingPage: React.FC = () => {
             <TiltCard variants={fadeUp} className="p-6 overflow-hidden">
               <div className="relative">
                 <motion.ul
-                  className="relative mb-6 space-y-2 rounded-xl border border-[#F5C451]/30 bg-gradient-to-br from-[#F5C451]/10 via-[#003a34] to-[#5EEAD4]/10 p-4"
+                  className="relative mb-6 space-y-2 rounded-xl border border-[#FD1843]/30 bg-gradient-to-br from-[#FD1843]/10 via-white to-[#FF6B35]/10 p-4"
                   initial="hidden"
                   whileInView="show"
                   viewport={{ once: true }}
@@ -460,15 +460,15 @@ export const LandingPage: React.FC = () => {
                       variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}
                       className="flex items-center gap-2.5 text-xs"
                     >
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${i < 2 ? 'bg-[#5EEAD4]' : 'border border-[#F5C451]/60'}`}>
-                        {i < 2 ? <CheckCircle2 className="w-3.5 h-3.5 text-[#004741]" /> : <span className="h-1.5 w-1.5 rounded-full bg-[#F5C451] animate-pulse" />}
+                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${i < 2 ? 'bg-[#FD1843]' : 'border border-[#FF6B35]/60'}`}>
+                        {i < 2 ? <CheckCircle2 className="w-3.5 h-3.5 text-[#FFF9FA]" /> : <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35] animate-pulse" />}
                       </span>
-                      <span className={i < 2 ? 'text-[#F0EDE4]/60 line-through decoration-[#5EEAD4]/50' : 'font-semibold'}>{stage}</span>
+                      <span className={i < 2 ? 'text-[#110508]/60 line-through decoration-[#FD1843]/50' : 'font-semibold'}>{stage}</span>
                     </motion.li>
                   ))}
                 </motion.ul>
                 <h3 className="text-base font-bold mb-2">Guided Career Roadmaps</h3>
-                <p className="text-xs text-[#F0EDE4]/65 leading-relaxed">
+                <p className="text-xs text-[#110508]/65 leading-relaxed">
                   Follow sequential, stage-by-stage roadmaps for Full Stack, Frontend, Backend and DevOps, with curated resources for every step.
                 </p>
               </div>
@@ -478,10 +478,10 @@ export const LandingPage: React.FC = () => {
             <TiltCard variants={fadeUp} className="p-6">
               <div className="relative">
                 <div className="mb-6 flex items-center">
-                  {['#5EEAD4', '#F5C451', '#F0EDE4', '#7dd3fc', '#fda4af'].map((c, i) => (
+                  {['#FD1843', '#FF6B35', '#FFF9FA', '#7dd3fc', '#fda4af'].map((c, i) => (
                     <motion.span
                       key={c}
-                      className="-ml-2 first:ml-0 h-10 w-10 rounded-full border-2 border-[#003a34] flex items-center justify-center text-[11px] font-bold text-[#004741]"
+                      className="-ml-2 first:ml-0 h-10 w-10 rounded-full border-2 border-[#FFF9FA] flex items-center justify-center text-[11px] font-bold text-[#110508]"
                       style={{ background: c }}
                       initial={{ scale: 0 }}
                       whileInView={{ scale: 1 }}
@@ -492,16 +492,16 @@ export const LandingPage: React.FC = () => {
                     </motion.span>
                   ))}
                   <span className="relative ml-3 flex h-3 w-3">
-                    <span className="absolute inset-0 rounded-full bg-[#5EEAD4] animate-ping opacity-60" />
-                    <span className="relative h-3 w-3 rounded-full bg-[#5EEAD4]" />
+                    <span className="absolute inset-0 rounded-full bg-[#FD1843] animate-ping opacity-60" />
+                    <span className="relative h-3 w-3 rounded-full bg-[#FD1843]" />
                   </span>
-                  <span className="ml-2 text-[11px] text-[#F0EDE4]/60">online now</span>
+                  <span className="ml-2 text-[11px] text-[#110508]/60">online now</span>
                 </div>
-                <div className="w-10 h-10 rounded-xl bg-[#F0EDE4]/10 flex items-center justify-center mb-4">
-                  <Users className="w-5 h-5 text-[#F0EDE4]" />
+                <div className="w-10 h-10 rounded-xl bg-[#FD1843]/10 flex items-center justify-center mb-4">
+                  <Users className="w-5 h-5 text-[#FD1843]" />
                 </div>
                 <h3 className="text-base font-bold mb-2">Private Staff Engineer Community</h3>
-                <p className="text-xs text-[#F0EDE4]/65 leading-relaxed">
+                <p className="text-xs text-[#110508]/65 leading-relaxed">
                   Engage directly in thread discussions with instructors and fellow senior engineers. Solve architecture questions and review system designs together.
                 </p>
               </div>
@@ -521,22 +521,22 @@ export const LandingPage: React.FC = () => {
             <Reveal delay={0.15}>
               <TiltCard onClick={() => setCurrentView('learning-paths')} className="p-8 sm:p-10 text-center">
                 <div className="relative mx-auto mb-6 h-28 w-28">
-                  <span aria-hidden className="spin-slow absolute -inset-1 rounded-[1.75rem] bg-[conic-gradient(from_0deg,#5EEAD4,#F5C451,#F0EDE4,#5EEAD4)] opacity-80 blur-[2px]" />
-                  <span className="relative flex h-full w-full items-center justify-center rounded-3xl bg-[#00211e] text-3xl font-bold">
+                  <span aria-hidden className="spin-slow absolute -inset-1 rounded-[1.75rem] bg-[conic-gradient(from_0deg,#FD1843,#FF6B35,#FFF9FA,#FD1843)] opacity-80 blur-[2px]" />
+                  <span className="relative flex h-full w-full items-center justify-center rounded-3xl bg-[#FFF0F3] text-3xl font-bold">
                     YP
                   </span>
                 </div>
                 <h3 className="relative text-xl font-bold mb-1">{PRIMARY_INSTRUCTOR.name}</h3>
-                <p className="relative text-xs text-[#F0EDE4]/60 font-medium mb-6">{PRIMARY_INSTRUCTOR.role}</p>
-                <div className="relative grid grid-cols-3 gap-2 pt-6 border-t border-[#F0EDE4]/10">
+                <p className="relative text-xs text-[#110508]/60 font-medium mb-6">{PRIMARY_INSTRUCTOR.role}</p>
+                <div className="relative grid grid-cols-3 gap-2 pt-6 border-t border-[#FD1843]/10">
                   {[
                     { v: <CountUp to={PRIMARY_INSTRUCTOR.rating} decimals={1} suffix="★" />, l: 'Rating' },
                     { v: <CountUp to={PRIMARY_INSTRUCTOR.studentsCount} suffix="+" />, l: 'Mentored' },
                     { v: <CountUp to={ALL_ROADMAP_TRACKS.length} />, l: 'Roadmaps' },
                   ].map(({ v, l }) => (
                     <div key={l}>
-                      <div className="text-xl sm:text-2xl font-bold text-[#F5C451] tabular-nums">{v}</div>
-                      <div className="text-[10px] uppercase tracking-[0.18em] text-[#F0EDE4]/50 mt-1">{l}</div>
+                      <div className="text-xl sm:text-2xl font-bold text-[#FD1843] tabular-nums">{v}</div>
+                      <div className="text-[10px] uppercase tracking-[0.18em] text-[#110508]/50 mt-1">{l}</div>
                     </div>
                   ))}
                 </div>
@@ -569,23 +569,23 @@ export const LandingPage: React.FC = () => {
                 <motion.div
                   key={idx}
                   variants={fadeUp}
-                  className={`rounded-2xl border backdrop-blur-xl transition-colors duration-300 ${isOpen ? 'border-[#F5C451]/35 bg-[#003a34]/90' : 'border-[#F0EDE4]/12 bg-[#003a34]/50 hover:border-[#F0EDE4]/25'}`}
+                  className={`rounded-2xl border backdrop-blur-xl transition-colors duration-300 ${isOpen ? 'border-[#FD1843]/35 bg-white/90' : 'border-[#FD1843]/12 bg-white/50 hover:border-[#FD1843]/25'}`}
                 >
                   <button
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                     aria-expanded={isOpen}
-                    className="group w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#F0EDE4]"
+                    className="group w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#110508]"
                   >
                     <span className="flex items-center gap-3">
-                      <HelpCircle className={`w-5 h-5 shrink-0 transition-all duration-500 group-hover:rotate-[20deg] group-hover:scale-110 ${isOpen ? 'text-[#F5C451]' : 'text-[#F0EDE4]/50 group-hover:text-[#5EEAD4]'}`} />
+                      <HelpCircle className={`w-5 h-5 shrink-0 transition-all duration-500 group-hover:rotate-[20deg] group-hover:scale-110 ${isOpen ? 'text-[#FD1843]' : 'text-[#110508]/50 group-hover:text-[#FD1843]'}`} />
                       {faq.q}
                     </span>
                     <motion.span
                       animate={{ rotate: isOpen ? 180 : 0 }}
                       transition={{ duration: 0.3 }}
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isOpen ? 'bg-[#F5C451]' : 'bg-[#F0EDE4]/10'}`}
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isOpen ? 'bg-[#FD1843]' : 'bg-[#FD1843]/10'}`}
                     >
-                      <ChevronDown className={`w-4 h-4 ${isOpen ? 'text-[#004741]' : 'text-[#F0EDE4]/70'}`} />
+                      <ChevronDown className={`w-4 h-4 ${isOpen ? 'text-[#FFF9FA]' : 'text-[#110508]/70'}`} />
                     </motion.span>
                   </button>
                   <AnimatePresence initial={false}>
@@ -597,7 +597,7 @@ export const LandingPage: React.FC = () => {
                         transition={{ duration: 0.35, ease: EASE_OUT }}
                         className="overflow-hidden"
                       >
-                        <p className="px-5 sm:px-6 pb-6 text-sm text-[#F0EDE4]/70 leading-relaxed">{faq.a}</p>
+                        <p className="px-5 sm:px-6 pb-6 text-sm text-[#110508]/70 leading-relaxed">{faq.a}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -619,14 +619,14 @@ export const LandingPage: React.FC = () => {
               }}
             >
               {/* Rotating gradient border */}
-              <span aria-hidden className="spin-slow absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0%,#F5C451_10%,transparent_25%,transparent_50%,#5EEAD4_60%,transparent_75%)] opacity-70 [animation-duration:10s]" />
-              <div className="relative rounded-[calc(2rem-1px)] bg-[#00211e] px-6 py-14 sm:px-14 sm:py-20 text-center overflow-hidden">
+              <span aria-hidden className="spin-slow absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0%,#FD1843_10%,transparent_25%,transparent_50%,#FF6B35_60%,transparent_75%)] opacity-70 [animation-duration:10s]" />
+              <div className="relative rounded-[calc(2rem-1px)] bg-[#FFF0F3] px-6 py-14 sm:px-14 sm:py-20 text-center overflow-hidden">
                 <motion.div aria-hidden className="absolute inset-0" style={{ background: ctaGlow }} />
                 <div aria-hidden className="absolute inset-0 grid-backdrop opacity-50 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
                 {[
-                  { c: '#5EEAD4', pos: 'top-8 left-[12%]', d: 7 },
-                  { c: '#F5C451', pos: 'bottom-10 right-[14%]', d: 9 },
-                  { c: '#F0EDE4', pos: 'top-16 right-[24%]', d: 6 },
+                  { c: '#FD1843', pos: 'top-8 left-[12%]', d: 7 },
+                  { c: '#FF6B35', pos: 'bottom-10 right-[14%]', d: 9 },
+                  { c: '#FFF9FA', pos: 'top-16 right-[24%]', d: 6 },
                 ].map(({ c, pos, d }) => (
                   <motion.span
                     key={c}
@@ -643,7 +643,7 @@ export const LandingPage: React.FC = () => {
                     Begin Your Engineering <br className="hidden sm:inline" />
                     <span className="text-gradient-sand">Upskilling Today.</span>
                   </h2>
-                  <p className="text-sm sm:text-base text-[#F0EDE4]/65 max-w-lg mx-auto leading-relaxed mb-10">
+                  <p className="text-sm sm:text-base text-[#110508]/65 max-w-lg mx-auto leading-relaxed mb-10">
                     Access step-by-step roadmaps, hands-on projects, study notes, and free developer tools.
                   </p>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-none mx-auto">

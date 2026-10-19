@@ -145,15 +145,15 @@ export const Navbar: React.FC = () => {
   return (
     <>
       {/* ── Sticky Navigation Header Container (Wraps Announcement + Main Nav to prevent any misalignment) ── */}
-      <header className="sticky top-0 z-40 w-full bg-[#004741]/95 backdrop-blur-xl border-b border-[#F0EDE4]/15 shadow-xs text-[#F0EDE4]">
+      <header className="sticky top-0 z-40 w-full bg-[#FFF9FA]/95 backdrop-blur-xl border-b border-[#FD1843]/12 shadow-xs text-[#110508]">
         
         {/* ── Global Announcement Banner Configured via Admin ── */}
         {announcement?.enabled && (
-          <aside aria-label="Global Announcement" className="w-full bg-[#003630] text-[#F0EDE4] border-b border-[#F0EDE4]/10 text-[11px] sm:text-xs py-1.5 sm:py-2 px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 text-center transition-all">
-            <span className="px-2 py-0.5 rounded-full bg-[#F0EDE4]/20 text-[#F0EDE4] font-bold uppercase text-[9px] sm:text-[10px] tracking-wider shrink-0">
+          <aside aria-label="Global Announcement" className="w-full bg-[#FD1843] text-[#FFF9FA] border-b border-[#FD1843]/20 text-[11px] sm:text-xs py-1.5 sm:py-2 px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 text-center transition-all">
+            <span className="px-2 py-0.5 rounded-full bg-[#FFF9FA]/20 text-[#FFF9FA] font-bold uppercase text-[9px] sm:text-[10px] tracking-wider shrink-0">
               {announcement.badge}
             </span>
-            <span className="font-medium truncate max-w-[200px] xs:max-w-xs sm:max-w-md lg:max-w-xl text-[#F0EDE4]">
+            <span className="font-medium truncate max-w-[200px] xs:max-w-xs sm:max-w-md lg:max-w-xl text-[#FFF9FA]">
               {announcement.text}
             </span>
             {announcement.link && (
@@ -167,7 +167,7 @@ export const Navbar: React.FC = () => {
                     else if (target === 'tools') setCurrentView('tools');
                   }
                 }}
-                className="inline-flex items-center gap-1 font-bold underline hover:opacity-90 shrink-0 text-[10px] sm:text-[11px] text-[#F0EDE4]"
+                className="inline-flex items-center gap-1 font-bold underline hover:opacity-90 shrink-0 text-[10px] sm:text-[11px] text-[#FFF9FA]"
               >
                 {announcement.btnText}
               </a>
@@ -198,8 +198,8 @@ export const Navbar: React.FC = () => {
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       isActive 
-                        ? 'text-[#004741] bg-[#F0EDE4] font-bold shadow-2xs' 
-                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
+                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold shadow-2xs'
+                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
                     }`}
                   >
                     {link.label}
@@ -217,9 +217,9 @@ export const Navbar: React.FC = () => {
                     key={link.id}
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                      isActive 
-                        ? 'text-[#004741] bg-[#F0EDE4] font-bold shadow-2xs' 
-                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
+                      isActive
+                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold shadow-2xs'
+                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
                     }`}
                   >
                     {link.label}
@@ -237,9 +237,9 @@ export const Navbar: React.FC = () => {
                     key={link.id}
                     onClick={() => setCurrentView(link.id as any)}
                     className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                      isActive 
-                        ? 'text-[#004741] bg-[#F0EDE4] font-bold' 
-                        : 'text-[#F0EDE4]/75 hover:text-[#F0EDE4] hover:bg-[#F0EDE4]/10'
+                      isActive
+                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold'
+                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
                     }`}
                   >
                     {link.label}
