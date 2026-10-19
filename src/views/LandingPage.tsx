@@ -1,674 +1,436 @@
-import React, { useState, useEffect, useRef } from 'react';
-import {
-  motion,
-  AnimatePresence,
-  MotionConfig,
-  useScroll,
-  useSpring,
-  useTransform,
-  useMotionValue,
-  useMotionTemplate,
-} from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence, MotionConfig } from 'framer-motion';
 import { useLms } from '../context/LmsContext';
 import { PRIMARY_INSTRUCTOR } from '../config/brand';
 import { ALL_ROADMAP_TRACKS } from '../data/fullstackRoadmap';
-import {
-  ArrowRight,
-  Sparkles,
-  CheckCircle2,
-  ChevronRight,
-  Users,
-  ChevronDown,
-  Play,
-  GitBranch,
-  BadgeCheck,
-  MousePointer2,
-  Rocket,
-  Route,
-  HelpCircle,
-} from 'lucide-react';
-import { Badge } from '../components/ui/Badge';
+import { ArrowRight, ChevronRight, ChevronDown } from 'lucide-react';
 import { injectSchema, buildFAQSchema } from '../services/seo';
-import { Reveal, TiltCard, Magnetic, CountUp, Marquee, AnimatedCta, fadeUp, stagger, EASE_OUT } from '../components/landing/motion';
 
-// three.js is heavy — load the hero scene in its own chunk so it never blocks first paint
-const HeroScene = React.lazy(() => import('../components/landing/HeroScene'));
+const EASE = [0.22, 1, 0.36, 1] as const;
 
-const HEADLINE_TOP = ['Architect', 'the', 'Future'];
-const HEADLINE_BOTTOM = ['of', 'Software', '&', 'AI', 'Engineering.'];
-
-const TECH_STACK = [
-  'React 19', 'Next.js 15', 'TypeScript', 'Node.js', 'PostgreSQL', 'Redis', 'Docker',
-  'Kubernetes', 'AWS', 'Go', 'GraphQL', 'PyTorch', 'LLM Agents', 'Kafka',
-];
-
-const SectionHeading: React.FC<{ eyebrow: string; title: React.ReactNode; sub?: string; center?: boolean }> = ({
-  eyebrow,
-  title,
-  sub,
-  center,
+const FadeIn: React.FC<{ children: React.ReactNode; className?: string; delay?: number }> = ({
+  children, className, delay = 0,
 }) => (
-  <Reveal className={center ? 'text-center max-w-2xl mx-auto' : ''}>
-    <div className={`inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#FD1843] mb-3`}>
-      <span className="h-px w-6 bg-[#FD1843]/60" />
-      {eyebrow}
-    </div>
-    <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.1]">{title}</h2>
-    {sub && <p className="text-sm sm:text-base text-[#110508]/70 mt-3 leading-relaxed">{sub}</p>}
-  </Reveal>
+  <motion.div
+    className={className}
+    initial={{ opacity: 0, y: 18 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, margin: '-40px' }}
+    transition={{ duration: 0.6, ease: EASE, delay }}
+  >
+    {children}
+  </motion.div>
 );
 
 export const LandingPage: React.FC = () => {
   const { setCurrentView, openAuthModal } = useLms();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
-  const [roadmaps, setRoadmaps] = useState<any[]>([]);
-  const [sceneReady, setSceneReady] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/roadmaps.php')
-      .then(res => res.json())
-      .then(json => {
-        if (json.success && Array.isArray(json.data)) setRoadmaps(json.data);
-      })
-      .catch(() => { });
-  }, []);
-
-  // Defer the WebGL scene until the browser is idle so it never competes with LCP
-  useEffect(() => {
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-    if (w.requestIdleCallback) {
-      w.requestIdleCallback(() => setSceneReady(true), { timeout: 1200 });
-    } else {
-      const id = window.setTimeout(() => setSceneReady(true), 400);
-      return () => window.clearTimeout(id);
-    }
-  }, []);
 
   const faqs = [
     {
-      q: "How does this curriculum differ from generic coding tutorials?",
-      a: "Every roadmap and project is built around real production systems. You build real-world distributed architectures, write zero-waterfall React 19 apps, and fine-tune transformer weights—not toy todo lists."
+      q: "How does this differ from generic coding tutorials?",
+      a: "Every roadmap follows real production system patterns. You build distributed caches, write zero-waterfall React apps, and work with production databases — not todo lists."
     },
     {
-      q: "Can I switch between independent learning and structured career paths?",
-      a: "Absolutely. Follow an end-to-end Career Roadmap (Full Stack, Frontend, Backend or DevOps), or jump straight into individual projects, study notes and developer tools."
+      q: "Can I follow individual topics or only full roadmaps?",
+      a: "Both. Follow a complete career roadmap (Full Stack, Frontend, Backend, DevOps) end-to-end, or jump to individual projects, study notes, and developer tools."
     },
     {
-      q: "Do projects include automated and instructor feedback?",
-      a: "Yes. Projects require GitHub repository submissions, test suite passes, and code reviews from designated industry instructors."
+      q: "Do projects include code review?",
+      a: "Yes. Projects require GitHub submissions, test suite passes, and review from designated instructors."
+    },
+    {
+      q: "Is the content updated for 2026 tooling?",
+      a: "Yes. Roadmaps cover React 19, Next.js 15, Node 22, PostgreSQL 17, Kubernetes, LLM integration, and current cloud-native patterns."
     }
   ];
 
-  // Inject FAQ schema on mount for AEO / People Also Ask eligibility
   useEffect(() => {
     injectSchema(buildFAQSchema(faqs));
-    return () => { /* schema is cleaned up by router on navigation */ };
   }, []);
 
-  // Page scroll progress bar + hero parallax
-  const { scrollYProgress } = useScroll();
-  const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30, mass: 0.3 });
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
-  const heroY = useTransform(heroProgress, [0, 1], [0, 140]);
-  const heroFade = useTransform(heroProgress, [0, 0.8], [1, 0]);
-  const sceneScale = useTransform(heroProgress, [0, 1], [1, 1.15]);
-
-  // Spotlight that follows the cursor in the final CTA
-  const ctaX = useMotionValue(50);
-  const ctaY = useMotionValue(50);
-  const ctaGlow = useMotionTemplate`radial-gradient(600px circle at ${ctaX}% ${ctaY}%, rgba(253,24,67,0.15), transparent 55%)`;
-
-  const tracksToShow = roadmaps.length > 0 ? roadmaps : ALL_ROADMAP_TRACKS.slice(0, 3);
+  const totalStages = ALL_ROADMAP_TRACKS.reduce((n, t) => n + t.stages.length, 0);
 
   return (
     <MotionConfig reducedMotion="user">
-      <motion.div
-        aria-hidden
-        className="fixed top-0 left-0 right-0 h-[2px] z-[60] origin-left bg-gradient-to-r from-[#FD1843] via-[#FF6B35] to-[#FD1843]"
-        style={{ scaleX: progress }}
-      />
+      <div className="w-full overflow-x-hidden">
 
-      <div className="space-y-24 sm:space-y-32 overflow-x-clip">
+        {/* ── HERO ──────────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-24 sm:pt-24 sm:pb-32">
+          <div className="grid lg:grid-cols-[1fr_380px] xl:grid-cols-[1fr_420px] gap-16 xl:gap-24 items-start">
 
-        {/* 1. Hero — WebGL scene + kinetic type */}
-        <section ref={heroRef} className="relative isolate min-h-[calc(100svh-4rem)] flex items-center pt-10 pb-20 sm:py-16">
-          {/* Static gradient fallback (also the WebGL backdrop) */}
-          <div aria-hidden className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_70%_45%,#FFE0E8_0%,#FFF0F3_45%,#FFF9FA_100%)]" />
-          <div aria-hidden className="absolute inset-0 -z-20 grid-backdrop [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
-
-          <motion.div aria-hidden className="absolute inset-0 -z-10" style={{ scale: sceneScale }}>
-            {sceneReady && (
-              <React.Suspense fallback={null}>
-                <motion.div
-                  className="absolute inset-0"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 1.6, ease: 'easeOut' }}
-                >
-                  <HeroScene className="absolute inset-0 opacity-30 lg:opacity-50" />
-                </motion.div>
-              </React.Suspense>
-            )}
-          </motion.div>
-          {/* Subtle bottom bleed into next section */}
-          <div aria-hidden className="absolute bottom-0 inset-x-0 h-24 -z-10 bg-gradient-to-t from-[#FFF9FA]/60 to-transparent pointer-events-none" />
-
-          <motion.div style={{ y: heroY, opacity: heroFade }} className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial="hidden"
-              animate="show"
-              variants={stagger(0.08, 0.1)}
-              className="max-w-2xl text-center lg:text-left mx-auto lg:mx-0"
-            >
-              <motion.a
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: EASE_OUT, delay: 0.05 }}
-                href="/roadmaps"
-                onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
-                className="group inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full bg-[#FD1843]/[0.08] border border-[#FD1843]/20 backdrop-blur-md text-xs font-semibold mb-7 max-w-full hover:border-[#FD1843]/40 transition-colors"
-              >
-                <span className="inline-flex items-center gap-1 rounded-full bg-[#FD1843] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#FFF9FA]">
-                  <Sparkles className="w-3 h-3 text-[#FFF9FA] transition-transform duration-500 group-hover:rotate-180 group-hover:scale-125" /> New
-                </span>
-                <span className="truncate text-[#110508]/90">2026 Roadmaps: Full Stack, Frontend, Backend & DevOps</span>
-                <ChevronRight className="w-3.5 h-3.5 text-[#110508]/60 shrink-0 transition-transform group-hover:translate-x-0.5" />
-              </motion.a>
-
-              <h1 className="text-[2.6rem] sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.04] mb-6 break-words text-[#110508]">
-                <span className="lg:block">
-                  {HEADLINE_TOP.map((w, i) => (
-                    <React.Fragment key={w}>
-                      <motion.span
-                        className="inline-block"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.1 + i * 0.07 }}
-                      >
-                        {w}
-                      </motion.span>{' '}
-                    </React.Fragment>
-                  ))}
-                </span>
-                <span className="lg:block">
-                  {HEADLINE_BOTTOM.map((w, i) => (
-                    <React.Fragment key={w}>
-                      <motion.span
-                        className={`inline-block ${w === 'of' ? '' : 'text-gradient-sand'}`}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.35 + i * 0.07 }}
-                      >
-                        {w}
-                      </motion.span>{' '}
-                    </React.Fragment>
-                  ))}
-                </span>
-              </h1>
-
-              <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: EASE_OUT, delay: 0.55 }}
-                className="text-base sm:text-lg text-[#110508]/75 max-w-xl mx-auto lg:mx-0 leading-relaxed mb-9"
-              >
-                A developer-first learning platform engineered for serious practitioners. Follow step-by-step roadmaps, build production-grade projects, and sharpen your skills with free notes and developer tools.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.65 }}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 w-full max-w-xs sm:max-w-none mx-auto lg:mx-0"
-              >
-                {/* Real <a href> for crawler discoverability — SPA nav via onClick */}
-                <Magnetic>
-                  <a
-                    href="/roadmaps"
-                    onClick={(e) => { e.preventDefault(); openAuthModal('signup'); }}
-                    className="block"
-                    aria-label="Start learning full-stack engineering for free"
-                  >
-                    <AnimatedCta icon={Rocket} iconMotion="launch" trailing={ArrowRight} className="w-full sm:w-auto">
-                      Start Learning Free
-                    </AnimatedCta>
-                  </a>
-                </Magnetic>
-                <Magnetic strength={0.15}>
-                  <a
-                    href="/roadmaps"
-                    onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
-                    className="block"
-                    aria-label="Explore the engineering career roadmaps"
-                  >
-                    <AnimatedCta variant="ghost" icon={Play} iconMotion="pop" trailing={ChevronRight} className="w-full sm:w-auto">
-                      Explore Roadmaps
-                    </AnimatedCta>
-                  </a>
-                </Magnetic>
-              </motion.div>
-
-              {/* Trust Meta */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.8 }}
-                className="flex flex-wrap items-center justify-center lg:justify-start gap-x-6 gap-y-2 mt-9 text-xs text-[#110508]/70"
-              >
-                {['140k+ Active Engineers', 'Hands-On Projects', 'Interactive In-Browser Labs'].map((t) => (
-                  <span key={t} className="flex items-center gap-1.5 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-[#FD1843]" /> {t}
-                  </span>
-                ))}
-              </motion.div>
-
-              {/* E-E-A-T: Founder / About signal — visible to crawlers & AI engines */}
+            {/* Left — Headline + CTA */}
+            <div>
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.8, ease: EASE_OUT, delay: 1.0 }}
-                className="text-xs text-[#110508]/50 mt-6 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                Founded by <strong className="text-[#110508]/70">Yaswant Pandey</strong>, a software engineer and educator, Yaswant Code was built in 2024 to bridge the gap between academic tutorials and production-grade engineering.
-                Every roadmap and project is designed around real-world systems used by top technology companies.
-              </motion.p>
-            </motion.div>
-          </motion.div>
-
-          {/* Floating proof chips orbiting the 3D core (desktop only) */}
-          <div aria-hidden className="hidden lg:block absolute inset-y-0 right-0 w-1/2 pointer-events-none">
-            {[
-              { icon: CheckCircle2, label: '142 tests passed', sub: 'CI · distributed-cache', pos: 'top-[22%] left-[8%]', color: 'text-[#FD1843]', d: 1.1, f: 6 },
-              { icon: BadgeCheck, label: 'Stage complete', sub: 'Full Stack · Stage 4', pos: 'bottom-[24%] right-[10%]', color: 'text-[#FF6B35]', d: 1.3, f: 7.5 },
-              { icon: GitBranch, label: 'PR merged', sub: 'review by instructor', pos: 'top-[16%] right-[14%]', color: 'text-[#110508]', d: 1.5, f: 8 },
-            ].map(({ icon: Icon, label, sub, pos, color, d, f }) => (
-              <motion.div
-                key={label}
-                className={`absolute ${pos}`}
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: EASE_OUT, delay: d }}
+                transition={{ duration: 0.5 }}
+                className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#FD1843] mb-7"
               >
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: f, repeat: Infinity, ease: 'easeInOut' }}
-                  className="flex items-center gap-3 rounded-2xl border border-[#FD1843]/15 bg-white/80 backdrop-blur-xl px-4 py-3 shadow-[0_20px_50px_-15px_rgba(253,24,67,0.15)]"
+                Developer Learning Platform · 2026
+              </motion.p>
+
+              <h1 className="text-[3rem] sm:text-[4rem] lg:text-[5rem] xl:text-[6rem] font-bold tracking-[-0.025em] leading-[0.92] mb-8 text-[#110508]">
+                <motion.span
+                  className="block"
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.75, ease: EASE, delay: 0.08 }}
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FD1843]/[0.07]">
-                    <Icon className={`w-4 h-4 ${color}`} />
-                  </span>
-                  <span className="leading-tight">
-                    <span className="block text-xs font-semibold text-[#110508]">{label}</span>
-                    <span className="block text-[10px] font-mono text-[#110508]/55">{sub}</span>
-                  </span>
-                </motion.div>
-              </motion.div>
-            ))}
-          </div>
+                  Architect
+                </motion.span>
+                <motion.span
+                  className="block"
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.75, ease: EASE, delay: 0.16 }}
+                >
+                  the Future
+                </motion.span>
+                <motion.span
+                  className="block text-[#FD1843]"
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.75, ease: EASE, delay: 0.24 }}
+                >
+                  of Software.
+                </motion.span>
+              </h1>
 
-          {/* Scroll cue */}
-          <motion.div
-            aria-hidden
-            className="hidden sm:flex absolute bottom-6 left-1/2 -translate-x-1/2 flex-col items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#110508]/50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2 }}
-          >
-            <MousePointer2 className="w-3.5 h-3.5" />
-            <span className="relative h-10 w-px overflow-hidden bg-[#FD1843]/15">
-              <motion.span
-                className="absolute inset-x-0 top-0 h-4 bg-[#FD1843]"
-                animate={{ y: [-16, 40] }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-              />
-            </span>
-          </motion.div>
-        </section>
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.7, ease: EASE, delay: 0.36 }}
+                className="text-base sm:text-[1.05rem] text-[#110508]/60 max-w-[500px] leading-relaxed mb-10"
+              >
+                Step-by-step engineering roadmaps, production-grade projects, and developer tools —
+                built for engineers who ship real systems.
+              </motion.p>
 
-        {/* 1b. Stats + tech marquee */}
-        <section className="-mt-6 sm:-mt-10 space-y-14" aria-label="Platform at a glance">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-60px' }}
-              variants={stagger(0.1)}
-              className="grid grid-cols-2 lg:grid-cols-4 rounded-3xl border border-[#FD1843]/12 bg-white/60 backdrop-blur-xl overflow-hidden divide-x divide-y lg:divide-y-0 divide-[#FD1843]/10"
-            >
-              {[
-                { node: <CountUp to={140} suffix="k+" />, label: 'Active engineers' },
-                { node: <CountUp to={ALL_ROADMAP_TRACKS.reduce((n, t) => n + t.stages.length, 0)} />, label: 'Roadmap stages' },
-                { node: <CountUp to={ALL_ROADMAP_TRACKS.length} />, label: 'Career roadmaps' },
-                { node: <CountUp to={PRIMARY_INSTRUCTOR.rating} decimals={1} suffix="★" />, label: 'Instructor rating' },
-              ].map(({ node, label }) => (
-                <motion.div key={label} variants={fadeUp} className="p-6 sm:p-8 text-center">
-                  <div className="text-3xl sm:text-5xl font-bold tracking-tight text-gradient-sand tabular-nums">{node}</div>
-                  <div className="mt-2 text-[11px] sm:text-xs uppercase tracking-[0.18em] text-[#110508]/60">{label}</div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-
-          <Marquee duration={45}>
-            {TECH_STACK.map((t) => (
-              <span key={t} className="flex items-center gap-10 whitespace-nowrap text-lg sm:text-2xl font-semibold tracking-tight text-[#110508]/35">
-                {t}
-                <Sparkles className="w-4 h-4 text-[#FD1843]/50" />
-              </span>
-            ))}
-          </Marquee>
-        </section>
-
-        {/* 4. Trending Learning Paths */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="relative p-6 sm:p-14 rounded-3xl bg-[#FFF0F3] border border-[#FD1843]/10 overflow-hidden">
-            <div aria-hidden className="absolute inset-0 grid-backdrop opacity-60 [mask-image:radial-gradient(ellipse_at_top,black,transparent_70%)]" />
-            <div aria-hidden className="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-[#FD1843]/10 blur-[120px]" />
-            <div aria-hidden className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full bg-[#FF6B35]/10 blur-[120px]" />
-            <div aria-hidden className="absolute top-0 inset-x-0 h-px overflow-hidden">
-              <div className="beam-line h-px w-1/4 bg-gradient-to-r from-transparent via-[#FD1843] to-transparent" />
-            </div>
-
-            <div className="relative z-10 max-w-2xl mb-10 sm:mb-14">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#FD1843]/10 text-xs font-semibold mb-5">
-                <Sparkles className="w-3.5 h-3.5 text-[#FD1843]" /> Structured Career Roadmaps
-              </div>
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4 leading-[1.1]">
-                Go From Mid-Level to <span className="text-gradient-sand">Staff Engineer.</span>
-              </h2>
-              <p className="text-sm text-[#110508]/65 leading-relaxed">
-                Step-by-step sequential learning roadmaps vetted by Silicon Valley hiring managers. Master theoretical computer science and production execution.
-              </p>
-            </div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-60px' }}
-              variants={stagger(0.12)}
-              className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6"
-            >
-              {/* Connector line tying the roadmap cards into a path */}
               <motion.div
-                aria-hidden
-                className="hidden md:block absolute top-9 left-[8%] right-[8%] h-px origin-left bg-gradient-to-r from-[#FD1843]/60 via-[#FF6B35]/60 to-[#FD1843]/20"
-                variants={{ hidden: { scaleX: 0 }, show: { scaleX: 1, transition: { duration: 1.4, ease: EASE_OUT } } }}
-              />
-              {tracksToShow.map((path, i) => (
-                <TiltCard
-                  key={path.id}
-                  variants={fadeUp}
-                  max={6}
-                  onClick={() => setCurrentView('learning-paths')}
-                  className="p-6 flex flex-col justify-between bg-white/80"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: EASE, delay: 0.46 }}
+                className="flex items-center gap-5 flex-wrap"
+              >
+                <a
+                  href="/roadmaps"
+                  onClick={(e) => { e.preventDefault(); openAuthModal('signup'); }}
+                  className="inline-flex items-center gap-2 bg-[#FD1843] text-[#FFF9FA] px-6 py-3 text-sm font-semibold hover:bg-[#E5102F] transition-colors"
+                  aria-label="Start learning for free"
                 >
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-5">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-full border border-[#FD1843]/50 bg-[#FFF0F3] font-mono text-[11px] text-[#FD1843]">
-                        {i + 1}
-                      </span>
-                      <Badge variant="purple" size="sm">{path.badge || '2026 Edition'}</Badge>
-                    </div>
-                    <h3 className="text-lg font-bold mb-2 transition-colors group-hover:text-yellow-300">
-                      {path.title}
-                    </h3>
-                    <p className="text-xs text-[#110508]/60 line-clamp-3 mb-5 leading-relaxed">
-                      {path.subtitle || path.description}
-                    </p>
-                  </div>
+                  Start Learning Free
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/roadmaps"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
+                  className="text-sm font-semibold text-[#110508] underline underline-offset-4 decoration-[#110508]/20 hover:text-[#FD1843] hover:decoration-[#FD1843]/50 transition-colors"
+                  aria-label="Browse career roadmaps"
+                >
+                  View roadmaps
+                </a>
+              </motion.div>
 
-                  <div className="relative pt-4 border-t border-[#FD1843]/10 flex items-center justify-between text-xs">
-                    <span className="text-[#110508]/55">{path.stages ? `${path.stages.length} Sequential Stages` : 'Curated Track'}</span>
-                    <span className="font-semibold inline-flex items-center gap-1.5 text-[#FD1843]">
-                      <Route className="w-3.5 h-3.5 transition-transform duration-500 group-hover:-rotate-12 group-hover:scale-125" />
-                      View Roadmap
-                      <ChevronRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              {/* Inline stats — no cards, no orbs, just numbers */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.62 }}
+                className="mt-12 pt-8 border-t border-[#110508]/8 flex flex-wrap gap-8"
+              >
+                {[
+                  { val: '140k+', label: 'engineers enrolled' },
+                  { val: String(ALL_ROADMAP_TRACKS.length), label: 'career tracks' },
+                  { val: String(totalStages), label: 'stages of content' },
+                  { val: `${PRIMARY_INSTRUCTOR.rating}★`, label: 'instructor rating', pink: true },
+                ].map(({ val, label, pink }) => (
+                  <div key={label}>
+                    <span className={`block text-xl font-bold ${pink ? 'text-[#FD1843]' : 'text-[#110508]'}`}>
+                      {val}
+                    </span>
+                    <span className="block text-xs text-[#110508]/45 mt-0.5">{label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            {/* Right — Track listing (desktop only) */}
+            <motion.aside
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.8, ease: EASE, delay: 0.4 }}
+              className="hidden lg:block"
+              aria-label="Career tracks"
+            >
+              <p className="text-[10px] font-mono uppercase tracking-[0.22em] text-[#110508]/30 mb-5">
+                2026 Career Tracks
+              </p>
+              <div className="divide-y divide-[#110508]/8">
+                {ALL_ROADMAP_TRACKS.map((track, i) => (
+                  <button
+                    key={track.id}
+                    onClick={() => setCurrentView('learning-paths')}
+                    className="group w-full flex items-start justify-between gap-4 py-4 text-left"
+                  >
+                    <div>
+                      <span className="block text-[10px] font-mono text-[#110508]/28 mb-0.5">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <span className="block text-[0.85rem] font-semibold text-[#110508] group-hover:text-[#FD1843] transition-colors leading-tight">
+                        {track.title}
+                      </span>
+                      <span className="block text-xs text-[#110508]/38 mt-1">
+                        {track.stages?.length ?? 0} stages
+                      </span>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-[#110508]/18 group-hover:text-[#FD1843] shrink-0 mt-3 transition-colors" />
+                  </button>
+                ))}
+              </div>
+
+              <p className="mt-8 text-xs text-[#110508]/40 leading-relaxed">
+                Founded by{' '}
+                <strong className="font-semibold text-[#110508]/65">Yaswant Pandey</strong>
+                {' '}— software engineer and educator. Built in 2024 to bridge the gap between
+                tutorials and production-grade engineering.
+              </p>
+            </motion.aside>
+          </div>
+        </section>
+
+        {/* ── DIVIDER ───────────────────────────────────────────────── */}
+        <div className="border-t border-[#110508]/8" />
+
+        {/* ── CURRICULUM ────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <FadeIn className="mb-14">
+            <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#FD1843] mb-4">
+              The Curriculum
+            </p>
+            <h2 className="text-3xl sm:text-[2.5rem] font-bold tracking-[-0.02em] text-[#110508] leading-[1.1] max-w-lg">
+              Production engineering,<br />not toy projects.
+            </h2>
+          </FadeIn>
+
+          <div className="grid sm:grid-cols-2 gap-x-16">
+            {[
+              {
+                n: '01',
+                title: 'Sequential Roadmaps',
+                body: 'Not playlists — ordered paths built around hiring criteria at top-tier engineering teams. Each stage builds directly on the last.'
+              },
+              {
+                n: '02',
+                title: 'Real Codebase Projects',
+                body: 'Build a distributed cache, a fintech microservice, an LLM agent pipeline. Submit via GitHub, reviewed by an instructor.'
+              },
+              {
+                n: '03',
+                title: 'Study Notes & References',
+                body: 'Every concept backed by dense, engineering-grade reference material — written for practitioners, not beginners.'
+              },
+              {
+                n: '04',
+                title: 'Developer Toolkit',
+                body: 'JSON formatter, regex tester, JWT decoder, cron expression builder — directly in the browser, no account required.'
+              },
+            ].map((item, i) => (
+              <FadeIn key={item.n} delay={i * 0.07}>
+                <div className="flex gap-6 py-8 border-b border-[#110508]/8">
+                  <span className="text-xs font-mono text-[#FD1843] shrink-0 pt-0.5">{item.n}</span>
+                  <div>
+                    <h3 className="text-[0.9rem] font-bold text-[#110508] mb-2">{item.title}</h3>
+                    <p className="text-sm text-[#110508]/55 leading-relaxed">{item.body}</p>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </section>
+
+        {/* ── TRACKS ────────────────────────────────────────────────── */}
+        <section className="bg-[#FD1843]" aria-label="Career roadmap tracks">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+            <FadeIn className="mb-12">
+              <h2 className="text-3xl sm:text-[2.75rem] font-bold tracking-[-0.02em] text-[#FFF9FA] leading-[1.1] mb-4">
+                Four tracks.<br />One platform.
+              </h2>
+              <p className="text-sm text-[#FFF9FA]/65 max-w-md">
+                Full Stack, Frontend, Backend, DevOps — each a complete career roadmap, not a beginner course.
+              </p>
+            </FadeIn>
+
+            <div className="divide-y divide-[#FFF9FA]/15">
+              {ALL_ROADMAP_TRACKS.map((track, i) => (
+                <FadeIn key={track.id} delay={i * 0.06}>
+                  <button
+                    onClick={() => setCurrentView('learning-paths')}
+                    className="group w-full flex items-center justify-between gap-6 py-6 text-left"
+                  >
+                    <div className="flex items-baseline gap-5 min-w-0">
+                      <span className="text-[11px] font-mono text-[#FFF9FA]/38 shrink-0">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block text-base sm:text-lg font-bold text-[#FFF9FA] leading-tight">
+                          {track.title}
+                        </span>
+                        <span className="block text-xs text-[#FFF9FA]/55 mt-1 truncate max-w-sm">
+                          {track.subtitle || track.description}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 shrink-0">
+                      <span className="hidden sm:block text-xs font-mono text-[#FFF9FA]/48">
+                        {track.stages?.length ?? 0} stages
+                      </span>
+                      <span className="text-[11px] bg-[#FFF9FA]/15 text-[#FFF9FA] px-2.5 py-1 font-semibold tracking-wide">
+                        {track.badge || '2026'}
+                      </span>
+                      <ArrowRight className="w-4 h-4 text-[#FFF9FA]/38 group-hover:text-[#FFF9FA] transition-colors" />
+                    </div>
+                  </button>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── INSTRUCTOR ────────────────────────────────────────────── */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-24">
+            <FadeIn>
+              <p className="text-[11px] font-mono uppercase tracking-[0.22em] text-[#FD1843] mb-6">
+                Lead Instructor
+              </p>
+              <h2 className="text-3xl sm:text-[2.5rem] font-bold tracking-[-0.02em] text-[#110508] mb-6 leading-[1.1]">
+                {PRIMARY_INSTRUCTOR.name}
+              </h2>
+              <p className="text-sm text-[#110508]/58 leading-relaxed mb-6">
+                {PRIMARY_INSTRUCTOR.bio}
+              </p>
+              <p className="text-sm text-[#110508]/58 leading-relaxed mb-8">
+                Yaswant Code was built in 2024 to bridge the gap between academic tutorials and
+                production engineering. Every roadmap is designed around real systems used at top
+                technology companies.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {PRIMARY_INSTRUCTOR.expertise.map((skill) => (
+                  <span
+                    key={skill}
+                    className="text-xs border border-[#110508]/14 text-[#110508]/55 px-3 py-1 font-mono"
+                  >
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </FadeIn>
+
+            <FadeIn delay={0.15} className="lg:flex lg:flex-col lg:justify-center">
+              <div className="divide-y divide-[#110508]/8">
+                {[
+                  { label: 'Instructor rating', value: `${PRIMARY_INSTRUCTOR.rating} / 5.0`, pink: true },
+                  { label: 'Engineers mentored', value: `${PRIMARY_INSTRUCTOR.studentsCount}+` },
+                  { label: 'Career tracks authored', value: String(ALL_ROADMAP_TRACKS.length) },
+                  { label: 'Platform launched', value: '2024' },
+                ].map(({ label, value, pink }) => (
+                  <div key={label} className="flex items-center justify-between py-5">
+                    <span className="text-sm text-[#110508]/48">{label}</span>
+                    <span className={`text-lg font-bold tabular-nums ${pink ? 'text-[#FD1843]' : 'text-[#110508]'}`}>
+                      {value}
                     </span>
                   </div>
-                </TiltCard>
-              ))}
-            </motion.div>
-          </Reveal>
-        </section>
-
-        {/* 5. Why Learn With Us (Bento Grid) */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-14">
-            <SectionHeading
-              center
-              eyebrow="The Pedagogy"
-              title={<>Designed for Real <span className="text-gradient-sand">Production Demands</span></>}
-              sub="No shallow summaries. Rigorous engineering instruction built around actual production code."
-            />
-          </div>
-
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-80px' }}
-            variants={stagger(0.12)}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-          >
-            {/* Guided roadmaps — stage checklist that ticks itself off */}
-            <TiltCard variants={fadeUp} className="p-6 overflow-hidden">
-              <div className="relative">
-                <motion.ul
-                  className="relative mb-6 space-y-2 rounded-xl border border-[#FD1843]/30 bg-gradient-to-br from-[#FD1843]/10 via-white to-[#FF6B35]/10 p-4"
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true }}
-                  variants={stagger(0.25, 0.2)}
-                >
-                  {['Web & Internet Fundamentals', 'Frontend Frameworks', 'Backend & Databases'].map((stage, i) => (
-                    <motion.li
-                      key={stage}
-                      variants={{ hidden: { opacity: 0, x: -10 }, show: { opacity: 1, x: 0 } }}
-                      className="flex items-center gap-2.5 text-xs"
-                    >
-                      <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${i < 2 ? 'bg-[#FD1843]' : 'border border-[#FF6B35]/60'}`}>
-                        {i < 2 ? <CheckCircle2 className="w-3.5 h-3.5 text-[#FFF9FA]" /> : <span className="h-1.5 w-1.5 rounded-full bg-[#FF6B35] animate-pulse" />}
-                      </span>
-                      <span className={i < 2 ? 'text-[#110508]/60 line-through decoration-[#FD1843]/50' : 'font-semibold'}>{stage}</span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-                <h3 className="text-base font-bold mb-2">Guided Career Roadmaps</h3>
-                <p className="text-xs text-[#110508]/65 leading-relaxed">
-                  Follow sequential, stage-by-stage roadmaps for Full Stack, Frontend, Backend and DevOps, with curated resources for every step.
-                </p>
+                ))}
               </div>
-            </TiltCard>
-
-            {/* Community — avatar stack with pulse */}
-            <TiltCard variants={fadeUp} className="p-6">
-              <div className="relative">
-                <div className="mb-6 flex items-center">
-                  {['#FD1843', '#FF6B35', '#FFF9FA', '#7dd3fc', '#fda4af'].map((c, i) => (
-                    <motion.span
-                      key={c}
-                      className="-ml-2 first:ml-0 h-10 w-10 rounded-full border-2 border-[#FFF9FA] flex items-center justify-center text-[11px] font-bold text-[#110508]"
-                      style={{ background: c }}
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.2 + i * 0.08 }}
-                    >
-                      {['AK', 'RS', 'YP', 'MJ', 'NV'][i]}
-                    </motion.span>
-                  ))}
-                  <span className="relative ml-3 flex h-3 w-3">
-                    <span className="absolute inset-0 rounded-full bg-[#FD1843] animate-ping opacity-60" />
-                    <span className="relative h-3 w-3 rounded-full bg-[#FD1843]" />
-                  </span>
-                  <span className="ml-2 text-[11px] text-[#110508]/60">online now</span>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-[#FD1843]/10 flex items-center justify-center mb-4">
-                  <Users className="w-5 h-5 text-[#FD1843]" />
-                </div>
-                <h3 className="text-base font-bold mb-2">Private Staff Engineer Community</h3>
-                <p className="text-xs text-[#110508]/65 leading-relaxed">
-                  Engage directly in thread discussions with instructors and fellow senior engineers. Solve architecture questions and review system designs together.
-                </p>
-              </div>
-            </TiltCard>
-          </motion.div>
-        </section>
-
-        {/* 6. Instructor Highlights */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <SectionHeading
-              eyebrow="Lead Instructor"
-              title={<>Learn Directly From <span className="text-gradient-sand">Yaswant Pandey</span></>}
-              sub={PRIMARY_INSTRUCTOR.bio}
-            />
-
-            <Reveal delay={0.15}>
-              <TiltCard onClick={() => setCurrentView('learning-paths')} className="p-8 sm:p-10 text-center">
-                <div className="relative mx-auto mb-6 h-28 w-28">
-                  <span aria-hidden className="spin-slow absolute -inset-1 rounded-[1.75rem] bg-[conic-gradient(from_0deg,#FD1843,#FF6B35,#FFF9FA,#FD1843)] opacity-80 blur-[2px]" />
-                  <span className="relative flex h-full w-full items-center justify-center rounded-3xl bg-[#FFF0F3] text-3xl font-bold">
-                    YP
-                  </span>
-                </div>
-                <h3 className="relative text-xl font-bold mb-1">{PRIMARY_INSTRUCTOR.name}</h3>
-                <p className="relative text-xs text-[#110508]/60 font-medium mb-6">{PRIMARY_INSTRUCTOR.role}</p>
-                <div className="relative grid grid-cols-3 gap-2 pt-6 border-t border-[#FD1843]/10">
-                  {[
-                    { v: <CountUp to={PRIMARY_INSTRUCTOR.rating} decimals={1} suffix="★" />, l: 'Rating' },
-                    { v: <CountUp to={PRIMARY_INSTRUCTOR.studentsCount} suffix="+" />, l: 'Mentored' },
-                    { v: <CountUp to={ALL_ROADMAP_TRACKS.length} />, l: 'Roadmaps' },
-                  ].map(({ v, l }) => (
-                    <div key={l}>
-                      <div className="text-xl sm:text-2xl font-bold text-[#FD1843] tabular-nums">{v}</div>
-                      <div className="text-[10px] uppercase tracking-[0.18em] text-[#110508]/50 mt-1">{l}</div>
-                    </div>
-                  ))}
-                </div>
-              </TiltCard>
-            </Reveal>
+            </FadeIn>
           </div>
         </section>
 
-        {/* 7. FAQ Accordion */}
-        <section className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Frequently asked questions about Yaswant Code">
-          <div className="mb-12">
-            <SectionHeading
-              center
-              eyebrow="FAQ"
-              title="Frequently Asked Questions"
-              sub="Everything you need to know about the platform."
-            />
-          </div>
+        {/* ── DIVIDER ───────────────────────────────────────────────── */}
+        <div className="border-t border-[#110508]/8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" />
 
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-60px' }}
-            variants={stagger(0.08)}
-            className="space-y-3"
-          >
+        {/* ── FAQ ───────────────────────────────────────────────────── */}
+        <section
+          className="max-w-3xl mx-auto px-4 sm:px-6 py-20 sm:py-28"
+          aria-label="Frequently asked questions about Yaswant Code"
+        >
+          <FadeIn className="mb-12">
+            <h2 className="text-3xl font-bold tracking-[-0.02em] text-[#110508]">
+              Common questions.
+            </h2>
+          </FadeIn>
+
+          <div>
             {faqs.map((faq, idx) => {
               const isOpen = openFaqIndex === idx;
               return (
-                <motion.div
-                  key={idx}
-                  variants={fadeUp}
-                  className={`rounded-2xl border backdrop-blur-xl transition-colors duration-300 ${isOpen ? 'border-[#FD1843]/35 bg-white/90' : 'border-[#FD1843]/12 bg-white/50 hover:border-[#FD1843]/25'}`}
-                >
-                  <button
-                    onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                    aria-expanded={isOpen}
-                    className="group w-full text-left p-5 sm:p-6 flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-[#110508]"
-                  >
-                    <span className="flex items-center gap-3">
-                      <HelpCircle className={`w-5 h-5 shrink-0 transition-all duration-500 group-hover:rotate-[20deg] group-hover:scale-110 ${isOpen ? 'text-[#FD1843]' : 'text-[#110508]/50 group-hover:text-[#FD1843]'}`} />
-                      {faq.q}
-                    </span>
-                    <motion.span
-                      animate={{ rotate: isOpen ? 180 : 0 }}
-                      transition={{ duration: 0.3 }}
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isOpen ? 'bg-[#FD1843]' : 'bg-[#FD1843]/10'}`}
+                <FadeIn key={idx} delay={idx * 0.04}>
+                  <div className="border-b border-[#110508]/10">
+                    <button
+                      onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      aria-expanded={isOpen}
+                      className="w-full flex items-center justify-between gap-4 py-5 text-left"
                     >
-                      <ChevronDown className={`w-4 h-4 ${isOpen ? 'text-[#FFF9FA]' : 'text-[#110508]/70'}`} />
-                    </motion.span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.35, ease: EASE_OUT }}
-                        className="overflow-hidden"
-                      >
-                        <p className="px-5 sm:px-6 pb-6 text-sm text-[#110508]/70 leading-relaxed">{faq.a}</p>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
+                      <span className="text-sm font-semibold text-[#110508] leading-snug">{faq.q}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 shrink-0 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180 text-[#FD1843]' : 'text-[#110508]/30'
+                        }`}
+                      />
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: EASE }}
+                          className="overflow-hidden"
+                        >
+                          <p className="pb-6 text-sm text-[#110508]/55 leading-relaxed">{faq.a}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </FadeIn>
               );
             })}
-          </motion.div>
+          </div>
         </section>
 
-        {/* 8. Final CTA */}
-        <section className="max-w-6xl mx-auto px-4 pb-12">
-          <Reveal>
-            <div
-              className="relative rounded-[2rem] p-px overflow-hidden"
-              onPointerMove={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                ctaX.set(((e.clientX - r.left) / r.width) * 100);
-                ctaY.set(((e.clientY - r.top) / r.height) * 100);
-              }}
-            >
-              {/* Rotating gradient border */}
-              <span aria-hidden className="spin-slow absolute left-1/2 top-1/2 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 bg-[conic-gradient(from_0deg,transparent_0%,#FD1843_10%,transparent_25%,transparent_50%,#FF6B35_60%,transparent_75%)] opacity-70 [animation-duration:10s]" />
-              <div className="relative rounded-[calc(2rem-1px)] bg-[#FFF0F3] px-6 py-14 sm:px-14 sm:py-20 text-center overflow-hidden">
-                <motion.div aria-hidden className="absolute inset-0" style={{ background: ctaGlow }} />
-                <div aria-hidden className="absolute inset-0 grid-backdrop opacity-50 [mask-image:radial-gradient(ellipse_at_center,black,transparent_70%)]" />
-                {[
-                  { c: '#FD1843', pos: 'top-8 left-[12%]', d: 7 },
-                  { c: '#FF6B35', pos: 'bottom-10 right-[14%]', d: 9 },
-                  { c: '#FFF9FA', pos: 'top-16 right-[24%]', d: 6 },
-                ].map(({ c, pos, d }) => (
-                  <motion.span
-                    key={c}
-                    aria-hidden
-                    className={`absolute ${pos} h-2 w-2 rounded-full`}
-                    style={{ background: c, boxShadow: `0 0 24px 6px ${c}55` }}
-                    animate={{ y: [0, -18, 0], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: d, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                ))}
-
-                <div className="relative">
-                  <h2 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-5 leading-[1.08]">
-                    Begin Your Engineering <br className="hidden sm:inline" />
-                    <span className="text-gradient-sand">Upskilling Today.</span>
-                  </h2>
-                  <p className="text-sm sm:text-base text-[#110508]/65 max-w-lg mx-auto leading-relaxed mb-10">
-                    Access step-by-step roadmaps, hands-on projects, study notes, and free developer tools.
-                  </p>
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-xs sm:max-w-none mx-auto">
-                    <Magnetic>
-                      <button type="button" className="block w-full" onClick={() => openAuthModal('signup')}>
-                        <AnimatedCta icon={Sparkles} iconMotion="spin" trailing={ArrowRight} className="w-full sm:w-auto">
-                          Get Started for Free
-                        </AnimatedCta>
-                      </button>
-                    </Magnetic>
-                    <Magnetic strength={0.15}>
-                      <button type="button" className="block w-full" onClick={() => setCurrentView('learning-paths')}>
-                        <AnimatedCta variant="ghost" icon={Route} iconMotion="wiggle" trailing={ChevronRight} className="w-full sm:w-auto">Explore Roadmaps</AnimatedCta>
-                      </button>
-                    </Magnetic>
-                  </div>
-                </div>
+        {/* ── BOTTOM CTA ────────────────────────────────────────────── */}
+        <section className="border-t border-[#110508]/8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32">
+            <FadeIn>
+              <h2 className="text-[2.5rem] sm:text-[4rem] lg:text-[5rem] font-bold tracking-[-0.025em] text-[#110508] leading-[0.95] mb-8">
+                Start building<br />
+                <span className="text-[#FD1843]">real things.</span>
+              </h2>
+              <p className="text-sm sm:text-base text-[#110508]/52 max-w-md mb-10 leading-relaxed">
+                Free to start. Access roadmaps, study notes, and developer tools without a payment card.
+              </p>
+              <div className="flex items-center gap-5 flex-wrap">
+                <a
+                  href="/roadmaps"
+                  onClick={(e) => { e.preventDefault(); openAuthModal('signup'); }}
+                  className="inline-flex items-center gap-2 bg-[#FD1843] text-[#FFF9FA] px-8 py-4 text-sm font-semibold hover:bg-[#E5102F] transition-colors"
+                  aria-label="Create a free account"
+                >
+                  Get started for free
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/roadmaps"
+                  onClick={(e) => { e.preventDefault(); setCurrentView('learning-paths'); }}
+                  className="text-sm font-semibold text-[#110508] underline underline-offset-4 decoration-[#110508]/20 hover:text-[#FD1843] hover:decoration-[#FD1843]/50 transition-colors"
+                  aria-label="Browse all roadmaps"
+                >
+                  Browse roadmaps
+                </a>
               </div>
-            </div>
-          </Reveal>
+            </FadeIn>
+          </div>
         </section>
 
       </div>

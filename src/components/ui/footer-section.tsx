@@ -105,7 +105,7 @@ export function Footer({
 											<a
 												href={link.href}
 												onClick={link.onClick}
-												className="hover:text-[#FD1843] hover:translate-x-0.5 inline-flex items-center transition-all duration-200"
+												className="hover:text-[#FD1843] inline-flex items-center transition-colors duration-200"
 											>
 												{link.icon && <link.icon className="me-1 size-4" />}
 												{link.title}

@@ -74,7 +74,7 @@ export const Footer: React.FC = () => {
       ],
     },
     {
-      label: 'Dashboards',
+      label: 'Dashboards & Legal',
       links: [
         {
           title: 'Student Dashboard',
@@ -91,6 +91,16 @@ export const Footer: React.FC = () => {
             window.location.hash = '#admin';
             setCurrentView('admin-dashboard');
           }
+        },
+        {
+          title: 'Privacy Policy',
+          href: '/privacy',
+          icon: FileText,
+        },
+        {
+          title: 'Terms of Service',
+          href: '/terms',
+          icon: FileText,
         },
       ],
     },

@@ -58,7 +58,7 @@ export const Navbar: React.FC = () => {
   const DEFAULT_ANNOUNCEMENT = {
     enabled: true,
     badge: 'NEW RELEASE',
-    text: '🚀 Welcome to Yaswant Code — Direct ZIP developer downloads & university study notes now available!',
+    text: 'Welcome to Yaswant Code — Direct ZIP developer downloads & university study notes now available!',
     link: '#paths',
     btnText: 'Explore Roadmaps →',
   };
@@ -134,7 +134,7 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { id: 'projects', label: 'Projects', desc: 'Hands-on capstones & repositories', icon: FolderGit2 },
-    { id: 'learning-paths', label: 'Roadmaps', desc: 'Tech upskilling & mindtree roadmaps', icon: Sparkles },
+    { id: 'learning-paths', label: 'Roadmaps', desc: 'Tech upskilling & mindtree roadmaps', icon: Compass },
     { id: 'notes', label: 'Notes', desc: 'Study notes & code snippets', icon: FileText },
     { id: 'tools', label: 'Tools', desc: 'JSON, Regex, JWT, Cron utilities', icon: Wrench },
     { id: 'blog', label: 'Blog', desc: 'Architecture & deep-dive guides', icon: FileText },
@@ -426,7 +426,7 @@ export const Navbar: React.FC = () => {
                   </div>
                   
                   {/* User Avatar Circle */}
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-xs flex items-center justify-center shrink-0 ring-1 ring-neutral-300 dark:ring-neutral-700 shadow-xs">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FD1843] text-[#FFF9FA] font-bold text-xs flex items-center justify-center shrink-0 ring-1 ring-[#FD1843]/30 shadow-xs">
                     {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
                   </div>
 
@@ -599,7 +599,7 @@ export const Navbar: React.FC = () => {
               {isUserLoggedIn ? (
                 <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-[#FD1843] text-[#FFF9FA] font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
                       {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                     <div className="min-w-0">
