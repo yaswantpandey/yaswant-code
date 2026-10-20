@@ -305,7 +305,7 @@ export const ProjectsPage: React.FC = () => {
                         project.status === 'Completed' 
                           ? 'bg-emerald-500/90 text-white' 
                           : project.status === 'In Progress' 
-                            ? 'bg-blue-600/90 text-white' 
+                            ? 'bg-brand-600/90 text-white' 
                             : 'bg-neutral-800/80 text-neutral-200'
                       }`}>
                         {project.status}
@@ -322,7 +322,7 @@ export const ProjectsPage: React.FC = () => {
 
                   {/* Card Content */}
                   <div className="p-5 space-y-3">
-                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors line-clamp-1">
+                    <h3 className="text-lg font-bold text-neutral-900 dark:text-white group-hover:text-brand-500 transition-colors line-clamp-1">
                       {project.title}
                     </h3>
                     
@@ -437,7 +437,7 @@ export const ProjectsPage: React.FC = () => {
             {activeProject.architectureDiagramSnippet && (
               <div className="space-y-2">
                 <h4 className="text-xs font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Code2 className="w-4 h-4 text-blue-500" /> Architecture Blueprint
+                  <Code2 className="w-4 h-4 text-brand-500" /> Architecture Blueprint
                 </h4>
                 <div className="p-3.5 bg-neutral-50 dark:bg-neutral-950 rounded-xl border border-neutral-200 dark:border-neutral-800 text-xs font-mono text-neutral-700 dark:text-neutral-300 whitespace-pre overflow-x-auto">
                   {activeProject.architectureDiagramSnippet}
@@ -508,7 +508,7 @@ export const ProjectsPage: React.FC = () => {
                     href={activeProject.liveDemoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-xs text-blue-500 hover:underline"
+                    className="flex items-center gap-1.5 text-xs text-brand-500 hover:underline"
                   >
                     <span>Reference Live Demo</span>
                     <ExternalLink className="w-3.5 h-3.5" />

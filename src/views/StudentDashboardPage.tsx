@@ -21,12 +21,12 @@ import { ALL_ROADMAP_TRACKS } from '../data/fullstackRoadmap';
 const HUB_LINKS: { view: ActiveView; title: string; desc: string; icon: LucideIcon; accent: string }[] = [
   { view: 'learning-paths', title: 'Roadmaps', desc: 'Step-by-step career tracks from fundamentals to production.', icon: Sparkles, accent: 'text-amber-400' },
   { view: 'projects', title: 'Projects', desc: 'Hands-on capstones with starter repos and reviews.', icon: FolderGit2, accent: 'text-emerald-400' },
-  { view: 'notes', title: 'Study Notes', desc: 'Architecture guides, cheat sheets and code snippets.', icon: FileText, accent: 'text-sky-400' },
-  { view: 'tools', title: 'Developer Tools', desc: 'JSON, Regex, JWT, Cron and more in your browser.', icon: Wrench, accent: 'text-indigo-400' },
+  { view: 'notes', title: 'Study Notes', desc: 'Architecture guides, cheat sheets and code snippets.', icon: FileText, accent: 'text-brand-400' },
+  { view: 'tools', title: 'Developer Tools', desc: 'JSON, Regex, JWT, Cron and more in your browser.', icon: Wrench, accent: 'text-brand-400' },
   { view: 'community', title: 'Community', desc: 'Ask questions and review designs with peers.', icon: MessageSquare, accent: 'text-rose-400' },
-  { view: 'resources', title: 'Free Resources', desc: 'Blueprints, templates and starter kits.', icon: DownloadCloud, accent: 'text-teal-400' },
-  { view: 'blog', title: 'Engineering Blog', desc: 'Deep dives on systems, AI and frontend.', icon: BookMarked, accent: 'text-blue-400' },
-  { view: 'student-profile', title: 'My Profile', desc: 'Your skills, activity and showcase projects.', icon: User, accent: 'text-purple-400' },
+  { view: 'resources', title: 'Free Resources', desc: 'Blueprints, templates and starter kits.', icon: DownloadCloud, accent: 'text-emerald-400' },
+  { view: 'blog', title: 'Engineering Blog', desc: 'Deep dives on systems, AI and frontend.', icon: BookMarked, accent: 'text-brand-400' },
+  { view: 'student-profile', title: 'My Profile', desc: 'Your skills, activity and showcase projects.', icon: User, accent: 'text-brand-400' },
 ];
 
 export const StudentDashboardPage: React.FC = () => {

@@ -13,7 +13,6 @@ import {
   FileText,
   Wrench,
   LayoutDashboard,
-  ShieldCheck,
   Mail
 } from 'lucide-react';
 
@@ -74,23 +73,13 @@ export const Footer: React.FC = () => {
       ],
     },
     {
-      label: 'Dashboards & Legal',
+      label: 'Account & Legal',
       links: [
         {
           title: 'Student Dashboard',
           href: '/dashboard',
           icon: LayoutDashboard,
           onClick: (e) => { e.preventDefault(); setCurrentView('student-dashboard'); }
-        },
-        {
-          title: 'Admin Operations',
-          href: '/admin',
-          icon: ShieldCheck,
-          onClick: (e) => {
-            e.preventDefault();
-            window.location.hash = '#admin';
-            setCurrentView('admin-dashboard');
-          }
         },
         {
           title: 'Privacy Policy',
@@ -132,22 +121,11 @@ export const Footer: React.FC = () => {
   ];
 
   const bottomBar = (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-neutral-400">
-      <div>
-        <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
-        {' '}
-        <span className="text-neutral-300 dark:text-neutral-700">·</span>
-        {' '}
-        <a
-          href="mailto:contact@yaswant.co.in"
-          className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
-        >
-          contact@yaswant.co.in
-        </a>
-      </div>
-      <div className="flex items-center gap-1">
-        <span>Built with React 19 &amp; Firebase · Made in India 🇮🇳</span>
-      </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-ink-3">
+      <span>© {new Date().getFullYear()} {brandName}. All rights reserved.</span>
+      <a href="mailto:contact@yaswant.co.in" className="hover:text-accent transition-colors">
+        contact@yaswant.co.in
+      </a>
     </div>
   );
 
@@ -161,9 +139,9 @@ export const Footer: React.FC = () => {
         />
       }
       brandName={brandName}
-      brandDescription="The high-velocity learning environment for serious software engineers, distributed systems architects, and machine learning researchers."
+      brandDescription="Roadmaps, projects, study notes and developer tools for engineers who want to ship production systems."
       sections={sections}
-      className="mt-20"
+      className="mt-24"
       bottomContent={bottomBar}
     />
   );

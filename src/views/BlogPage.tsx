@@ -257,7 +257,9 @@ export const BlogPage: React.FC = () => {
             <BookOpen className="w-10 h-10 text-neutral-400 mx-auto mb-3 opacity-50" />
             <h4 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">No articles found</h4>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 max-w-sm mx-auto mb-4">
-              We couldn't find any articles matching "{searchQuery}". Try selecting a different topic filter.
+              {searchQuery.trim()
+                ? <>We couldn't find any articles matching "{searchQuery}". Try a different search or topic.</>
+                : <>No articles have been published in this topic yet. Check back soon.</>}
             </p>
             <Button variant="outline" size="sm" onClick={() => { setSearchQuery(''); setSelectedCategory('All'); }}>
               Reset Filters

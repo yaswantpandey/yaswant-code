@@ -71,13 +71,13 @@ export const NOTE_CATEGORIES = [
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'Data Structures & Algorithms': <Cpu className="w-3.5 h-3.5 text-rose-500" />,
   'Languages & Programming': <Terminal className="w-3.5 h-3.5 text-amber-500" />,
-  'Core CS & B.Tech': <BookOpen className="w-3.5 h-3.5 text-blue-500" />,
-  'System Design': <Server className="w-3.5 h-3.5 text-purple-500" />,
-  'React & Web': <Globe className="w-3.5 h-3.5 text-sky-500" />,
-  'Distributed Systems': <Layers className="w-3.5 h-3.5 text-indigo-500" />,
+  'Core CS & B.Tech': <BookOpen className="w-3.5 h-3.5 text-brand-500" />,
+  'System Design': <Server className="w-3.5 h-3.5 text-brand-500" />,
+  'React & Web': <Globe className="w-3.5 h-3.5 text-brand-500" />,
+  'Distributed Systems': <Layers className="w-3.5 h-3.5 text-brand-500" />,
   'Databases & SQL': <Database className="w-3.5 h-3.5 text-emerald-500" />,
-  'Machine Learning': <Sparkles className="w-3.5 h-3.5 text-pink-500" />,
-  'DevOps & Cloud': <Terminal className="w-3.5 h-3.5 text-teal-500" />,
+  'Machine Learning': <Sparkles className="w-3.5 h-3.5 text-brand-500" />,
+  'DevOps & Cloud': <Terminal className="w-3.5 h-3.5 text-emerald-500" />,
   'General': <FileText className="w-3.5 h-3.5 text-neutral-500" />
 };
 
@@ -459,14 +459,14 @@ export const NotesPage: React.FC = () => {
         );
       case 'google_drive':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-sky-600/90 text-white shadow-xs backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-brand-600/90 text-white shadow-xs backdrop-blur-md">
             <FolderOpen className="w-3 h-3" />
             DRIVE
           </span>
         );
       case 'google_docs':
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-blue-600/90 text-white shadow-xs backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-brand-600/90 text-white shadow-xs backdrop-blur-md">
             <FileCode className="w-3 h-3" />
             DOCS
           </span>
@@ -480,7 +480,7 @@ export const NotesPage: React.FC = () => {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-indigo-600/90 text-white shadow-xs backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-brand-600/90 text-white shadow-xs backdrop-blur-md">
             <ExternalLink className="w-3 h-3" />
             LINK
           </span>
@@ -534,8 +534,8 @@ export const NotesPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => handleOpenAddModal('google_drive')}
-                className="border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs"
-                icon={<FolderOpen className="w-3.5 h-3.5 text-sky-500" />}
+                className="border-brand-300 dark:border-brand-800 text-brand-700 dark:text-brand-300 hover:bg-brand-50 dark:hover:bg-brand-950/40 text-xs"
+                icon={<FolderOpen className="w-3.5 h-3.5 text-brand-500" />}
               >
                 + Google Link
               </Button>
@@ -566,7 +566,7 @@ export const NotesPage: React.FC = () => {
         </div>
 
         <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
+          <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
             <FolderOpen className="w-4 h-4" />
           </div>
           <div>
@@ -576,7 +576,7 @@ export const NotesPage: React.FC = () => {
         </div>
 
         <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-850/80 border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          <div className="p-2 rounded-xl bg-brand-500/10 text-brand-600 dark:text-brand-400">
             <Layers className="w-4 h-4" />
           </div>
           <div>
@@ -647,7 +647,7 @@ export const NotesPage: React.FC = () => {
               onClick={() => setSelectedResourceType('google')}
               className={`px-3 py-1 rounded-lg font-medium transition-all ${
                 selectedResourceType === 'google'
-                  ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 shadow-2xs font-bold'
+                  ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-2xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-950 dark:hover:text-white'
               }`}
             >
@@ -806,7 +806,7 @@ export const NotesPage: React.FC = () => {
                   {/* Top-Right: Quick Pin & Star Icons */}
                   <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                     {note.pinned && (
-                      <span className="p-1.5 rounded-lg backdrop-blur-md bg-indigo-600 text-white shadow-xs" title="Pinned by Instructor">
+                      <span className="p-1.5 rounded-lg backdrop-blur-md bg-brand-600 text-white shadow-xs" title="Pinned by Instructor">
                         <Pin className="w-3 h-3 fill-white" />
                       </span>
                     )}
@@ -890,7 +890,7 @@ export const NotesPage: React.FC = () => {
                           href={note.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/60 border border-sky-200 dark:border-sky-900/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                          className="flex-1 py-1.5 px-3 rounded-xl text-xs font-bold bg-brand-50 dark:bg-brand-950/50 text-brand-700 dark:text-brand-300 hover:bg-brand-100 dark:hover:bg-brand-900/60 border border-brand-200 dark:border-brand-900/40 flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           Open Link
@@ -1068,11 +1068,11 @@ export const NotesPage: React.FC = () => {
                 onClick={() => setFormResourceType('google_drive')}
                 className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                   formResourceType === 'google_drive'
-                    ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-600 dark:text-sky-400 shadow-2xs'
+                    ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-600 dark:text-brand-400 shadow-2xs'
                     : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-800'
                 }`}
               >
-                <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                <FolderOpen className="w-3.5 h-3.5 text-brand-500" />
                 Google Drive Link
               </button>
             </div>
@@ -1295,7 +1295,7 @@ export const NotesPage: React.FC = () => {
               />
 
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 px-4 py-2 rounded-xl bg-neutral-900/90 text-white text-xs backdrop-blur-md shadow-lg flex items-center gap-2 border border-white/10">
-                <Info className="w-4 h-4 text-sky-400 shrink-0" />
+                <Info className="w-4 h-4 text-brand-400 shrink-0" />
                 <span>
                   Having trouble viewing in browser?
                 </span>
@@ -1303,7 +1303,7 @@ export const NotesPage: React.FC = () => {
                   href={previewNote.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-bold underline text-sky-400 hover:text-sky-300"
+                  className="font-bold underline text-brand-400 hover:text-brand-300"
                 >
                   Click to open PDF directly
                 </a>

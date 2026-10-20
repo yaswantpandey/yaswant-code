@@ -59,14 +59,14 @@ export const FreeResourcesPage: React.FC = () => {
 
   const getCategoryIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Layers': return <Layers className="w-5 h-5 text-indigo-500" />;
+      case 'Layers': return <Layers className="w-5 h-5 text-brand-500" />;
       case 'Server': return <Server className="w-5 h-5 text-emerald-500" />;
       case 'Compass': return <Compass className="w-5 h-5 text-amber-500" />;
-      case 'Code': return <Code className="w-5 h-5 text-cyan-500" />;
+      case 'Code': return <Code className="w-5 h-5 text-brand-500" />;
       case 'Terminal': return <Terminal className="w-5 h-5 text-rose-500" />;
-      case 'ShieldCheck': return <ShieldCheck className="w-5 h-5 text-blue-500" />;
-      case 'Database': return <Database className="w-5 h-5 text-purple-500" />;
-      case 'Cpu': return <Cpu className="w-5 h-5 text-teal-500" />;
+      case 'ShieldCheck': return <ShieldCheck className="w-5 h-5 text-brand-500" />;
+      case 'Database': return <Database className="w-5 h-5 text-brand-500" />;
+      case 'Cpu': return <Cpu className="w-5 h-5 text-emerald-500" />;
       default: return <FileText className="w-5 h-5 text-neutral-400" />;
     }
   };
@@ -124,7 +124,7 @@ export const FreeResourcesPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 pb-6 border-b border-neutral-200 dark:border-neutral-800">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-neutral-500 dark:text-neutral-400 mb-1.5">
-            <span className="w-2 h-2 rounded-full bg-indigo-500" />
+            <span className="w-2 h-2 rounded-full bg-brand-500" />
             100% Free Open Community Assets
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-neutral-950 dark:text-white tracking-tight">
@@ -204,7 +204,7 @@ export const FreeResourcesPage: React.FC = () => {
               </div>
 
               {/* Title & Description */}
-              <h3 className="text-base font-bold text-neutral-950 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors mb-2 leading-snug">
+              <h3 className="text-base font-bold text-neutral-950 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors mb-2 leading-snug">
                 {resource.title}
               </h3>
               <p className="text-xs text-neutral-600 dark:text-neutral-400 line-clamp-3 leading-relaxed mb-4">

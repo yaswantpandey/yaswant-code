@@ -2,367 +2,265 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ==========================================================================
+   Yaswant Code design system
+   Brand: True Pink #FD1843 on Chill White #FFF9FA.
+   Every colour on the site comes from the scales below. Components keep
+   using ordinary Tailwind classes (neutral-*, white, dark:*) and the
+   semantic tokens (ink, paper, surface, line, accent, brand) — no
+   !important overrides, so light and dark themes both work.
+   ========================================================================== */
+
 @theme {
-  /* ── TRUE PINK ─────────────────────────────────────────────── */
-  --color-brand:          #FD1843;
-  --color-brand-hover:    #E5102F;
-  --color-brand-light:    #FF3356;
-  --color-brand-surface:  #FFF0F3;
-  --color-brand-elevated: #FFE0E8;
-  --color-brand-subtle:   #FFCCD5;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ── CHILL WHITE surfaces ───────────────────────────────────── */
-  --color-pine:           #FD1843;   /* kept for compat — now maps to brand */
-  --color-pine-deep:      #C5102E;
-  --color-pine-surface:   #FFF0F3;
-  --color-pine-elevated:  #FFE0E8;
-  --color-pine-light:     #FFCCD5;
+  /* Brand scale — 500 is True Pink */
+  --color-brand-50:  #FFF1F3;
+  --color-brand-100: #FFE0E6;
+  --color-brand-200: #FFC2CD;
+  --color-brand-300: #FF94A8;
+  --color-brand-400: #FF5878;
+  --color-brand-500: #FD1843;
+  --color-brand-600: #E00B35;
+  --color-brand-700: #BC062B;
+  --color-brand-800: #9C0A28;
+  --color-brand-900: #850D27;
+  --color-brand-950: #4B0211;
+  --color-brand:       #FD1843;
+  --color-brand-hover: #E00B35;
+  --color-on-brand:    #FFF9FA;
 
-  /* ── Sand / chalk kept for compat — remapped to near-black ─── */
-  --color-sand:           #FFF9FA;
-  --color-sand-hover:     #FFE0E8;
-  --color-chalk:          #FFF9FA;
-  --color-chalk-muted:    rgba(255, 249, 250, 0.78);
-  --color-chalk-subtle:   rgba(255, 249, 250, 0.55);
+  /* Neutral scale — warm, faintly rose-tinted greys.
+     Includes the 750/850 steps the components already use. */
+  --color-neutral-50:  #FFF9FA;
+  --color-neutral-100: #FBEFF2;
+  --color-neutral-200: #F1DEE3;
+  --color-neutral-300: #E0C7CE;
+  --color-neutral-400: #B39AA1;
+  --color-neutral-500: #7F676D;
+  --color-neutral-600: #67525A;
+  --color-neutral-700: #4E3B41;
+  --color-neutral-750: #3C2C31;
+  --color-neutral-800: #2D2024;
+  --color-neutral-850: #23171B;
+  --color-neutral-900: #1B1013;
+  --color-neutral-950: #12090C;
 
-  --color-white:          #FFF9FA;
-  --color-foreground:     #110508;
-  --color-muted-foreground: rgba(17, 5, 8, 0.65);
-  --radius-4xl:           2rem;
-  --radius-6xl:           3rem;
+  --radius-4xl: 2rem;
+}
+
+/* Semantic tokens that flip with the theme */
+@theme inline {
+  --color-paper:     var(--yc-paper);
+  --color-surface:   var(--yc-surface);
+  --color-surface-2: var(--yc-surface-2);
+  --color-ink:       var(--yc-ink);
+  --color-ink-2:     var(--yc-ink-2);
+  --color-ink-3:     var(--yc-ink-3);
+  --color-line:      var(--yc-line);
+  --color-accent:    var(--yc-accent);
 }
 
 @layer base {
-  :root,
-  .light,
-  .dark {
-    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-
-    /* Primary Palette: Chill White #FFF9FA Background & Near-Black #110508 Text */
-    --background: #FFF9FA;
-    --foreground: #110508;
-    --muted-foreground: rgba(17, 5, 8, 0.65);
-
-    /* Surfaces (cards, panels) */
-    --color-contrast-surface:          #FFF0F3;
-    --color-contrast-surface-elevated: #FFE0E8;
-    --color-contrast-surface-subtle:   #FFF5F7;
-
-    /* Text */
-    --color-contrast-text-heading: #110508;
-    --color-contrast-text-body:    #110508;
-    --color-contrast-text-muted:   rgba(17, 5, 8, 0.65);
-    --color-contrast-text-subtle:  rgba(17, 5, 8, 0.45);
-
-    /* Borders — translucent pink */
-    --color-contrast-border:       rgba(253, 24, 67, 0.12);
-
-    /* Inputs */
-    --color-contrast-input-bg:     #FFF5F7;
-    --color-contrast-input-text:   #110508;
+  :root {
+    --yc-paper:     #FFF9FA;
+    --yc-surface:   #FFFFFF;
+    --yc-surface-2: #FBEFF2;
+    --yc-ink:       #1B1013;
+    --yc-ink-2:     #5E4A50;
+    --yc-ink-3:     #8A7278;
+    --yc-line:      rgb(27 16 19 / 0.09);
+    /* Text-safe pink: 500 is too light for small text on white (3.9:1) */
+    --yc-accent:    #E00B35;
+    color-scheme: light;
   }
 
-  html {
-    background-color: #FFF9FA !important;
-    color: #110508 !important;
+  .dark {
+    --yc-paper:     #12090C;
+    --yc-surface:   #1B1013;
+    --yc-surface-2: #23171B;
+    --yc-ink:       #FBEFF2;
+    --yc-ink-2:     #C8B1B8;
+    --yc-ink-3:     #8F777E;
+    --yc-line:      rgb(251 239 242 / 0.09);
+    --yc-accent:    #FF5878;
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    background-color: var(--yc-paper);
+    color: var(--yc-ink);
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #FFF9FA !important;
-    color: #110508 !important;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  h1, h2, h3, h4, h5, h6,
-  p, li, a, dt, dd, label, legend, td, th {
-    color: #110508;
+  h1, h2, h3, h4 {
+    text-wrap: balance;
   }
 
   ::selection {
     background-color: #FD1843;
     color: #FFF9FA;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--yc-accent);
+    outline-offset: 2px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--yc-ink-3);
+  }
 }
 
-/* Custom subtle scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #FFF0F3;
-}
-
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(253, 24, 67, 0.30);
+  background: rgb(127 103 109 / 0.35);
   border-radius: 9999px;
+  border: 2px solid var(--yc-paper);
 }
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(253, 24, 67, 0.55);
-}
-
-/* ── Glassmorphic Surfaces (light frosted-glass on white bg) ── */
-.glass-surface {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(253, 24, 67, 0.12);
-  box-shadow: 0 4px 20px -2px rgba(253, 24, 67, 0.08);
-  color: #110508;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.glass-card {
-  background: rgba(255, 255, 255, 0.90);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(253, 24, 67, 0.12);
-  box-shadow: 0 4px 20px -2px rgba(253, 24, 67, 0.08), 0 2px 6px -1px rgba(253, 24, 67, 0.05);
-  color: #110508;
-  transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
+::-webkit-scrollbar-thumb:hover { background: rgb(253 24 67 / 0.55); }
 
 /* ==========================================================================
-   Theme Overrides — remap Tailwind neutral classes to Pink/White palette
+   Component utilities
    ========================================================================== */
 
-/* 1. Guaranteed near-black text for headings, titles, labels */
-:is(h1, h2, h3, h4, h5, h6,
-    .text-neutral-950,
-    .text-neutral-900,
-    .text-neutral-850,
-    .text-neutral-800,
-    .text-neutral-750,
-    .text-neutral-700,
-    .text-black,
-    .text-white,
-    .dark\:text-white,
-    .dark\:text-neutral-100,
-    .dark\:text-neutral-200):not(.text-\[\#FD1843\]):not(.text-\[\#FFF9FA\]):not([class*="text-emerald-"]):not([class*="text-rose-"]):not([class*="text-amber-"]):not([class*="text-cyan-"]):not([class*="text-blue-"]):not([class*="text-indigo-"]):not([class*="text-yellow-"]):not([class*="text-purple-"]) {
-  color: #110508 !important;
+@utility container-page {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 40rem) { padding-inline: 1.5rem; }
+  @media (width >= 64rem) { padding-inline: 2rem; }
 }
 
-/* 2. Muted text for secondary descriptions & subtitles */
-:is(.text-neutral-600,
-    .text-neutral-500,
-    .text-neutral-400,
-    .dark\:text-neutral-400,
-    .dark\:text-neutral-300,
-    .dark\:text-neutral-300):not(.text-\[\#FD1843\]):not(.text-\[\#FFF9FA\]) {
-  color: rgba(17, 5, 8, 0.65) !important;
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--yc-accent);
 }
 
-/* 3. Surface & card backgrounds */
-:is(.bg-white,
-    .bg-neutral-900,
-    .bg-neutral-850,
-    .dark\:bg-neutral-900,
-    .dark\:bg-neutral-850):not(.bg-\[\#FD1843\]):not(.bg-\[\#FFF9FA\]):not([class*="bg-emerald-"]):not([class*="bg-rose-"]):not([class*="bg-amber-"]) {
-  background-color: #FFFFFF !important;
-  color: #110508 !important;
-}
-
-/* Allow semi-transparent overlays on cards */
-.bg-white\/90,
-.bg-white\/80 {
-  background-color: rgba(255, 255, 255, 0.90) !important;
-}
-
-/* 4. Chips, filters, elevated surfaces */
-:is(.bg-neutral-100,
-    .bg-neutral-800,
-    .dark\:bg-neutral-800,
-    .dark\:bg-neutral-750):not(.bg-\[\#FD1843\]):not(.bg-\[\#FFF9FA\]) {
-  background-color: #FFF0F3 !important;
-  color: #110508 !important;
-}
-
-/* 5. Page canvas backgrounds */
-:is(.bg-neutral-50,
-    .bg-neutral-50\/50,
-    .bg-neutral-950,
-    .dark\:bg-neutral-950) {
-  background-color: #FFF9FA !important;
-}
-
-/* 6. Borders — translucent pink instead of sand */
-:is(.border-neutral-200,
-    .border-neutral-200\/80,
-    .border-neutral-200\/60,
-    .border-neutral-300,
-    .border-neutral-700,
-    .border-neutral-750,
-    .border-neutral-800,
-    .dark\:border-neutral-800,
-    .dark\:border-neutral-750,
-    .dark\:border-neutral-700) {
-  border-color: rgba(253, 24, 67, 0.14) !important;
-}
-
-/* 7. Form inputs, search fields, textareas */
-input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
-select,
-textarea {
-  background-color: #FFF5F7 !important;
-  color: #110508 !important;
-  border-color: rgba(253, 24, 67, 0.18) !important;
-}
-
-input::placeholder,
-textarea::placeholder {
-  color: rgba(17, 5, 8, 0.40) !important;
-}
-
-/* 8. Primary pink buttons: #FD1843 bg + white text */
-.bg-\[\#FD1843\],
-button.bg-\[\#FD1843\] {
-  background-color: #FD1843 !important;
-  color: #FFF9FA !important;
-}
-
-.bg-\[\#FD1843\] *:not([class*="bg-"]):not([class*="text-rose-"]):not([class*="text-emerald-"]),
-button.bg-\[\#FD1843\] * {
-  color: #FFF9FA !important;
-}
-
-button.bg-\[\#FD1843\]:hover {
-  background-color: #E5102F !important;
-}
-
-/* White text on pink bg */
-.bg-\[\#FFF9FA\] *:not([class*="text-"]) {
-  color: #110508 !important;
-}
-
-/* Legacy: sand-button class used by old components */
-.bg-\[\#F0EDE4\],
-button.bg-\[\#F0EDE4\] {
-  background-color: #FD1843 !important;
-  color: #FFF9FA !important;
-}
-button.bg-\[\#F0EDE4\]:hover {
-  background-color: #E5102F !important;
-}
-
-/* Legacy text-[#004741] (was pine text on light bg) → now brand pink */
-.text-\[\#004741\] {
-  color: #FD1843 !important;
-}
-
-/* 9. Theme-safe card & panel utilities */
+.glass-surface,
+.glass-card,
 .contrast-card {
-  background-color: var(--color-contrast-surface);
-  color: var(--color-contrast-text-body);
-  border: 1px solid var(--color-contrast-border);
+  background-color: var(--yc-surface);
+  color: var(--yc-ink);
+  border: 1px solid var(--yc-line);
 }
 
-.contrast-card-elevated {
-  background-color: var(--color-contrast-surface-elevated);
-  color: var(--color-contrast-text-body);
-  border: 1px solid var(--color-contrast-border);
-}
-
+.contrast-card-elevated,
 .contrast-card-subtle {
-  background-color: var(--color-contrast-surface-subtle);
-  color: var(--color-contrast-text-body);
-  border: 1px solid var(--color-contrast-border);
+  background-color: var(--yc-surface-2);
+  color: var(--yc-ink);
+  border: 1px solid var(--yc-line);
 }
 
-.contrast-heading  { color: var(--color-contrast-text-heading); }
-.contrast-body     { color: var(--color-contrast-text-body); }
-.contrast-muted    { color: var(--color-contrast-text-muted); }
-.contrast-subtle   { color: var(--color-contrast-text-subtle); }
+.contrast-heading { color: var(--yc-ink); }
+.contrast-body    { color: var(--yc-ink); }
+.contrast-muted   { color: var(--yc-ink-2); }
+.contrast-subtle  { color: var(--yc-ink-3); }
+.contrast-border  { border-color: var(--yc-line); }
 
 .contrast-input {
-  background-color: var(--color-contrast-input-bg);
-  color: var(--color-contrast-input-text);
-  border: 1px solid var(--color-contrast-border);
+  background-color: var(--yc-surface);
+  color: var(--yc-ink);
+  border: 1px solid var(--yc-line);
 }
-
-.contrast-input::placeholder {
-  color: var(--color-contrast-text-subtle);
-}
-
 .contrast-input:focus {
   outline: none;
   border-color: #FD1843;
 }
 
-.contrast-border {
-  border-color: var(--color-contrast-border);
-}
-
 /* ==========================================================================
-   Landing page motion & animation utilities
+   Motion
+   `animate-in` + `fade-in` / `slide-in-from-*` / `zoom-in-*` are used by
+   dropdowns and modals; this is a small self-contained implementation.
    ========================================================================== */
+@keyframes yc-enter {
+  from {
+    opacity: var(--yc-enter-opacity, 1);
+    transform: translate3d(var(--yc-enter-x, 0), var(--yc-enter-y, 0), 0) scale(var(--yc-enter-scale, 1));
+  }
+}
+.animate-in {
+  animation: yc-enter 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-in.fade-in            { --yc-enter-opacity: 0; }
+.animate-in[class*="zoom-in"]  { --yc-enter-scale: 0.96; }
+.animate-in.slide-in-from-top-2,
+.animate-in[class*="slide-in-from-top"]    { --yc-enter-y: -8px; }
+.animate-in[class*="slide-in-from-bottom"] { --yc-enter-y: 8px; }
+.animate-in.slide-in-from-right            { --yc-enter-x: 100%; }
+.animate-in.duration-150 { animation-duration: 150ms; }
+.animate-in.duration-300 { animation-duration: 300ms; }
+
 @keyframes marquee {
   from { transform: translateX(0); }
   to   { transform: translateX(-100%); }
 }
-.marquee-track {
-  animation: marquee linear infinite;
-}
+.marquee-track { animation: marquee linear infinite; }
 
-@keyframes gradient-pan {
-  0%, 100% { background-position: 0% 50%; }
-  50%       { background-position: 100% 50%; }
-}
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+.spin-slow { animation: spin-slow 8s linear infinite; }
 
-/* Pink gradient text — replaces old sand gradient */
-.text-gradient-sand,
-.text-gradient-pink {
-  background-image: linear-gradient(100deg, #FD1843 0%, #FF6B35 35%, #FD1843 65%, #FF3356 100%);
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent;
-  animation: gradient-pan 8s ease-in-out infinite;
+@keyframes shine {
+  0%        { transform: translateX(-120%) skewX(-20deg); }
+  60%, 100% { transform: translateX(260%) skewX(-20deg); }
 }
+.shine-sweep { animation: shine 3.6s ease-in-out infinite; }
 
 @keyframes beam {
   from { transform: translateX(-100%); }
   to   { transform: translateX(400%); }
 }
-.beam-line {
-  animation: beam 4.5s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+.beam-line { animation: beam 4.5s cubic-bezier(0.65, 0, 0.35, 1) infinite; }
+
+.text-gradient-sand,
+.text-gradient-pink {
+  color: var(--yc-accent);
 }
 
-@keyframes spin-slow {
-  to { transform: rotate(360deg); }
-}
-.spin-slow {
-  animation: spin-slow 8s linear infinite;
-}
-
-@keyframes shine {
-  0%       { transform: translateX(-120%) skewX(-20deg); }
-  60%, 100% { transform: translateX(260%) skewX(-20deg); }
-}
-.shine-sweep {
-  animation: shine 3.6s ease-in-out infinite;
-}
-
-/* Grid backdrop — pink dots instead of sand */
 .grid-backdrop {
   background-image:
-    linear-gradient(rgba(253, 24, 67, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(253, 24, 67, 0.06) 1px, transparent 1px);
+    linear-gradient(var(--yc-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--yc-line) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track,
-  .text-gradient-sand,
-  .text-gradient-pink,
-  .beam-line,
-  .spin-slow,
-  .shine-sweep {
-    animation: none !important;
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
+}
+
+/* Button press ripple — must animate so Button's onAnimationEnd removes it */
+@keyframes yc-ripple {
+  to { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
+.btn-ripple {
+  position: absolute;
+  z-index: -1;
+  width: 240%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.18;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0);
+  animation: yc-ripple 550ms ease-out forwards;
 }

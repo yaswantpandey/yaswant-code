@@ -2,34 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useLms } from '../../context/LmsContext';
 import { safeHref } from '../../lib/safeHref';
-import { 
-  Search, 
-  Bell, 
-  Sun, 
-  Moon, 
-  Menu, 
-  X, 
-  Sparkles, 
-  GraduationCap, 
-  ShieldCheck, 
-  User, 
-  LogOut, 
-  Check, 
-  Layers, 
-  CheckCircle2, 
-  Flame,
+import {
+  Search,
+  Bell,
+  Menu,
+  X,
+  GraduationCap,
+  ShieldCheck,
+  User,
+  Users,
+  LogOut,
   Settings,
   ChevronDown,
+  ChevronRight,
   FileText,
+  BookOpen,
   Wrench,
   DownloadCloud,
   FolderGit2,
-  Cloud,
-  ChevronRight,
   Compass
 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { Badge } from '../ui/Badge';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { BrandLogo } from '../ui/BrandLogo';
 import { PushSubscribeButton } from '../ui/PushSubscribeButton';
@@ -133,27 +126,54 @@ export const Navbar: React.FC = () => {
   }, []);
 
   const navLinks = [
+    { id: 'learning-paths', label: 'Roadmaps', desc: 'Step-by-step career tracks', icon: Compass },
     { id: 'projects', label: 'Projects', desc: 'Hands-on capstones & repositories', icon: FolderGit2 },
-    { id: 'learning-paths', label: 'Roadmaps', desc: 'Tech upskilling & mindtree roadmaps', icon: Compass },
     { id: 'notes', label: 'Notes', desc: 'Study notes & code snippets', icon: FileText },
     { id: 'tools', label: 'Tools', desc: 'JSON, Regex, JWT, Cron utilities', icon: Wrench },
-    { id: 'blog', label: 'Blog', desc: 'Architecture & deep-dive guides', icon: FileText },
+    { id: 'blog', label: 'Blog', desc: 'Architecture & deep-dive guides', icon: BookOpen },
     { id: 'resources', label: 'Resources', desc: 'Starter templates & cheat sheets', icon: DownloadCloud },
-    { id: 'community', label: 'Community', desc: 'Discussions & peer code review', icon: User },
+    { id: 'community', label: 'Community', desc: 'Discussions & peer code review', icon: Users },
   ];
+
+  // How many links fit inline at each breakpoint; the rest live in the drawer.
+  const inlineVisibility = (i: number) =>
+    i < 4 ? 'hidden lg:inline-flex' : i < 6 ? 'hidden xl:inline-flex' : 'hidden 2xl:inline-flex';
+
+  const signOut = async () => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    const { signOutUser } = await import('../../services/firebaseAuth');
+    await signOutUser();
+    setRole('student');
+    setCurrentView('landing');
+  };
+
+  const openAdmin = () => {
+    setUserMenuOpen(false);
+    setMobileMenuOpen(false);
+    window.location.hash = '#admin';
+    setCurrentView('admin-dashboard');
+  };
+
+  const iconBtn =
+    'relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-ink-2 hover:text-ink hover:bg-surface-2 transition-colors';
+  const menuItem =
+    'w-full text-left px-3 py-2 rounded-lg text-ink-2 hover:text-ink hover:bg-surface-2 flex items-center gap-2.5 transition-colors';
 
   return (
     <>
-      {/* ── Sticky Navigation Header Container (Wraps Announcement + Main Nav to prevent any misalignment) ── */}
-      <header className="sticky top-0 z-40 w-full bg-[#FFF9FA]/95 backdrop-blur-xl border-b border-[#FD1843]/12 shadow-xs text-[#110508]">
-        
-        {/* ── Global Announcement Banner Configured via Admin ── */}
+      <header className="sticky top-0 z-40 w-full bg-paper/85 backdrop-blur-md border-b border-line">
+
+        {/* ── Announcement (configured from the admin panel) ── */}
         {announcement?.enabled && (
-          <aside aria-label="Global Announcement" className="w-full bg-[#FD1843] text-[#FFF9FA] border-b border-[#FD1843]/20 text-[11px] sm:text-xs py-1.5 sm:py-2 px-3 sm:px-4 flex items-center justify-center gap-2 sm:gap-3 text-center transition-all">
-            <span className="px-2 py-0.5 rounded-full bg-[#FFF9FA]/20 text-[#FFF9FA] font-bold uppercase text-[9px] sm:text-[10px] tracking-wider shrink-0">
+          <aside
+            aria-label="Announcement"
+            className="w-full bg-neutral-950 dark:bg-neutral-900 dark:border-b dark:border-line text-neutral-50 text-[11px] sm:text-xs py-2 px-4 flex items-center justify-center gap-2 sm:gap-3 text-center"
+          >
+            <span className="hidden sm:inline font-mono uppercase tracking-[0.14em] text-[10px] text-brand-300 shrink-0">
               {announcement.badge}
             </span>
-            <span className="font-medium truncate max-w-[200px] xs:max-w-xs sm:max-w-md lg:max-w-xl text-[#FFF9FA]">
+            <span className="truncate max-w-[220px] sm:max-w-md lg:max-w-xl text-neutral-300">
               {announcement.text}
             </span>
             {announcement.link && (
@@ -167,7 +187,7 @@ export const Navbar: React.FC = () => {
                     else if (target === 'tools') setCurrentView('tools');
                   }
                 }}
-                className="inline-flex items-center gap-1 font-bold underline hover:opacity-90 shrink-0 text-[10px] sm:text-[11px] text-[#FFF9FA]"
+                className="font-semibold underline underline-offset-2 decoration-neutral-500 hover:decoration-neutral-50 shrink-0 text-neutral-50"
               >
                 {announcement.btnText}
               </a>
@@ -175,12 +195,10 @@ export const Navbar: React.FC = () => {
           </aside>
         )}
 
-        {/* ── Main Navigation Bar ── */}
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-4">
-          
-          {/* Left: Brand Logo & Adaptive Desktop Navigation Links */}
-          <div className="flex items-center gap-2 sm:gap-3 lg:gap-6 shrink-0 min-w-0">
-            {/* Logo Area */}
+        {/* ── Main bar ── */}
+        <div className="container-page h-16 flex items-center justify-between gap-3">
+
+          <div className="flex items-center gap-6 min-w-0">
             <BrandLogo
               size="md"
               brandName={brandName}
@@ -188,149 +206,78 @@ export const Navbar: React.FC = () => {
               className="shrink-0"
             />
 
-            {/* Large Desktop Navigation Links (xl+: all 9 links) */}
-            <nav className="hidden 2xl:flex items-center gap-1" aria-label="Primary Desktop Navigation">
-              {navLinks.map((link) => {
+            <nav className="flex items-center gap-0.5" aria-label="Primary">
+              {navLinks.map((link, i) => {
                 const isActive = currentView === link.id;
                 return (
                   <button
                     key={link.id}
                     onClick={() => setCurrentView(link.id as any)}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                      isActive 
-                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold shadow-2xs'
-                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
-                    }`}
-                  >
-                    {link.label}
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Standard Desktop Navigation Links (xl to 2xl: top 6 core links) */}
-            <nav className="hidden xl:flex 2xl:hidden items-center gap-1" aria-label="Desktop Navigation">
-              {navLinks.slice(0, 6).map((link) => {
-                const isActive = currentView === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setCurrentView(link.id as any)}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
+                    aria-current={isActive ? 'page' : undefined}
+                    className={`${inlineVisibility(i)} relative items-center h-9 px-3 rounded-lg text-[13px] font-medium transition-colors ${
                       isActive
-                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold shadow-2xs'
-                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
+                        ? 'text-ink'
+                        : 'text-ink-2 hover:text-ink hover:bg-surface-2'
                     }`}
                   >
                     {link.label}
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Laptop Navigation Links (lg to xl: top 4 primary links) */}
-            <nav className="hidden lg:flex xl:hidden items-center gap-1" aria-label="Laptop Navigation">
-              {navLinks.slice(0, 4).map((link) => {
-                const isActive = currentView === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setCurrentView(link.id as any)}
-                    className={`px-2.5 py-1.5 rounded-xl text-xs font-medium transition-colors ${
-                      isActive
-                        ? 'text-[#FFF9FA] bg-[#FD1843] font-bold'
-                        : 'text-[#110508]/65 hover:text-[#110508] hover:bg-[#FD1843]/10'
-                    }`}
-                  >
-                    {link.label}
-                  </button>
-                );
-              })}
-            </nav>
-
-            {/* Tablet Navigation Links (sm to lg: 3 essential links) */}
-            <nav className="hidden sm:flex lg:hidden items-center gap-1" aria-label="Tablet Navigation">
-              {navLinks.slice(0, 3).map((link) => {
-                const isActive = currentView === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setCurrentView(link.id as any)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                      isActive 
-                        ? 'text-neutral-950 dark:text-white bg-neutral-100 dark:bg-neutral-850 font-semibold' 
-                        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-900'
-                    }`}
-                  >
-                    {link.label}
+                    {isActive && (
+                      <span aria-hidden className="absolute left-3 right-3 -bottom-[13px] h-0.5 rounded-full bg-brand" />
+                    )}
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Center: Global Search Bar (Visible on lg+ screens with keyboard shortcut) */}
-          <div className="hidden lg:flex flex-1 max-w-xs mx-2 xl:mx-4">
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Search */}
             <button
               onClick={() => setSearchModalOpen(true)}
-              className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-neutral-100/80 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs text-neutral-500 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all shadow-2xs"
+              className="hidden md:flex items-center gap-2 h-9 pl-3 pr-2 mr-1 rounded-lg border border-line bg-surface text-xs text-ink-3 hover:text-ink-2 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors w-44 lg:w-52"
             >
-              <div className="flex items-center gap-2">
-                <Search className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="truncate">Search roadmaps, projects...</span>
-              </div>
-              <kbd className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono text-neutral-400 bg-neutral-200 dark:bg-neutral-800 rounded">
-                ⌘K
-              </kbd>
+              <Search className="w-3.5 h-3.5" />
+              <span className="flex-1 text-left truncate">Search…</span>
+              <kbd className="font-mono text-[10px] px-1.5 py-0.5 rounded border border-line text-ink-3">⌘K</kbd>
             </button>
-          </div>
-
-          {/* Right Action Controls: Search Icon (on < lg), Theme, Bell, User Profile & Hamburger */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            
-            {/* Quick Search Button (Visible on screens < lg) */}
             <button
               id="navbar-mobile-search-btn"
               onClick={() => setSearchModalOpen(true)}
-              className="lg:hidden p-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-colors"
+              className={`md:hidden ${iconBtn}`}
               aria-label="Search roadmaps, projects, and resources"
             >
               <Search className="w-4 h-4" />
             </button>
 
-            {/* Theme Toggle Button - clean icon on tablet/mobile, segmented on xl+ */}
-            <div className="hidden xl:inline-flex">
-              <ThemeToggle variant="segmented" size="sm" />
-            </div>
-            <div className="hidden sm:inline-flex xl:hidden">
+            <div className="hidden sm:inline-flex">
               <ThemeToggle variant="icon" size="sm" />
             </div>
 
-            {/* Notifications Bell with Dropdown */}
+            {/* Notifications */}
             <div className="relative">
               <button
                 id="navbar-notifications-btn"
-                onClick={() => setNotifDropdownOpen(!notifDropdownOpen)}
-                className="p-2 rounded-xl text-neutral-600 dark:text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-colors relative"
+                onClick={() => { setNotifDropdownOpen(!notifDropdownOpen); setUserMenuOpen(false); }}
+                className={iconBtn}
                 aria-label="Notifications"
+                aria-expanded={notifDropdownOpen}
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-neutral-950" />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-brand ring-2 ring-paper" />
                 )}
               </button>
 
-              {/* Notification Dropdown Panel */}
               {notifDropdownOpen && (
-                <div 
-                  className="absolute right-0 mt-2 w-72 sm:w-80 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                <div
+                  className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-xl bg-surface border border-line shadow-xl shadow-neutral-950/10 p-4 z-50 animate-in fade-in slide-in-from-top-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
+                  <div className="flex items-center justify-between pb-3 border-b border-line">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-neutral-900 dark:text-white">Notifications</span>
+                      <span className="text-sm font-semibold text-ink">Notifications</span>
                       {unreadCount > 0 && (
-                        <span className="text-[10px] font-bold bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 px-1.5 py-0.2 rounded-full">
+                        <span className="text-[10px] font-semibold bg-brand text-on-brand px-1.5 py-0.5 rounded-full">
                           {unreadCount} new
                         </span>
                       )}
@@ -338,195 +285,102 @@ export const Navbar: React.FC = () => {
                     {unreadCount > 0 && (
                       <button
                         onClick={markAllNotificationsRead}
-                        className="text-[11px] text-neutral-500 hover:text-neutral-900 dark:hover:text-white font-medium"
+                        className="text-xs text-ink-3 hover:text-ink font-medium"
                       >
-                        Mark all as read
+                        Mark all read
                       </button>
                     )}
                   </div>
 
-                  <div className="divide-y divide-neutral-100 dark:divide-neutral-850 max-h-72 overflow-y-auto my-1">
+                  <div className="divide-y divide-line max-h-72 overflow-y-auto my-1">
+                    {notifications.length === 0 && (
+                      <p className="py-6 text-center text-xs text-ink-3">You're all caught up.</p>
+                    )}
                     {notifications.map((notif) => (
-                      <div 
-                        key={notif.id} 
-                        className={`py-2.5 px-1 transition-colors ${notif.read ? 'opacity-70' : 'opacity-100'}`}
-                      >
+                      <div key={notif.id} className={`py-3 ${notif.read ? 'opacity-60' : ''}`}>
                         <div className="flex items-start justify-between gap-2">
-                          <h5 className="text-xs font-semibold text-neutral-900 dark:text-white">
-                            {notif.title}
-                          </h5>
-                          <span className="text-[10px] text-neutral-400 shrink-0 font-mono">
-                            {notif.timeAgo}
-                          </span>
+                          <h5 className="text-xs font-semibold text-ink">{notif.title}</h5>
+                          <span className="text-[10px] text-ink-3 shrink-0 font-mono">{notif.timeAgo}</span>
                         </div>
-                        <p className="text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">
-                          {notif.message}
-                        </p>
+                        <p className="text-xs text-ink-2 mt-1 leading-relaxed">{notif.message}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="pt-3 border-t border-neutral-100 dark:border-neutral-800 space-y-3">
+                  <div className="pt-3 border-t border-line space-y-3">
                     <PushSubscribeButton />
-                    <div className="text-center">
-                      <button
-                        onClick={() => {
-                          setNotifDropdownOpen(false);
-                          setCurrentView('student-dashboard');
-                        }}
-                        className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white"
-                      >
-                        View All in Dashboard
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => {
+                        setNotifDropdownOpen(false);
+                        setCurrentView('student-dashboard');
+                      }}
+                      className="w-full text-center text-xs font-semibold text-ink-2 hover:text-accent"
+                    >
+                      View all in dashboard
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* User Profile / Auth Action */}
+            {/* Account */}
             {!isUserLoggedIn ? (
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                {/* Wrapper owns the responsive display: Button's own inline-flex would override `hidden` */}
+              <div className="flex items-center gap-1 ml-1">
                 <div className="hidden md:block">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs px-2.5 py-1.5"
-                    onClick={() => openAuthModal('login')}
-                  >
-                    Log In
+                  <Button variant="ghost" size="sm" icon={null} onClick={() => openAuthModal('login')}>
+                    Log in
                   </Button>
                 </div>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="text-xs px-2.5 sm:px-3 py-1.5 font-bold"
-                  onClick={() => openAuthModal('signup')}
-                >
-                  <span className="hidden sm:inline">Sign Up</span>
+                <Button variant="primary" size="sm" icon={null} onClick={() => openAuthModal('signup')}>
+                  <span className="hidden sm:inline">Sign up free</span>
                   <span className="sm:hidden">Join</span>
                 </Button>
               </div>
             ) : (
-              <div className="relative">
+              <div className="relative ml-1">
                 <button
                   id="navbar-user-menu-btn"
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="flex items-center gap-1.5 p-1 sm:px-2 sm:py-1 rounded-xl bg-neutral-100/70 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all cursor-pointer"
-                  aria-label="User profile menu"
+                  onClick={() => { setUserMenuOpen(!userMenuOpen); setNotifDropdownOpen(false); }}
+                  className="flex items-center gap-1.5 h-9 pl-1 pr-1.5 rounded-lg hover:bg-surface-2 transition-colors"
+                  aria-label="Account menu"
+                  aria-expanded={userMenuOpen}
                 >
-                  <div className="text-right hidden md:block max-w-[100px] truncate">
-                    <div className="text-xs font-bold text-neutral-900 dark:text-white leading-none truncate">
-                      {activeRole === 'admin' ? (storedUser?.name || 'Platform Admin') : (storedUser?.name || 'Student')}
-                    </div>
-                    <div className="text-[10px] text-neutral-500 capitalize leading-none mt-1">
-                      {activeRole}
-                    </div>
-                  </div>
-                  
-                  {/* User Avatar Circle */}
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-[#FD1843] text-[#FFF9FA] font-bold text-xs flex items-center justify-center shrink-0 ring-1 ring-[#FD1843]/30 shadow-xs">
+                  <span className="w-7 h-7 rounded-md bg-brand text-on-brand font-semibold text-xs flex items-center justify-center">
                     {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
-                  </div>
-
-                  <ChevronDown className="w-3 h-3 text-neutral-400 hidden sm:block" />
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 text-ink-3 hidden sm:block" />
                 </button>
 
-                {/* User Dropdown Menu */}
                 {userMenuOpen && (
                   <div
-                    className="absolute right-0 mt-2 w-56 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-2xl p-2 z-50 animate-in fade-in duration-150"
+                    className="absolute right-0 mt-2 w-60 rounded-xl bg-surface border border-line shadow-xl shadow-neutral-950/10 p-1.5 z-50 animate-in fade-in slide-in-from-top-2 text-sm"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <div className="px-3 py-2 border-b border-neutral-100 dark:border-neutral-800 mb-1">
-                      <div className="text-xs font-bold text-neutral-900 dark:text-white truncate">
-                        {activeRole === 'admin' ? (storedUser?.name || 'Admin Controller') : (storedUser?.name || 'Student')}
+                    <div className="px-3 py-2.5 border-b border-line mb-1">
+                      <div className="text-sm font-semibold text-ink truncate">
+                        {storedUser?.name || (activeRole === 'admin' ? 'Admin' : 'Student')}
                       </div>
-                      <div className="text-[11px] text-neutral-400 truncate">
-                        {storedUser?.email || ''}
-                      </div>
+                      <div className="text-xs text-ink-3 truncate">{storedUser?.email || activeRole}</div>
                     </div>
 
-                    <div className="space-y-0.5 text-xs">
-                      {activeRole === 'admin' ? (
-                        <button
-                          onClick={() => {
-                            setUserMenuOpen(false);
-                            window.location.hash = '#admin';
-                            setCurrentView('admin-dashboard');
-                          }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 flex items-center gap-2 font-semibold"
-                        >
-                          <ShieldCheck className="w-3.5 h-3.5" /> Open Admin Portal
-                        </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => {
-                              setUserMenuOpen(false);
-                              setCurrentView('student-dashboard');
-                            }}
-                            className="w-full text-left px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2"
-                          >
-                            <GraduationCap className="w-3.5 h-3.5" /> Student Dashboard
-                          </button>
-
-                          <button
-                            onClick={() => {
-                              setUserMenuOpen(false);
-                              setCurrentView('student-profile');
-                            }}
-                            className="w-full text-left px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2"
-                          >
-                            <User className="w-3.5 h-3.5" /> Public Profile
-                          </button>
-                        </>
-                      )}
-
-                      <button
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setCurrentView('notes');
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2"
-                      >
-                        <FileText className="w-3.5 h-3.5" /> Study Notes
+                    {activeRole === 'admin' && (
+                      <button onClick={openAdmin} className={`${menuItem} text-accent font-semibold`}>
+                        <ShieldCheck className="w-4 h-4" /> Admin portal
                       </button>
+                    )}
+                    <button onClick={() => { setUserMenuOpen(false); setCurrentView('student-dashboard'); }} className={menuItem}>
+                      <GraduationCap className="w-4 h-4" /> Dashboard
+                    </button>
+                    <button onClick={() => { setUserMenuOpen(false); setCurrentView('student-profile'); }} className={menuItem}>
+                      <User className="w-4 h-4" /> Profile
+                    </button>
+                    <button onClick={() => { setUserMenuOpen(false); setCurrentView('settings'); }} className={menuItem}>
+                      <Settings className="w-4 h-4" /> Settings
+                    </button>
 
-                      <button
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setCurrentView('tools');
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2"
-                      >
-                        <Wrench className="w-3.5 h-3.5" /> Developer Tools
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          setUserMenuOpen(false);
-                          setCurrentView('settings');
-                        }}
-                        className="w-full text-left px-3 py-2 rounded-xl text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 flex items-center gap-2"
-                      >
-                        <Settings className="w-3.5 h-3.5" /> Settings
-                      </button>
-                    </div>
-
-                    <div className="pt-1 mt-1 border-t border-neutral-100 dark:border-neutral-800">
-                      <button
-                        onClick={async () => {
-                          setUserMenuOpen(false);
-                          const { signOutUser } = await import('../../services/firebaseAuth');
-                          await signOutUser();
-                          setRole('student');
-                          setCurrentView('landing');
-                        }}
-                        className="w-full text-left px-3 py-1.5 rounded-xl text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 flex items-center gap-2"
-                      >
-                        <LogOut className="w-3.5 h-3.5" /> Sign Out
+                    <div className="pt-1 mt-1 border-t border-line">
+                      <button onClick={signOut} className={`${menuItem} text-rose-600 dark:text-rose-400 hover:text-rose-600`}>
+                        <LogOut className="w-4 h-4" /> Sign out
                       </button>
                     </div>
                   </div>
@@ -534,233 +388,125 @@ export const Navbar: React.FC = () => {
               </div>
             )}
 
-            {/* Mobile & Tablet Hamburger Button - Visible on all screens < xl */}
+            {/* Drawer toggle — below 2xl not every link fits inline */}
             <button
               id="mobile-main-menu-toggle-btn"
               type="button"
               onClick={() => setMobileMenuOpen(prev => !prev)}
-              className={`xl:hidden flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl transition-all cursor-pointer ${
-                mobileMenuOpen 
-                  ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 shadow-md ring-2 ring-neutral-400/40' 
-                  : 'text-neutral-700 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-850 active:scale-95 bg-neutral-100/80 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800'
-              }`}
-              aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              className={`2xl:hidden ml-1 ${iconBtn} border border-line`}
+              aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-4 h-4 sm:w-5 sm:h-5" /> : <Menu className="w-4 h-4 sm:w-5 sm:h-5" />}
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
       </header>
 
-      {/* ── Mobile & Tablet Full-Screen Slide-over Drawer via Portal ── */}
+      {/* ── Slide-over drawer ── */}
       {mobileMenuOpen && typeof document !== 'undefined' && createPortal(
-        <div 
+        <div
           id="mobile-tablet-nav-drawer"
-          className="fixed inset-0 z-50 flex justify-end bg-neutral-950/70 backdrop-blur-xs xl:hidden animate-in fade-in duration-200"
+          className="fixed inset-0 z-50 flex justify-end bg-neutral-950/50 backdrop-blur-[2px] 2xl:hidden animate-in fade-in"
           onClick={() => setMobileMenuOpen(false)}
         >
-          {/* Drawer Panel Container */}
-          <div 
-            className="w-full max-w-lg h-full bg-white dark:bg-neutral-950 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl flex flex-col z-10 animate-in slide-in-from-right duration-200"
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation"
+            className="w-full max-w-sm h-full bg-paper border-l border-line shadow-2xl flex flex-col animate-in slide-in-from-right"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Drawer Top Header Bar */}
-            <div className="p-4 sm:p-5 border-b border-neutral-100 dark:border-neutral-850 flex items-center justify-between shrink-0">
+            <div className="h-16 px-5 border-b border-line flex items-center justify-between shrink-0">
               <BrandLogo size="sm" brandName={brandName} onClick={() => { setCurrentView('landing'); setMobileMenuOpen(false); }} />
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2 rounded-xl text-neutral-400 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-850 transition-colors"
-                aria-label="Close menu"
-              >
+              <button onClick={() => setMobileMenuOpen(false)} className={iconBtn} aria-label="Close menu">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Scrollable Drawer Content */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 pb-32">
-              
-              {/* Quick Search Action */}
+            <div className="flex-1 overflow-y-auto px-5 py-6 space-y-8 pb-32">
               <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  setSearchModalOpen(true);
-                }}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-neutral-100/90 dark:bg-neutral-900 border border-neutral-200/80 dark:border-neutral-800 text-xs sm:text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+                onClick={() => { setMobileMenuOpen(false); setSearchModalOpen(true); }}
+                className="w-full flex items-center gap-2.5 h-11 px-3.5 rounded-lg border border-line bg-surface text-sm text-ink-3 hover:text-ink-2 transition-colors"
               >
-                <div className="flex items-center gap-2.5">
-                  <Search className="w-4 h-4 text-neutral-400" />
-                  <span>Search tools, roadmaps, notes...</span>
-                </div>
-                <span className="font-mono text-[10px] bg-neutral-200 dark:bg-neutral-800 px-2 py-0.5 rounded text-neutral-500">⌘K</span>
+                <Search className="w-4 h-4" />
+                <span>Search roadmaps, notes, tools…</span>
               </button>
 
-              {/* User Profile Card / Auth CTA */}
+              <nav aria-label="All sections">
+                <p className="eyebrow mb-3">Explore</p>
+                <ul className="divide-y divide-line border-y border-line">
+                  {navLinks.map((link) => {
+                    const Icon = link.icon;
+                    const isActive = currentView === link.id;
+                    return (
+                      <li key={link.id}>
+                        <button
+                          onClick={() => { setCurrentView(link.id as any); setMobileMenuOpen(false); }}
+                          aria-current={isActive ? 'page' : undefined}
+                          className="w-full flex items-center gap-3.5 py-3.5 text-left group"
+                        >
+                          <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-accent' : 'text-ink-3 group-hover:text-ink-2'}`} />
+                          <span className="flex-1 min-w-0">
+                            <span className={`block text-sm font-semibold ${isActive ? 'text-accent' : 'text-ink'}`}>{link.label}</span>
+                            <span className="block text-xs text-ink-3 truncate">{link.desc}</span>
+                          </span>
+                          <ChevronRight className="w-4 h-4 text-ink-3 shrink-0" />
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+
               {isUserLoggedIn ? (
-                <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 rounded-xl bg-[#FD1843] text-[#FFF9FA] font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                <div>
+                  <p className="eyebrow mb-3">Your account</p>
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="w-10 h-10 rounded-lg bg-brand text-on-brand font-semibold flex items-center justify-center shrink-0">
                       {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
+                    </span>
                     <div className="min-w-0">
-                      <p className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white truncate">
-                        {storedUser?.name || 'Engineer'}
-                      </p>
-                      <p className="text-[11px] text-neutral-400 truncate">
-                        {storedUser?.email || ''}
-                      </p>
+                      <p className="text-sm font-semibold text-ink truncate">{storedUser?.name || 'Engineer'}</p>
+                      <p className="text-xs text-ink-3 truncate">{storedUser?.email || ''}</p>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 shrink-0"
-                    icon={<LogOut className="w-3.5 h-3.5" />}
-                    onClick={async () => {
-                      setMobileMenuOpen(false);
-                      const { signOutUser } = await import('../../services/firebaseAuth');
-                      await signOutUser();
-                      setRole('student');
-                      setCurrentView('landing');
-                    }}
-                  >
-                    Sign Out
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button variant="outline" size="sm" icon={<GraduationCap className="w-4 h-4" />} className="justify-start" onClick={() => { setCurrentView('student-dashboard'); setMobileMenuOpen(false); }}>
+                      Dashboard
+                    </Button>
+                    <Button variant="outline" size="sm" icon={<User className="w-4 h-4" />} className="justify-start" onClick={() => { setCurrentView('student-profile'); setMobileMenuOpen(false); }}>
+                      Profile
+                    </Button>
+                    {activeRole === 'admin' && (
+                      <Button variant="outline" size="sm" icon={<ShieldCheck className="w-4 h-4" />} className="justify-start" onClick={openAdmin}>
+                        Admin
+                      </Button>
+                    )}
+                    <Button variant="danger" size="sm" icon={<LogOut className="w-4 h-4" />} className="justify-start" onClick={signOut}>
+                      Sign out
+                    </Button>
+                  </div>
                 </div>
               ) : (
-                <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/80 border border-neutral-200/80 dark:border-neutral-800 space-y-2">
-                  <p className="text-xs font-semibold text-neutral-900 dark:text-white">
-                    Master Production Software Architecture
-                  </p>
-                  <p className="text-[11px] text-neutral-500">
-                    Join 140,000+ engineers building next-gen systems.
-                  </p>
-                  <div className="flex gap-2 pt-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 text-xs justify-center"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        openAuthModal('login');
-                      }}
-                    >
-                      Log In
+                <div className="rounded-xl border border-line bg-surface p-4">
+                  <p className="text-sm font-semibold text-ink">Learn production engineering</p>
+                  <p className="text-xs text-ink-2 mt-1">Free roadmaps, notes and developer tools.</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button variant="outline" size="sm" icon={null} className="flex-1" onClick={() => { setMobileMenuOpen(false); openAuthModal('login'); }}>
+                      Log in
                     </Button>
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      className="flex-1 text-xs justify-center font-bold"
-                      onClick={() => {
-                        setMobileMenuOpen(false);
-                        openAuthModal('signup');
-                      }}
-                    >
-                      Create Account
+                    <Button variant="primary" size="sm" icon={null} className="flex-1" onClick={() => { setMobileMenuOpen(false); openAuthModal('signup'); }}>
+                      Sign up free
                     </Button>
                   </div>
                 </div>
               )}
 
-              {/* Navigation Links Grid (1 col on small phones, 2 cols on tablet) */}
-              <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2 px-1 flex items-center justify-between">
-                  <span>Curriculum & Utilities</span>
-                  <span className="text-[10px] font-normal text-neutral-500">9 Modules</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {navLinks.map((link) => {
-                    const Icon = link.icon;
-                    const isActive = currentView === link.id;
-                    return (
-                      <button
-                        key={link.id}
-                        onClick={() => {
-                          setCurrentView(link.id as any);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`w-full flex items-start gap-3 p-2.5 sm:p-3 rounded-xl text-left text-xs transition-all ${
-                          isActive
-                            ? 'bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-bold shadow-xs ring-1 ring-neutral-900 dark:ring-white'
-                            : 'bg-neutral-50 dark:bg-neutral-900/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-800'
-                        }`}
-                      >
-                        <div className={`p-2 rounded-lg shrink-0 ${
-                          isActive
-                            ? 'bg-white/20 dark:bg-neutral-950/20 text-white dark:text-neutral-950'
-                            : 'bg-white dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 shadow-2xs'
-                        }`}>
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="font-semibold truncate">{link.label}</span>
-                            {isActive && (
-                              <span className="text-[9px] uppercase tracking-wider font-bold bg-white/20 dark:bg-black/20 px-1.5 py-0.5 rounded">Active</span>
-                            )}
-                          </div>
-                          <p className={`text-[11px] line-clamp-1 mt-0.5 ${isActive ? 'text-neutral-300 dark:text-neutral-600' : 'text-neutral-400'}`}>
-                            {link.desc}
-                          </p>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Portals & Dashboards (2 cols on mobile/tablet) */}
-              <div className="pt-2 border-t border-neutral-100 dark:border-neutral-850">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2 px-1">
-                  Portals & Workspaces
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start text-xs h-10 px-3"
-                    icon={<GraduationCap className="w-4 h-4 text-emerald-500" />}
-                    onClick={() => {
-                      setCurrentView('student-dashboard');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <span className="truncate">Student Dashboard</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start text-xs h-10 px-3"
-                    icon={<User className="w-4 h-4 text-cyan-500" />}
-                    onClick={() => {
-                      setCurrentView('student-profile');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <span className="truncate">Public Profile</span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="justify-start text-xs h-10 px-3 text-amber-600 dark:text-amber-400"
-                    icon={<ShieldCheck className="w-4 h-4 text-amber-500" />}
-                    onClick={() => {
-                      window.location.hash = '#admin';
-                      setCurrentView('admin-dashboard');
-                      setMobileMenuOpen(false);
-                    }}
-                  >
-                    <span className="truncate">Admin Portal</span>
-                  </Button>
-                </div>
-              </div>
-
-              {/* Appearance Theme Selector */}
-              <div className="pt-2 pb-1 border-t border-neutral-100 dark:border-neutral-850 flex items-center justify-between">
-                <span className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">Appearance Theme</span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-ink-2">Theme</span>
                 <ThemeToggle variant="segmented" size="sm" showLabels />
               </div>
-
             </div>
           </div>
         </div>,

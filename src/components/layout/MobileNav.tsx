@@ -87,7 +87,7 @@ export const MobileNav: React.FC = () => {
       label: 'Projects & Capstones',
       desc: 'Hands-on repositories & reviews',
       icon: FolderGit2,
-      color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400',
+      color: 'bg-surface-2 text-ink-2',
       tag: 'Portfolio'
     },
     {
@@ -95,7 +95,7 @@ export const MobileNav: React.FC = () => {
       label: 'Developer Tools',
       desc: 'JSON, Regex, JWT, Cron, UUID',
       icon: Wrench,
-      color: 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400',
+      color: 'bg-surface-2 text-ink-2',
       tag: 'Utilities'
     },
     {
@@ -103,7 +103,7 @@ export const MobileNav: React.FC = () => {
       label: 'Engineering Blog',
       desc: 'Architecture & deep dives',
       icon: FileText,
-      color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400',
+      color: 'bg-surface-2 text-ink-2',
       tag: 'Read'
     },
     {
@@ -111,7 +111,7 @@ export const MobileNav: React.FC = () => {
       label: 'Free Resources',
       desc: 'Blueprints, roadmaps, cheat sheets',
       icon: DownloadCloud,
-      color: 'bg-teal-500/15 text-teal-600 dark:text-teal-400',
+      color: 'bg-surface-2 text-ink-2',
       tag: 'Free'
     },
     {
@@ -119,35 +119,35 @@ export const MobileNav: React.FC = () => {
       label: 'Learning Paths',
       desc: 'Step-by-step career tracks',
       icon: Sparkles,
-      color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400',
+      color: 'bg-surface-2 text-ink-2',
     },
     {
       id: 'student-dashboard',
       label: 'Learning Dashboard',
       desc: 'Your learning hub',
       icon: GraduationCap,
-      color: 'bg-purple-500/15 text-purple-600 dark:text-purple-400',
+      color: 'bg-surface-2 text-ink-2',
     },
     {
       id: 'community',
       label: 'Community Q&A',
       desc: 'Discussions & peer review',
       icon: User,
-      color: 'bg-rose-500/15 text-rose-600 dark:text-rose-400',
+      color: 'bg-surface-2 text-ink-2',
     },
     {
       id: 'student-profile',
       label: 'My Profile',
       desc: 'Badges, stats & activity',
       icon: ShieldCheck,
-      color: 'bg-sky-500/15 text-sky-600 dark:text-sky-400',
+      color: 'bg-surface-2 text-ink-2',
     },
     {
       id: 'settings',
       label: 'Preferences',
       desc: 'Account & notification settings',
       icon: Settings,
-      color: 'bg-neutral-500/15 text-neutral-600 dark:text-neutral-400',
+      color: 'bg-surface-2 text-ink-2',
     },
   ];
 
@@ -170,11 +170,11 @@ export const MobileNav: React.FC = () => {
       {/* Material UI Style Bottom Sheet Drawer for Mobile */}
       {bottomSheetOpen && (
         <div 
-          className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-black/60 backdrop-blur-xs animate-fadeIn"
+          className="fixed inset-0 z-50 md:hidden flex flex-col justify-end bg-neutral-950/50 backdrop-blur-[2px] animate-in fade-in"
           onClick={() => setBottomSheetOpen(false)}
         >
           <div 
-            className="w-full max-h-[85vh] overflow-y-auto bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 rounded-t-[28px] shadow-2xl p-5 space-y-5 animate-slideUp pb-24"
+            className="w-full max-h-[85vh] overflow-y-auto bg-paper border-t border-line rounded-t-2xl shadow-2xl p-5 space-y-5 animate-in slide-in-from-bottom duration-300 pb-24"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Material Drag Handle */}
@@ -196,7 +196,7 @@ export const MobileNav: React.FC = () => {
                       className="w-10 h-10 rounded-xl object-cover border border-neutral-200 dark:border-neutral-800 shadow-xs shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-brand-600 text-on-brand font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
                       {storedUser?.name ? storedUser.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   )}
@@ -215,7 +215,7 @@ export const MobileNav: React.FC = () => {
               ) : (
                 <div className="flex items-center justify-between w-full">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-500 to-brand-600 text-on-brand flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
                       YC
                     </div>
                     <div>
@@ -291,13 +291,13 @@ export const MobileNav: React.FC = () => {
                     <button
                       key={app.id}
                       onClick={() => navigateFromSheet(app.id)}
-                      className={`flex items-start gap-3 p-3 rounded-2xl text-left border transition-all ${
+                      className={`flex items-start gap-3 p-3 rounded-xl text-left border transition-colors ${
                         isCurrent
-                          ? 'bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 border-neutral-900 dark:border-white shadow-xs'
-                          : 'bg-neutral-50 dark:bg-neutral-800/60 border-neutral-200/80 dark:border-neutral-750/70 hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-900 dark:text-white'
+                          ? 'bg-brand/10 text-accent border-brand/30'
+                          : 'bg-surface border-line hover:border-neutral-300 dark:hover:border-neutral-700 text-ink'
                       }`}
                     >
-                      <div className={`p-2 rounded-xl shrink-0 ${isCurrent ? 'bg-white/20 text-white dark:bg-black/20 dark:text-neutral-950' : app.color}`}>
+                      <div className={`p-2 rounded-xl shrink-0 ${isCurrent ? 'bg-brand/15 text-accent' : app.color}`}>
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -336,7 +336,7 @@ export const MobileNav: React.FC = () => {
                       window.location.hash = '#admin';
                       setCurrentView('admin-dashboard');
                     }}
-                    className="flex items-center gap-1.5 text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline py-1"
+                    className="flex items-center gap-1.5 text-xs font-bold text-accent hover:underline py-1"
                   >
                     <ShieldCheck className="w-3.5 h-3.5" /> Admin Portal
                   </button>
@@ -351,7 +351,7 @@ export const MobileNav: React.FC = () => {
       {/* Fixed Material Design 3 Bottom Navigation Bar */}
       <nav
         aria-label="Mobile Bottom Navigation"
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FFF9FA]/95 backdrop-blur-2xl border-t border-[#FD1843]/12 px-3 pt-1.5 pb-2 flex items-center justify-around shadow-[0_-4px_24px_rgba(253,24,67,0.10)] text-[#110508]"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-paper/90 backdrop-blur-md border-t border-line px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around text-ink"
       >
         {mainNavItems.map((item) => {
           const Icon = item.icon;
@@ -367,23 +367,23 @@ export const MobileNav: React.FC = () => {
               <div
                 className={`relative w-14 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
                   isActive
-                    ? 'bg-[#FD1843] text-[#FFF9FA] shadow-xs'
-                    : 'text-[#110508]/55 hover:text-[#FD1843] hover:bg-[#FD1843]/10'
+                    ? 'bg-brand/12 text-accent'
+                    : 'text-ink-3 hover:text-ink'
                 }`}
               >
                 <Icon className={`w-5 h-5 transition-transform ${isActive ? 'scale-105' : ''}`} />
 
                 {/* Optional Badge on icon pill */}
                 {item.badge && !isActive && (
-                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-[#FD1843] ring-2 ring-[#FFF9FA]" />
+                  <span className="absolute top-0.5 right-2 w-2 h-2 rounded-full bg-brand ring-2 ring-paper" />
                 )}
               </div>
 
               {/* Material Bottom Tab Label */}
               <span className={`text-[10px] tracking-tight transition-colors leading-none ${
                 isActive
-                  ? 'text-[#FD1843] font-bold'
-                  : 'text-[#110508]/50 font-medium'
+                  ? 'text-accent font-semibold'
+                  : 'text-ink-3 font-medium'
               }`}>
                 {item.label}
               </span>

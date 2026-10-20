@@ -94,15 +94,15 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       {/* Typography Label */}
       {showText && (
         <div className="flex flex-col">
-          <span className={`${currentSize.text} font-extrabold tracking-tight text-[#110508] group-hover:text-[#FD1843] transition-colors flex items-center gap-1.5`}>
+          <span className={`${currentSize.text} font-extrabold tracking-tight text-ink group-hover:text-accent transition-colors flex items-center gap-1.5`}>
             <span>{brandName.split(' ')[0]}</span>
             {brandName.split(' ').slice(1).length > 0 && (
-              <span className="text-[#FD1843]">
+              <span className="text-accent">
                 {brandName.split(' ').slice(1).join(' ')}
               </span>
             )}
           </span>
-          <span className={`${currentSize.sub} text-[#110508]/50 font-mono tracking-wider uppercase -mt-0.5 font-semibold hidden sm:inline-block`}>
+          <span className={`${currentSize.sub} text-ink/50 font-mono tracking-wider uppercase -mt-0.5 font-semibold hidden sm:inline-block`}>
             ENGINEERING LMS
           </span>
         </div>

@@ -34,7 +34,7 @@ const ViewLoadingFallback: React.FC = () => (
   <div className="flex-1 min-h-[50vh] flex flex-col items-center justify-center p-8 animate-in fade-in duration-300">
     <div className="relative w-10 h-10">
       <div className="absolute inset-0 rounded-full border-2 border-neutral-200 dark:border-neutral-800" />
-      <div className="absolute inset-0 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+      <div className="absolute inset-0 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
     </div>
     <p className="mt-3 text-xs font-mono text-neutral-400 dark:text-neutral-500 tracking-wider uppercase">Loading experience...</p>
   </div>
@@ -89,7 +89,7 @@ const AppShell: React.FC = () => {
     }
 
     return (
-      <div className="min-h-screen bg-[#FFF9FA] text-[#110508] transition-colors duration-200">
+      <div className="min-h-screen bg-paper text-ink transition-colors duration-200">
         <React.Suspense fallback={<ViewLoadingFallback />}>
           <AdminDashboardPage />
         </React.Suspense>
@@ -129,7 +129,7 @@ const AppShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FFF9FA] text-[#110508] transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-paper text-ink transition-colors duration-200">
       {/* Sticky Global Student Navigation */}
       <Navbar />
 

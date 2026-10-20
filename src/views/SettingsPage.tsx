@@ -556,7 +556,7 @@ export const SettingsPage: React.FC = () => {
               {/* PHP Endpoints Card */}
               <GlassCard className="p-6 space-y-3">
                 <div className="flex items-center gap-2 text-neutral-900 dark:text-white font-bold text-sm">
-                  <FileCode className="w-4 h-4 text-sky-500" />
+                  <FileCode className="w-4 h-4 text-brand-500" />
                   <span>Configured PHP Endpoints</span>
                 </div>
                 <p className="text-xs text-neutral-500">
@@ -572,14 +572,14 @@ export const SettingsPage: React.FC = () => {
                   </div>
                   <div className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 flex items-center justify-between">
                     <div>
-                      <span className="text-blue-500 font-bold">POST</span>{' '}
+                      <span className="text-brand-500 font-bold">POST</span>{' '}
                       <span className="text-neutral-800 dark:text-neutral-200">/api/contact.php</span>
                     </div>
                     <span className="text-[10px] text-neutral-400">PHP mail() & MySQL</span>
                   </div>
                   <div className="p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-850 border border-neutral-200/60 dark:border-neutral-750 flex items-center justify-between">
                     <div>
-                      <span className="text-blue-500 font-bold">POST</span>{' '}
+                      <span className="text-brand-500 font-bold">POST</span>{' '}
                       <span className="text-neutral-800 dark:text-neutral-200">/api/newsletter.php</span>
                     </div>
                     <span className="text-[10px] text-neutral-400">Subscription Handler</span>
@@ -636,7 +636,7 @@ export const SettingsPage: React.FC = () => {
             <GlassCard className="p-6 sm:p-8 space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-neutral-800">
                 <div className="flex items-center gap-2">
-                  <Terminal className="w-4 h-4 text-purple-500" />
+                  <Terminal className="w-4 h-4 text-brand-500" />
                   <h4 className="text-sm font-bold text-neutral-900 dark:text-white">
                     Step-by-Step Deployment Quickstart
                   </h4>

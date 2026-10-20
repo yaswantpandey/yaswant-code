@@ -81,7 +81,7 @@ export const TiltCard: React.FC<{
       onClick={onClick}
       style={{ rotateX: rx, rotateY: ry, transformPerspective: 900 }}
       whileTap={onClick ? { scale: 0.98 } : undefined}
-      className={`group relative rounded-2xl border border-[#FD1843]/12 bg-white/70 backdrop-blur-xl transition-colors duration-300 hover:border-[#FD1843]/30 ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`group relative rounded-2xl border border-brand/12 bg-white/70 backdrop-blur-xl transition-colors duration-300 hover:border-brand/30 ${onClick ? 'cursor-pointer' : ''} ${className}`}
     >
       <motion.div
         aria-hidden
@@ -138,10 +138,10 @@ const trailingMotion: Variants = {
 
 const ctaStyles = {
   primary:
-    'bg-[#FD1843] text-[#FFF9FA] font-bold shadow-[0_0_0_1px_rgba(253,24,67,0.4),0_12px_40px_-8px_rgba(253,24,67,0.45)] hover:shadow-[0_0_0_1px_rgba(253,24,67,0.6),0_16px_50px_-6px_rgba(253,24,67,0.65)] hover:bg-[#E5102F]',
+    'bg-brand text-on-brand font-bold shadow-[0_0_0_1px_rgba(253,24,67,0.4),0_12px_40px_-8px_rgba(253,24,67,0.45)] hover:shadow-[0_0_0_1px_rgba(253,24,67,0.6),0_16px_50px_-6px_rgba(253,24,67,0.65)] hover:bg-brand-hover',
   ghost:
-    'border border-[#FD1843]/25 bg-[#FD1843]/5 backdrop-blur-md font-semibold text-[#110508] hover:bg-[#FD1843]/10 hover:border-[#FD1843]/45',
-  link: 'font-semibold text-[#110508]/85 hover:text-[#FD1843]',
+    'border border-brand/25 bg-brand/5 backdrop-blur-md font-semibold text-ink hover:bg-brand/10 hover:border-brand/45',
+  link: 'font-semibold text-ink/85 hover:text-accent',
 };
 
 const ctaSizes = { md: 'h-12 px-7 text-sm', sm: 'h-10 px-5 text-sm', link: 'h-auto px-0 text-sm' };
@@ -162,7 +162,7 @@ export const AnimatedCta: React.FC<{
 }> = ({ children, variant = 'primary', size = 'md', icon: Icon, iconMotion = 'pop', trailing: Trailing, className = '' }) => {
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
   const isPrimary = variant === 'primary';
-  const iconColor = isPrimary ? 'text-[#FFF9FA]' : variant === 'link' ? 'text-[#FD1843]' : 'text-[#110508]';
+  const iconColor = isPrimary ? 'text-on-brand' : variant === 'link' ? 'text-accent' : 'text-ink';
 
   const addRipple = (e: React.PointerEvent<HTMLSpanElement>) => {
     if (variant === 'link') return;
@@ -188,7 +188,7 @@ export const AnimatedCta: React.FC<{
         <motion.span
           key={rp.id}
           aria-hidden
-          className={`pointer-events-none absolute h-10 w-10 -ml-5 -mt-5 rounded-full ${isPrimary ? 'bg-white/30' : 'bg-[#FD1843]/20'}`}
+          className={`pointer-events-none absolute h-10 w-10 -ml-5 -mt-5 rounded-full ${isPrimary ? 'bg-white/30' : 'bg-brand/20'}`}
           style={{ left: rp.x, top: rp.y }}
           initial={{ scale: 0, opacity: 1 }}
           animate={{ scale: 8, opacity: 0 }}
@@ -201,7 +201,7 @@ export const AnimatedCta: React.FC<{
           <Icon className="w-4 h-4" />
         </motion.span>
       )}
-      <span className={`relative ${isPrimary ? 'text-[#FFF9FA]' : ''}`}>{children}</span>
+      <span className={`relative ${isPrimary ? 'text-on-brand' : ''}`}>{children}</span>
       {Trailing && (
         <motion.span aria-hidden variants={trailingMotion} className={`relative inline-flex shrink-0 ${iconColor}`}>
           <Trailing className="w-4 h-4" />

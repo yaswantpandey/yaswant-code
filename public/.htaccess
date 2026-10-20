@@ -135,10 +135,10 @@ DefaultLanguage en-US
   <FilesMatch "\.(html|htm)$">
     Header set Cache-Control "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
     # HTTP/2 Server Push: push critical assets along with the HTML document
-    Header add Link "</assets/style-DWFjfGXL.css>; rel=preload; as=style"
+    Header add Link "</assets/style-CMigGQ9i.css>; rel=preload; as=style"
     Header add Link "</assets/vendor-framework-CPQMGIC9.js>; rel=modulepreload; crossorigin"
     Header add Link "</assets/vendor-motion-CCOJPKxm.js>; rel=modulepreload; crossorigin"
-    Header add Link "</assets/index-DvnyRJWQ.js>; rel=modulepreload; crossorigin"
+    Header add Link "</assets/index-COKuGfz-.js>; rel=modulepreload; crossorigin"
   </FilesMatch>
 
   # Service Worker: must not be cached to enable updates

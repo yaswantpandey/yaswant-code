@@ -136,7 +136,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
                   <div className="rounded-lg bg-neutral-950 p-2.5 space-y-2 border border-neutral-800 shadow-xs">
                     <div className="flex items-center justify-between">
                       <div className="w-12 h-2 rounded bg-neutral-700" />
-                      <div className="w-3 h-3 rounded-full bg-indigo-400" />
+                      <div className="w-3 h-3 rounded-full bg-brand-400" />
                     </div>
                     <div className="p-2 rounded-md bg-neutral-900/90 backdrop-blur-sm border border-neutral-750 shadow-xs space-y-1">
                       <div className="w-16 h-1.5 rounded bg-neutral-200" />
@@ -151,7 +151,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
                       <div className="w-12 h-2 rounded bg-neutral-400 dark:bg-neutral-600" />
                       <div className="flex items-center gap-1">
                         <div className="w-2 h-2 rounded-full bg-amber-400" />
-                        <div className="w-2 h-2 rounded-full bg-indigo-400" />
+                        <div className="w-2 h-2 rounded-full bg-brand-400" />
                       </div>
                     </div>
                     <div className="p-2 rounded-md bg-white/80 dark:bg-neutral-900/80 backdrop-blur-sm border border-neutral-200/90 dark:border-neutral-750 shadow-xs space-y-1">

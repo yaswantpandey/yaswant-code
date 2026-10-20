@@ -72,73 +72,46 @@ export function Footer({
 	bottomContent,
 }: FooterProps = {}) {
 	return (
-		<footer className={`md:rounded-t-6xl relative w-full max-w-6xl mx-auto flex flex-col items-center justify-center rounded-t-4xl border-t border-[#FD1843]/14 bg-[#FFF0F3]/90 px-6 py-12 lg:py-16 text-[#110508] ${className}`}>
-			<div className="bg-[#FD1843]/20 absolute top-0 right-1/2 left-1/2 h-px w-1/3 -translate-x-1/2 -translate-y-1/2 rounded-full blur" />
+		<footer className={`w-full border-t border-line bg-surface-2/60 ${className}`}>
+			<div className="container-page py-14 lg:py-16">
+				<div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-16">
+					<div className="space-y-4 max-w-sm">
+						{brandLogo ? brandLogo : <FrameIcon className="size-8 text-accent" />}
+						{brandDescription && (
+							<p className="text-sm text-ink-2 leading-relaxed">{brandDescription}</p>
+						)}
+					</div>
 
-			<div className="grid w-full gap-8 xl:grid-cols-3 xl:gap-8">
-				<AnimatedContainer className="space-y-4">
-					{brandLogo ? (
-						brandLogo
-					) : (
-						<FrameIcon className="size-8 text-[#FD1843]" />
-					)}
-					{brandDescription && (
-						<p className="text-xs text-[#110508]/65 max-w-sm leading-relaxed">
-							{brandDescription}
-						</p>
-					)}
-					<p className="text-[#110508]/55 text-sm">
-						© {new Date().getFullYear()} {brandName}. All rights reserved.
-					</p>
-				</AnimatedContainer>
-
-				<div className="mt-10 grid grid-cols-2 gap-8 md:grid-cols-4 xl:col-span-2 xl:mt-0">
-					{sections.map((section, index) => (
-						<AnimatedContainer key={section.label} delay={0.1 + index * 0.1}>
-							<div className="mb-10 md:mb-0">
-								<h3 className="text-xs font-semibold uppercase tracking-wider text-[#110508]">
-									{section.label}
-								</h3>
-								<ul className="text-[#110508]/65 mt-4 space-y-2 text-sm">
+					<div className="grid grid-cols-2 gap-x-8 gap-y-10 md:grid-cols-4">
+						{sections.map((section) => (
+							<div key={section.label}>
+								<h3 className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-3">{section.label}</h3>
+								<ul className="mt-4 space-y-2.5 text-sm">
 									{section.links.map((link) => (
 										<li key={link.title}>
 											<a
 												href={link.href}
 												onClick={link.onClick}
-												className="hover:text-[#FD1843] inline-flex items-center transition-colors duration-200"
+												className="text-ink-2 hover:text-accent transition-colors"
 											>
-												{link.icon && <link.icon className="me-1 size-4" />}
 												{link.title}
 											</a>
 										</li>
 									))}
 								</ul>
 							</div>
-						</AnimatedContainer>
-					))}
+						))}
+					</div>
 				</div>
+
+				{bottomContent ? (
+					<div className="mt-12 pt-6 border-t border-line">{bottomContent}</div>
+				) : (
+					<p className="mt-12 pt-6 border-t border-line text-xs text-ink-3">
+						© {new Date().getFullYear()} {brandName}. All rights reserved.
+					</p>
+				)}
 			</div>
-
-			{bottomContent && (
-				<div className="w-full mt-10 pt-6 border-t border-[#FD1843]/14">
-					{bottomContent}
-				</div>
-			)}
 		</footer>
-	);
-}
-
-type ViewAnimationProps = {
-	delay?: number;
-	className?: string;
-	children: ReactNode;
-	key?: React.Key;
-};
-
-function AnimatedContainer({ className = '', children }: ViewAnimationProps) {
-	return (
-		<div className={`transition-all duration-300 ${className}`}>
-			{children}
-		</div>
 	);
 }

@@ -85,11 +85,11 @@ export const Button: React.FC<ButtonProps> = ({
   const [ripples, setRipples] = useState<{ id: number; x: number; y: number }[]>([]);
 
   const variantMap = {
-    primary: 'bg-[#FD1843] text-[#FFF9FA] hover:bg-[#E5102F] shadow-md hover:shadow-lg hover:shadow-[#FD1843]/25 font-semibold',
-    secondary: 'bg-[#FFF0F3] text-[#FD1843] hover:bg-[#FFE0E8] border border-[#FD1843]/20 hover:border-[#FD1843]/40',
-    outline: 'border border-[#FD1843]/30 text-[#FD1843] hover:bg-[#FD1843]/10 hover:border-[#FD1843]/50',
-    ghost: 'text-[#110508]/70 hover:bg-[#FD1843]/10 hover:text-[#FD1843]',
-    danger: 'bg-rose-500/15 border border-rose-500/25 text-rose-600 hover:bg-rose-500/25'
+    primary: 'bg-brand text-on-brand hover:bg-brand-hover font-semibold shadow-sm shadow-brand/20',
+    secondary: 'bg-surface-2 text-ink hover:bg-brand-100 dark:hover:bg-brand-950/60 border border-line',
+    outline: 'border border-line text-ink bg-surface hover:border-brand/50 hover:text-accent',
+    ghost: 'text-ink-2 hover:bg-surface-2 hover:text-ink',
+    danger: 'bg-rose-500/10 border border-rose-500/25 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20'
   };
 
   const sizeMap = {
@@ -123,8 +123,8 @@ export const Button: React.FC<ButtonProps> = ({
         ? 'group-enabled:group-hover:translate-x-1'
         : 'group-enabled:group-hover:scale-[1.18] group-enabled:group-hover:-rotate-[10deg]';
 
-  const iconWrap = `btn-icon inline-flex shrink-0 transition-transform duration-300 ease-out ${iconMotion} ${variant === 'primary' ? 'text-[#FFF9FA]' : ''}`;
-  const lift = variant === 'ghost' ? '' : 'enabled:hover:-translate-y-0.5';
+  const iconWrap = `btn-icon inline-flex shrink-0 transition-transform duration-300 ease-out ${iconMotion} ${variant === 'primary' ? 'text-on-brand' : ''}`;
+  const lift = '';
 
   const handlePointerDown = (e: React.PointerEvent<HTMLButtonElement>) => {
     onPointerDown?.(e);
@@ -154,7 +154,7 @@ export const Button: React.FC<ButtonProps> = ({
       ) : (
         <>
           {resolvedIcon && resolvedPosition === 'left' && <span aria-hidden className={iconWrap}>{resolvedIcon}</span>}
-          <span className={`[&>svg]:transition-transform [&>svg]:duration-300 group-enabled:group-hover:[&>svg]:scale-110 ${variant === 'primary' ? 'text-[#FFF9FA] font-bold' : ''}`}>{children}</span>
+          <span className={`[&>svg]:transition-transform [&>svg]:duration-300 group-enabled:group-hover:[&>svg]:scale-110 ${variant === 'primary' ? 'text-on-brand font-bold' : ''}`}>{children}</span>
           {resolvedIcon && resolvedPosition === 'right' && <span aria-hidden className={iconWrap}>{resolvedIcon}</span>}
         </>
       )}

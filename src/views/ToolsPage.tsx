@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { tokenStorage } from '../services/api';
 import { useLms } from '../context/LmsContext';
 import { 
   Download, 
@@ -128,7 +129,9 @@ export const DEFAULT_DEV_TOOLS: DevToolItem[] = [
 const TOOLS_STORAGE_KEY = 'yaswant_code_dev_tools_v1';
 
 export const ToolsPage: React.FC = () => {
-  const { addToast } = useLms();
+  const { addToast, role } = useLms();
+  // Add/edit/delete only touch local state, so only admins see them.
+  const isAdmin = role === 'admin' || tokenStorage.getUser<{ role?: string }>()?.role === 'admin';
 
   // Load tools from localStorage or defaults
   const [tools, setTools] = useState<DevToolItem[]>(() => {
@@ -447,35 +450,37 @@ export const ToolsPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        {isAdmin && (
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleOpenAddModal('direct')}
-            className="border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-950/40 text-xs"
+            className="text-xs"
           >
-            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-purple-500" />
+            <Sparkles className="w-3.5 h-3.5 mr-1.5 text-brand-500" />
             + Online Tool
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => handleOpenAddModal('drive')}
-            className="border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40 text-xs"
+            className="text-xs"
           >
-            <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-sky-500" />
+            <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-brand-500" />
             + Drive Toolkit
           </Button>
           <Button
             variant="primary"
             size="sm"
             onClick={() => handleOpenAddModal('zip')}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 text-xs"
+            className="text-xs"
           >
             <FileArchive className="w-3.5 h-3.5 mr-1.5" />
             + Share ZIP Archive
           </Button>
         </div>
+        )}
       </div>
 
       {/* ─── Metric KPI Badges ────────────────────────────────────────────────── */}
@@ -491,12 +496,12 @@ export const ToolsPage: React.FC = () => {
           <div className="text-[11px] text-neutral-400 mt-0.5">Software & tools</div>
         </div>
 
-        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-purple-200/60 dark:border-purple-900/40 shadow-xs">
-          <div className="flex items-center justify-between text-xs text-purple-600 dark:text-purple-400 font-medium mb-1">
+        <div className="p-4 rounded-2xl bg-white dark:bg-neutral-900 border border-brand-200/60 dark:border-brand-900/40 shadow-xs">
+          <div className="flex items-center justify-between text-xs text-brand-600 dark:text-brand-400 font-medium mb-1">
             <span>Online Web Tools</span>
-            <Sparkles className="w-4 h-4 text-purple-500" />
+            <Sparkles className="w-4 h-4 text-brand-500" />
           </div>
-          <div className="text-2xl font-black text-purple-600 dark:text-purple-400 tracking-tight">
+          <div className="text-2xl font-black text-brand-600 dark:text-brand-400 tracking-tight">
             {stats.directCount}
           </div>
           <div className="text-[11px] text-neutral-400 mt-0.5">Instant browser tools</div>
@@ -564,11 +569,11 @@ export const ToolsPage: React.FC = () => {
               onClick={() => setSelectedType('direct')}
               className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 selectedType === 'direct'
-                  ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 shadow-2xs font-bold'
+                  ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-2xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-950'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+              <Sparkles className="w-3.5 h-3.5 text-brand-500" />
               Web Apps ({stats.directCount})
             </button>
             <button
@@ -586,11 +591,11 @@ export const ToolsPage: React.FC = () => {
               onClick={() => setSelectedType('drive')}
               className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 ${
                 selectedType === 'drive'
-                  ? 'bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 shadow-2xs font-bold'
+                  ? 'bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 shadow-2xs font-bold'
                   : 'text-neutral-500 hover:text-neutral-950'
               }`}
             >
-              <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+              <FolderOpen className="w-3.5 h-3.5 text-brand-500" />
               Drive ({stats.driveCount})
             </button>
           </div>
@@ -640,11 +645,13 @@ export const ToolsPage: React.FC = () => {
             No tools found
           </h3>
           <p className="text-xs text-neutral-500 mb-4">
-            Try resetting your filters or share a new tool link.
+            Try resetting your search or category filters.
           </p>
-          <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('direct')}>
-            <Plus className="w-3.5 h-3.5 mr-1" /> Add Online Tool
-          </Button>
+          {isAdmin && (
+            <Button variant="primary" size="sm" onClick={() => handleOpenAddModal('direct')}>
+              <Plus className="w-3.5 h-3.5 mr-1" /> Add Online Tool
+            </Button>
+          )}
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -678,12 +685,12 @@ export const ToolsPage: React.FC = () => {
                         ZIP ARCHIVE
                       </span>
                     ) : isDirect ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-xs backdrop-blur-md">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-gradient-to-r from-brand-600 to-brand-600 text-white shadow-xs backdrop-blur-md">
                         <Sparkles className="w-3 h-3" />
                         ONLINE TOOL
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-sky-600/90 text-white shadow-xs backdrop-blur-md">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-mono font-extrabold bg-brand-600/90 text-white shadow-xs backdrop-blur-md">
                         <FolderOpen className="w-3 h-3" />
                         GOOGLE DRIVE
                       </span>
@@ -715,12 +722,12 @@ export const ToolsPage: React.FC = () => {
                     </div>
 
                     {/* Tool Name */}
-                    <h3 className="text-base font-bold text-neutral-950 dark:text-white leading-snug tracking-tight mb-1 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors line-clamp-1">
+                    <h3 className="text-base font-bold text-neutral-950 dark:text-white leading-snug tracking-tight mb-1 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-1">
                       {tool.name}
                     </h3>
 
                     {/* Tagline */}
-                    <p className="text-[11px] font-medium text-purple-600 dark:text-purple-400 line-clamp-1 mb-2">
+                    <p className="text-[11px] font-medium text-brand-600 dark:text-brand-400 line-clamp-1 mb-2">
                       {tool.tagline}
                     </p>
 
@@ -758,7 +765,7 @@ export const ToolsPage: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => handleTriggerDownload(tool)}
-                          className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-indigo-600/20"
+                          className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-gradient-to-r from-brand-600 to-brand-600 hover:from-brand-700 hover:to-brand-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-600/20"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           Open Tool
@@ -769,7 +776,7 @@ export const ToolsPage: React.FC = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => handleTriggerDownload(tool)}
-                          className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-sky-600 hover:bg-sky-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-sky-600/20"
+                          className="flex-1 py-2 px-3 rounded-xl text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-brand-600/20"
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                           Open Drive Link
@@ -789,6 +796,7 @@ export const ToolsPage: React.FC = () => {
                         )}
                       </button>
 
+                      {isAdmin && (<>
                       {/* Edit */}
                       <button
                         onClick={() => handleOpenEditModal(tool)}
@@ -806,6 +814,7 @@ export const ToolsPage: React.FC = () => {
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
+                      </>)}
                     </div>
                   </div>
                 </div>
@@ -832,9 +841,9 @@ export const ToolsPage: React.FC = () => {
                         {isZip ? (
                           <span className="text-[10px] font-mono font-bold text-emerald-600">ZIP</span>
                         ) : isDirect ? (
-                          <span className="text-[10px] font-mono font-bold text-purple-600">ONLINE</span>
+                          <span className="text-[10px] font-mono font-bold text-brand-600">ONLINE</span>
                         ) : (
-                          <span className="text-[10px] font-mono font-bold text-sky-600">DRIVE</span>
+                          <span className="text-[10px] font-mono font-bold text-brand-600">DRIVE</span>
                         )}
                         <span className="text-[10px] font-mono text-neutral-400">{tool.category}</span>
                         <span className="text-[10px] font-mono text-neutral-400">{tool.version}</span>
@@ -865,7 +874,7 @@ export const ToolsPage: React.FC = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => handleTriggerDownload(tool)}
-                            className="py-1 px-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1"
+                            className="py-1 px-2.5 rounded-lg text-xs font-bold bg-gradient-to-r from-brand-600 to-brand-600 text-white flex items-center gap-1"
                           >
                             <ExternalLink className="w-3 h-3" /> Open Tool
                           </a>
@@ -875,7 +884,7 @@ export const ToolsPage: React.FC = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={() => handleTriggerDownload(tool)}
-                            className="py-1 px-2.5 rounded-lg text-xs font-bold bg-sky-600 text-white flex items-center gap-1"
+                            className="py-1 px-2.5 rounded-lg text-xs font-bold bg-brand-600 text-white flex items-center gap-1"
                           >
                             <ExternalLink className="w-3 h-3" /> Drive
                           </a>
@@ -886,12 +895,14 @@ export const ToolsPage: React.FC = () => {
                         >
                           <Copy className="w-3 h-3" />
                         </button>
+                        {isAdmin && (
                         <button
                           onClick={() => handleDeleteTool(tool.id, tool.name)}
                           className="p-1.5 rounded-lg border border-neutral-200 dark:border-neutral-800 text-neutral-400 hover:text-rose-600"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -931,11 +942,11 @@ export const ToolsPage: React.FC = () => {
                 onClick={() => setFormDownloadType('direct')}
                 className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   formDownloadType === 'direct'
-                    ? 'bg-purple-50 dark:bg-purple-950/60 border-purple-500 text-purple-600 dark:text-purple-400 shadow-2xs'
+                    ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-600 dark:text-brand-400 shadow-2xs'
                     : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50'
                 }`}
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                <Sparkles className="w-3.5 h-3.5 text-brand-500" />
                 Online Web Tool
               </button>
               <button
@@ -955,11 +966,11 @@ export const ToolsPage: React.FC = () => {
                 onClick={() => setFormDownloadType('drive')}
                 className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   formDownloadType === 'drive'
-                    ? 'bg-sky-50 dark:bg-sky-950/60 border-sky-500 text-sky-600 dark:text-sky-400 shadow-2xs'
+                    ? 'bg-brand-50 dark:bg-brand-950/60 border-brand-500 text-brand-600 dark:text-brand-400 shadow-2xs'
                     : 'border-neutral-200 dark:border-neutral-800 text-neutral-600 hover:bg-neutral-50'
                 }`}
               >
-                <FolderOpen className="w-3.5 h-3.5 text-sky-500" />
+                <FolderOpen className="w-3.5 h-3.5 text-brand-500" />
                 Google Drive
               </button>
             </div>

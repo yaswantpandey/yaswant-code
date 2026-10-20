@@ -280,10 +280,10 @@ export const LearningPathsPage: React.FC = () => {
                       : 'bg-neutral-100 dark:bg-neutral-850 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'
                   }`}
                 >
-                  {(track.id === 'full-stack' || track.slug === 'full-stack') && <Sparkles className="w-3.5 h-3.5 text-yellow-400" />}
-                  {(track.id === 'frontend' || track.slug === 'frontend') && <Layout className="w-3.5 h-3.5 text-sky-400" />}
+                  {(track.id === 'full-stack' || track.slug === 'full-stack') && <Sparkles className="w-3.5 h-3.5 text-brand-400" />}
+                  {(track.id === 'frontend' || track.slug === 'frontend') && <Layout className="w-3.5 h-3.5 text-brand-400" />}
                   {(track.id === 'backend' || track.slug === 'backend') && <Server className="w-3.5 h-3.5 text-emerald-400" />}
-                  {(track.id === 'devops' || track.slug === 'devops') && <Terminal className="w-3.5 h-3.5 text-purple-400" />}
+                  {(track.id === 'devops' || track.slug === 'devops') && <Terminal className="w-3.5 h-3.5 text-brand-400" />}
                   {!['full-stack', 'frontend', 'backend', 'devops'].includes(track.slug || track.id) && <Map className="w-3.5 h-3.5 text-amber-400" />}
                   {track.title}
                 </button>
@@ -295,7 +295,7 @@ export const LearningPathsPage: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-neutral-950 font-bold text-xs transition-colors cursor-pointer shadow-xs"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-brand hover:bg-brand-hover text-on-brand font-bold text-xs transition-colors cursor-pointer shadow-xs"
               title="Print or Save as PDF"
             >
               <Download className="w-3.5 h-3.5" />
@@ -315,7 +315,7 @@ export const LearningPathsPage: React.FC = () => {
 
         {/* Title & Tagline Banner */}
         <div className="space-y-3 pt-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/10 dark:bg-yellow-400/20 text-yellow-600 dark:text-yellow-400 text-xs font-bold font-mono tracking-wide">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-400/10 dark:bg-brand-400/20 text-brand-600 dark:text-brand-400 text-xs font-bold font-mono tracking-wide">
             <Map className="w-3.5 h-3.5" />
             {currentTrack.badge.toUpperCase()} • 2026 EDITION
           </div>
@@ -333,7 +333,7 @@ export const LearningPathsPage: React.FC = () => {
         <div className="p-5 rounded-2xl bg-neutral-100/90 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-yellow-400 text-neutral-950 font-black flex items-center justify-center text-sm shadow-sm">
+              <div className="w-10 h-10 rounded-xl bg-brand text-on-brand font-black flex items-center justify-center text-sm shadow-sm">
                 {progressStats.percent}%
               </div>
               <div>
@@ -371,7 +371,7 @@ export const LearningPathsPage: React.FC = () => {
               title={`${progressStats.completed} Completed`}
             />
             <div 
-              className="h-full bg-yellow-400 transition-all duration-500" 
+              className="h-full bg-brand-400 transition-all duration-500" 
               style={{ width: `${(progressStats.inProgress / progressStats.total) * 100}%` }}
               title={`${progressStats.inProgress} In Progress`}
             />
@@ -388,7 +388,7 @@ export const LearningPathsPage: React.FC = () => {
               placeholder="Search topics (e.g. Docker, React, PostgreSQL)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-yellow-400/50"
+              className="w-full pl-10 pr-4 py-2 rounded-xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 text-xs text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-hidden focus:ring-2 focus:ring-brand-400/50"
             />
             {searchQuery && (
               <button 
@@ -406,7 +406,7 @@ export const LearningPathsPage: React.FC = () => {
               onClick={() => setActiveViewMode('flowchart')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
                 activeViewMode === 'flowchart'
-                  ? 'bg-yellow-400 text-neutral-950 shadow-xs'
+                  ? 'bg-brand text-on-brand shadow-xs'
                   : 'text-neutral-500 hover:text-neutral-900 dark:hover:text-white'
               }`}
             >
@@ -459,11 +459,11 @@ export const LearningPathsPage: React.FC = () => {
             onClick={() => setNodeFilter(nodeFilter === 'recommended' ? 'all' : 'recommended')}
             className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg transition-all cursor-pointer font-semibold ${
               nodeFilter === 'recommended'
-                ? 'bg-yellow-400 text-neutral-950 shadow-xs font-bold'
-                : 'bg-yellow-400/15 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 hover:bg-yellow-400/25'
+                ? 'bg-brand text-on-brand shadow-xs font-bold'
+                : 'bg-brand-400/15 text-brand-700 dark:text-brand-400 border border-brand-400/30 hover:bg-brand-400/25'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-yellow-400" />
+            <span className="w-2 h-2 rounded-full bg-brand-400" />
             Recommended
           </button>
 
@@ -487,7 +487,7 @@ export const LearningPathsPage: React.FC = () => {
                 : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300'
             }`}
           >
-            <Clock className="w-3 h-3 text-yellow-500" />
+            <Clock className="w-3 h-3 text-brand-500" />
             In Progress ({progressStats.inProgress})
           </button>
         </div>
@@ -528,7 +528,7 @@ export const LearningPathsPage: React.FC = () => {
               <p className="text-sm text-neutral-500">No nodes match your search or filter.</p>
               <button
                 onClick={() => { setSearchQuery(''); setNodeFilter('all'); }}
-                className="px-4 py-2 rounded-xl bg-yellow-400 text-neutral-950 font-bold text-xs cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-brand text-on-brand font-bold text-xs cursor-pointer"
               >
                 Reset Filters
               </button>
@@ -545,12 +545,12 @@ export const LearningPathsPage: React.FC = () => {
                   
                   {/* Stage Hub Root Node */}
                   <div className="relative z-20 flex flex-col items-center group">
-                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-extrabold text-xs sm:text-sm border-2 border-yellow-400 shadow-md hover:scale-105 transition-all">
-                      <span className="w-5 h-5 rounded-full bg-yellow-400 text-neutral-950 font-black text-[10px] flex items-center justify-center">
+                    <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 font-extrabold text-xs sm:text-sm border-2 border-brand-400 shadow-md hover:scale-105 transition-all">
+                      <span className="w-5 h-5 rounded-full bg-brand text-on-brand font-black text-[10px] flex items-center justify-center">
                         {stage.stepNumber < 10 ? `0${stage.stepNumber}` : stage.stepNumber}
                       </span>
                       <span className="tracking-tight">{stage.title}</span>
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-neutral-800 text-yellow-400 dark:bg-neutral-200 dark:text-neutral-900 font-bold">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-neutral-800 text-brand-400 dark:bg-neutral-200 dark:text-neutral-900 font-bold">
                         {stage.topics.length}
                       </span>
                     </div>
@@ -560,7 +560,7 @@ export const LearningPathsPage: React.FC = () => {
                   </div>
 
                   {/* Central Trunk Stem from Stage Hub */}
-                  <div className="w-0.5 h-6 bg-yellow-400 dark:bg-yellow-500 z-10" />
+                  <div className="w-0.5 h-6 bg-brand-400 dark:bg-brand-500 z-10" />
 
                   {/* Horizontal Branching Rail & Child Cards */}
                   <div className="relative w-full flex flex-col items-center">
@@ -581,10 +581,10 @@ export const LearningPathsPage: React.FC = () => {
                         return (
                           <div key={topic.id} className="flex flex-col items-center relative group">
                             {/* Vertical Drop Stem from Rail to Card */}
-                            <div className="w-0.5 h-4 sm:h-5 bg-neutral-300 dark:bg-neutral-700 group-hover:bg-yellow-400 transition-colors" />
+                            <div className="w-0.5 h-4 sm:h-5 bg-neutral-300 dark:bg-neutral-700 group-hover:bg-brand-400 transition-colors" />
 
                             {/* Micro Connector Node Dot */}
-                            <div className="w-2 h-2 rounded-full -my-1 z-10 bg-neutral-300 dark:bg-neutral-600 group-hover:bg-yellow-400 group-hover:scale-125 transition-all" />
+                            <div className="w-2 h-2 rounded-full -my-1 z-10 bg-neutral-300 dark:bg-neutral-600 group-hover:bg-brand-400 group-hover:scale-125 transition-all" />
 
                             {/* Compact Mind Tree Card ("Chhote Chhote Card") */}
                             <div
@@ -593,11 +593,11 @@ export const LearningPathsPage: React.FC = () => {
                                 isDone
                                   ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500 shadow-xs shadow-emerald-500/20 ring-1 ring-emerald-500/30'
                                   : isInProg
-                                  ? 'bg-yellow-400/10 dark:bg-yellow-400/15 border-yellow-400 shadow-xs shadow-yellow-400/20 ring-2 ring-yellow-400/20'
+                                  ? 'bg-brand-400/10 dark:bg-brand-400/15 border-brand-400 shadow-xs shadow-brand-400/20 ring-2 ring-brand-400/20'
                                   : topic.type === 'recommended'
-                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-yellow-400 dark:hover:border-yellow-400 shadow-xs'
+                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-brand-400 dark:hover:border-brand-400 shadow-xs'
                                   : topic.type === 'alternative'
-                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-sky-400 dark:hover:border-sky-400 shadow-xs'
+                                  ? 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-750 hover:border-brand-400 dark:hover:border-brand-400 shadow-xs'
                                   : 'bg-white dark:bg-neutral-850 border-neutral-200 dark:border-neutral-800 hover:border-neutral-400'
                               }`}
                             >
@@ -605,9 +605,9 @@ export const LearningPathsPage: React.FC = () => {
                               <div className="flex items-center justify-between gap-1 mb-1">
                                 <span className={`text-[9px] font-black font-mono px-1.5 py-0.5 rounded tracking-wider uppercase ${
                                   topic.type === 'recommended'
-                                    ? 'bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30'
+                                    ? 'bg-brand-400/20 text-brand-700 dark:text-brand-400 border border-brand-400/30'
                                     : topic.type === 'alternative'
-                                    ? 'bg-sky-500/15 text-sky-700 dark:text-sky-300 border border-sky-500/20'
+                                    ? 'bg-brand-500/15 text-brand-700 dark:text-brand-300 border border-brand-500/20'
                                     : 'bg-neutral-200 dark:bg-neutral-750 text-neutral-600 dark:text-neutral-400'
                                 }`}>
                                   {topic.type === 'recommended' ? 'REC' : topic.type === 'alternative' ? 'ALT' : 'CORE'}
@@ -626,7 +626,7 @@ export const LearningPathsPage: React.FC = () => {
                                   {isDone ? (
                                     <CheckCircle2 className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />
                                   ) : isInProg ? (
-                                    <Clock className="w-4 h-4 text-yellow-500" />
+                                    <Clock className="w-4 h-4 text-brand-500" />
                                   ) : (
                                     <Circle className="w-4 h-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200" />
                                   )}
@@ -634,14 +634,14 @@ export const LearningPathsPage: React.FC = () => {
                               </div>
 
                               {/* Node Title */}
-                              <div className="text-xs sm:text-[13px] font-extrabold text-neutral-900 dark:text-white leading-snug group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors line-clamp-2 my-0.5">
+                              <div className="text-xs sm:text-[13px] font-extrabold text-neutral-900 dark:text-white leading-snug group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors line-clamp-2 my-0.5">
                                 {topic.title}
                               </div>
 
                               {/* Node Footer: Estimated Hours & Learn Link */}
                               <div className="flex items-center justify-between text-[10px] text-neutral-400 font-mono pt-1.5 mt-1 border-t border-neutral-100 dark:border-neutral-800">
                                 <span>~{topic.estimatedHours}h</span>
-                                <span className="text-neutral-500 group-hover:text-yellow-500 font-sans font-semibold flex items-center gap-0.5">
+                                <span className="text-neutral-500 group-hover:text-brand-500 font-sans font-semibold flex items-center gap-0.5">
                                   Guide <ChevronRight className="w-2.5 h-2.5" />
                                 </span>
                               </div>
@@ -660,7 +660,7 @@ export const LearningPathsPage: React.FC = () => {
                 {stageIdx < filteredStages.length - 1 && (
                   <div className="flex flex-col items-center my-3 sm:my-4 relative z-10">
                     <div className="w-0.5 h-6 sm:h-8 bg-neutral-300 dark:bg-neutral-750" />
-                    <div className="w-6 h-6 rounded-full bg-white dark:bg-neutral-900 border-2 border-yellow-400 flex items-center justify-center shadow-xs text-yellow-500 my-0.5">
+                    <div className="w-6 h-6 rounded-full bg-white dark:bg-neutral-900 border-2 border-brand-400 flex items-center justify-center shadow-xs text-brand-500 my-0.5">
                       <ArrowDown className="w-3.5 h-3.5" />
                     </div>
                     <div className="w-0.5 h-6 sm:h-8 bg-neutral-300 dark:bg-neutral-750" />
@@ -685,7 +685,7 @@ export const LearningPathsPage: React.FC = () => {
               className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 space-y-4"
             >
               <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-xl bg-yellow-400 text-neutral-950 font-black flex items-center justify-center text-xs">
+                <span className="w-8 h-8 rounded-xl bg-brand text-on-brand font-black flex items-center justify-center text-xs">
                   {stage.stepNumber}
                 </span>
                 <div>
@@ -703,7 +703,7 @@ export const LearningPathsPage: React.FC = () => {
                   <div 
                     key={topic.id}
                     onClick={() => setInspectingTopic({ topic, stageTitle: stage.title })}
-                    className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 hover:border-yellow-400 transition-all cursor-pointer flex items-start justify-between gap-4"
+                    className="p-4 rounded-2xl bg-neutral-50 dark:bg-neutral-850/60 border border-neutral-200/80 dark:border-neutral-750 hover:border-brand-400 transition-all cursor-pointer flex items-start justify-between gap-4"
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-1">
@@ -837,7 +837,7 @@ export const LearningPathsPage: React.FC = () => {
               <div className="space-y-1.5">
                 {inspectingTopic.topic.whatToLearn.map((item, idx) => (
                   <div key={idx} className="flex items-start gap-2 text-xs text-neutral-600 dark:text-neutral-300">
-                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 mt-1.5 shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand-400 mt-1.5 shrink-0" />
                     <span>{item}</span>
                   </div>
                 ))}
@@ -861,7 +861,7 @@ export const LearningPathsPage: React.FC = () => {
                 href={inspectingTopic.topic.officialDocs}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline"
+                className="inline-flex items-center gap-1.5 text-xs text-brand-600 dark:text-brand-400 font-semibold hover:underline"
               >
                 Official Documentation & Specifications <ExternalLink className="w-3.5 h-3.5" />
               </a>
@@ -891,7 +891,7 @@ export const LearningPathsPage: React.FC = () => {
                         setTopicStatus(inspectingTopic.topic.id, 'in-progress');
                         setInspectingTopic(null);
                       }}
-                      className="px-3.5 py-2 rounded-xl bg-yellow-400/20 text-yellow-700 dark:text-yellow-400 border border-yellow-400/30 text-xs font-bold cursor-pointer hover:bg-yellow-400/30"
+                      className="px-3.5 py-2 rounded-xl bg-brand-400/20 text-brand-700 dark:text-brand-400 border border-brand-400/30 text-xs font-bold cursor-pointer hover:bg-brand-400/30"
                     >
                       In Progress
                     </button>
