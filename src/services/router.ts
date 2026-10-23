@@ -11,8 +11,10 @@ import {
   buildBreadcrumbSchema,
   buildRoadmapSchema,
   buildCombinedSchema,
+  buildArticleSchema,
 } from './seo';
 import { ALL_ROADMAP_TRACKS, FULLSTACK_ROADMAP } from '../data/fullstackRoadmap';
+import { findStaticArticle } from '../data/blogArticles';
 
 const BRAND = 'Yaswant Code';
 const BASE_URL = 'https://yaswant.co.in';
@@ -60,6 +62,10 @@ export function getTitleForView(view: ActiveView, roadmapSlug?: string): string 
       return `Platform & Account Settings | ${BRAND}`;
     case 'blog':
       return `Engineering Architecture Blog — Distributed Systems, AI, Rust | ${BRAND}`;
+    case 'blog-article': {
+      const article = findStaticArticle(roadmapSlug);
+      return article ? `${article.title} | ${BRAND}` : `Article Not Found | ${BRAND}`;
+    }
     case 'resources':
       return `Free Developer Resources — Blueprints, Roadmaps & Cheat Sheets | ${BRAND}`;
     case 'community':
@@ -78,6 +84,9 @@ export function getMetaDescriptionForView(view: ActiveView, roadmapSlug?: string
       return `Learn full-stack engineering, AI/LLM systems, distributed systems, and cloud-native development from staff engineers. Join 140k+ developers on ${BRAND}.`;
     case 'blog':
       return `Deep-dive technical articles on distributed systems, AI/LLM architecture, React 19, Rust, cloud-native DevOps, and frontend engineering. Written by staff engineers on ${BRAND}.`;
+    case 'blog-article':
+      return findStaticArticle(roadmapSlug)?.excerpt
+        ?? `This article could not be found. Browse the latest engineering deep dives on ${BRAND}.`;
     case 'learning-paths': {
       if (roadmapSlug === 'frontend') {
         return `Comprehensive 2026 Frontend Developer Roadmap. Interactive mind tree covering HTML5 semantic web, CSS3 layouts, JavaScript ES6+, TypeScript, React 19, Next.js 15, and web performance.`;
@@ -129,6 +138,8 @@ export function getPathForView(view: ActiveView, roadmapSlug?: string): string {
       return '/settings';
     case 'blog':
       return '/blog';
+    case 'blog-article':
+      return roadmapSlug ? `/blog/${roadmapSlug}` : '/blog';
     case 'resources':
       return '/resources';
     case 'community':
@@ -163,6 +174,34 @@ function applySchemaForView(view: ActiveView, roadmapSlug?: string): void {
           { name: 'Engineering Blog', url: '/blog' },
         ])
       );
+      break;
+    }
+    case 'blog-article': {
+      const article = findStaticArticle(roadmapSlug);
+      const breadcrumb = buildBreadcrumbSchema([
+        { name: 'Home', url: '/' },
+        { name: 'Engineering Blog', url: '/blog' },
+        ...(article ? [{ name: article.title, url: `/blog/${article.slug}` }] : []),
+      ]);
+      if (!article) {
+        injectSchema(breadcrumb);
+        break;
+      }
+      const articleSchema = {
+        ...buildArticleSchema({
+          id: article.id,
+          title: article.title,
+          excerpt: article.excerpt,
+          author: article.author.name,
+          publishedAt: article.publishedIso,
+          category: article.category,
+          thumbnail: BASE_URL + article.coverImage,
+          keywords: article.tags,
+        }),
+        url: `${BASE_URL}/blog/${article.slug}`,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': `${BASE_URL}/blog/${article.slug}` },
+      };
+      injectSchema(buildCombinedSchema(breadcrumb, articleSchema));
       break;
     }
     case 'learning-paths': {
@@ -303,6 +342,11 @@ export function parseCurrentLocation(): {
     return { view: 'blog' };
   }
 
+  // Blog articles (/blog/:slug) — the slug travels in the roadmapSlug field
+  if (pathname.startsWith('/blog/')) {
+    return { view: 'blog-article', roadmapSlug: pathname.split('/')[2] };
+  }
+
   if (pathname === '/resources') {
     return { view: 'resources' };
   }
@@ -330,7 +374,8 @@ export function syncUrlWithView(
   const title = getTitleForView(view, roadmapSlug);
   const description = getMetaDescriptionForView(view, roadmapSlug);
   const canonicalUrl = targetPath === '/' ? BASE_URL + '/' : BASE_URL + targetPath;
-  const ogImage = 'https://yaswant.co.in/og-image.svg';
+  const article = view === 'blog-article' ? findStaticArticle(roadmapSlug) : undefined;
+  const ogImage = article ? BASE_URL + article.coverImage : 'https://yaswant.co.in/og-image.svg';
 
   // ── 1. Update browser history ──────────────────────────────────────────
   if (window.location.hash) {
@@ -356,7 +401,7 @@ export function syncUrlWithView(
     description,
     url: canonicalUrl,
     image: ogImage,
-    type: 'website',
+    type: article ? 'article' : 'website',
   });
 
   // ── 3. Robots directive: noindex for private routes ────────────────────

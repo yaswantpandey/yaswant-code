@@ -9,6 +9,7 @@ export type ActiveView =
   | 'admin-dashboard'
   | 'settings'
   | 'blog'
+  | 'blog-article'
   | 'resources'
   | 'notes'
   | 'tools'
@@ -87,7 +88,7 @@ export interface BlogPost {
   slug: string;
   excerpt: string;
   coverImage: string;
-  category: 'Distributed Systems' | 'AI & ML' | 'Frontend Architecture' | 'Rust & Systems' | 'Cloud Native' | 'DevOps & Tooling';
+  category: 'Distributed Systems' | 'AI & ML' | 'Frontend Architecture' | 'Rust & Systems' | 'Cloud Native' | 'DevOps & Tooling' | 'Security';
   tags: string[];
   author: {
     name: string;

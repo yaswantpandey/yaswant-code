@@ -13,7 +13,8 @@ interface Toast {
 
 interface LmsContextType {
   currentView: ActiveView;
-  setCurrentView: (view: ActiveView) => void;
+  /** `slug` selects the roadmap track or blog article for views that take one */
+  setCurrentView: (view: ActiveView, slug?: string) => void;
   role: RoleType;
   setRole: (role: RoleType) => void;
   theme: ThemeMode;
@@ -55,9 +56,9 @@ export const LmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   // Synchronize view changes with browser URL and update window history
-  const setCurrentView = useCallback((view: ActiveView) => {
+  const setCurrentView = useCallback((view: ActiveView, slug?: string) => {
     setCurrentViewInternal(view);
-    syncUrlWithView(view);
+    syncUrlWithView(view, false, slug);
     if (typeof window !== 'undefined' && window.scrollY > 80) {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

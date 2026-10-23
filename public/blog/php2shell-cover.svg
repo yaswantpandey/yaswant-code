@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" role="img" aria-label="PHP2Shell — PHP vulnerability landscape 2026">
+  <rect width="1280" height="720" fill="#12090C"/>
+  <g stroke="#2D2024" stroke-width="1">
+    <path d="M0 120H1280M0 240H1280M0 360H1280M0 480H1280M0 600H1280"/>
+    <path d="M160 0V720M320 0V720M480 0V720M640 0V720M800 0V720M960 0V720M1120 0V720"/>
+  </g>
+  <rect x="96" y="96" width="196" height="40" rx="8" fill="#FD1843"/>
+  <text x="194" y="123" text-anchor="middle" font-family="JetBrains Mono, ui-monospace, monospace" font-size="18" font-weight="700" fill="#FFF9FA" letter-spacing="2">THREAT INTEL</text>
+  <text x="96" y="300" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-size="120" font-weight="800" fill="#FFF9FA" letter-spacing="-4">PHP2Shell</text>
+  <text x="96" y="372" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-size="40" font-weight="600" fill="#C8B1B8">The PHP vulnerability landscape, 2026</text>
+  <text x="96" y="600" font-family="JetBrains Mono, ui-monospace, monospace" font-size="24" fill="#FF5878">CVE-2026-109618  ·  CVE-2026-109619</text>
+  <text x="96" y="640" font-family="JetBrains Mono, ui-monospace, monospace" font-size="22" fill="#8F777E">CVSS 9.2 · PHP 5.0 – 8.5.11 · fixed in 8.5.12 / 8.4.27 / 8.3.36 / 8.2.35</text>
+  <g font-family="JetBrains Mono, ui-monospace, monospace" font-size="20" fill="#4E3B41">
+    <text x="900" y="160">0x7f8a920 → freed</text>
+    <text x="900" y="200">longjmp(bailout)</text>
+    <text x="900" y="240">EG(error_state) ← stale</text>
+  </g>
+</svg>
